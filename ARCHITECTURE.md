@@ -1,6 +1,6 @@
 # 🏛️ GSFHub Technical Architecture & Developer Reference
 
-**GSFHub** is a decentralized, peer-to-peer World of Warcraft Classic TBC addon designed specifically for **Guild Self-Found (GSF)** and **Solo Self-Found (SSF)** guilds. It coordinates professions, known recipes, crafting requests, surplus material sharing, recipe drops, and alt management.
+**GSFHub** is a decentralized, peer-to-peer World of Warcraft Classic TBC addon designed specifically for **Guild Self-Found (GSF)** and **Solo Self-Found (SSF)** guilds. It coordinates professions, known recipes, crafting requests, surplus material sharing, recipe drops, a 1–375 resource farming atlas, guild supply chain bounties, and alt management.
 
 ---
 
@@ -16,20 +16,21 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      UI Presentation Layer                  │
-│   MainFrame (Tabs: Professions, WorkOrders, Surplus, Drops, │
-│   Roster) • TradeSkillHook • Minimap • Toast • Dialogs      │
+│   MainFrame (6 Tabs: Professions, WorkOrders, Surplus,      │
+│   Drops, Atlas, Roster) • GoalsHUD • Minimap • Toasts       │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
 │                       Functional Modules                    │
 │   Professions (Scanner & RecipeBook) • WorkOrders           │
-│   SurplusExchange • RecipeDrops • TradeHelper • MailHelper  │
+│   SurplusExchange • RecipeDrops • AtlasData (1-375)         │
+│   SupplyBounties • TradeHelper • MailHelper                 │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
 │                    Core, Identity & Storage                 │
 │   Core.lua • Database.lua (GSFHubDB & GSFHubCache)          │
-│   Alts.lua • VersionCheck.lua • Locales (Localization.lua)  │
+│   Alts.lua • Roles.lua • VersionCheck • Localization.lua    │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
@@ -52,7 +53,13 @@ GSFHubDB = {
     enableSounds = true,                -- Audio notifications
     announceDropsToParty = true,        -- Party/raid chat alerts on recipe drops
     autoScanOnOpen = true,              -- Auto-scan when opening trade skill window
+    showGoalsHUD = true,                -- Personal Goals HUD overlay visibility
+    goalsHUDPos = { point = "TOPRIGHT", x = -200, y = -150 },
     mainCharacter = "CharacterName",    -- Player's designated Main character
+    myRoleTags = { "MINER", "HERBALIST" },
+    myGoals = {
+        ["<GoalId>"] = { id = "...", name = "Fel Iron Ore", itemID = 23424, current = 8, target = 20, icon = 134567 }
+    },
     minimap = {
         hide = false,
         minimapPos = 220,               -- Angle around minimap in degrees
@@ -77,6 +84,7 @@ GSFHubCache = {
             name = "MemberName",
             main = "MainName",
             class = "MAGE",
+            roles = { "CRAFTER", "MASTER_CRAFTER" },
             lastSeen = 1700000000,
             professions = {
                 ["Tailoring"] = {
@@ -84,38 +92,25 @@ GSFHubCache = {
                     curRank = 375,
                     maxRank = 375,
                     lastScanned = 1700000000,
-                    recipes = {
-                        ["SpellIdOrName"] = {
-                            name = "Spellstrike Hood",
-                            key = 31338,
-                            itemLink = "[Spellstrike Hood]",
-                            recipeLink = "[Pattern: Spellstrike Hood]",
-                            reagents = {
-                                { name = "Spellcloth", count = 10, link = "..." },
-                                { name = "Primal Nether", count = 1, link = "..." }
-                            },
-                            skillType = "optimal"
-                        }
-                    }
+                    recipes = { ... }
                 }
             },
-            surplus = {
-                ["ItemId"] = { id = "...", name = "...", count = 20, link = "...", owner = "...", timestamp = ... }
-            }
+            surplus = { ... }
         }
     },
-    workOrders = {
-        ["<OrderId>"] = {
-            id = "Requester-1700000000-123",
-            requester = "Alice",
-            crafter = "Bob",            -- nil if OPEN
-            item = "Spellstrike Hood",
-            count = 1,
-            profession = "Tailoring",
-            matsProvided = true,
-            notes = "Tip included!",
-            status = "OPEN",            -- OPEN, CLAIMED, COMPLETED, CANCELLED
-            timestamp = 1700000000
+    workOrders = { ... },
+    bounties = {
+        ["<BountyId>"] = {
+            id = "BT-Requester-1700000000",
+            requester = "RequesterName",
+            claimer = "GathererName",
+            item = "Fel Iron Ore",
+            itemID = 23424,
+            count = 20,
+            status = "IN_TRANSIT",      -- OPEN, CLAIMED, IN_TRANSIT, COMPLETED, CANCELLED
+            timestamp = 1700000000,
+            mailedAt = 1700000500,
+            recipe = "Fel Iron Chain Vest"
         }
     },
     recentDrops = { ... },              -- Last 30 recipe drops recorded
@@ -125,7 +120,8 @@ GSFHubCache = {
     revisions = {
         recipes = 12,
         orders = 5,
-        surplus = 8
+        surplus = 8,
+        bounties = 4
     }
 }
 ```
@@ -155,6 +151,11 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 | `SPC` | `SURPLUS_CLAIM` | `WHISPER` | Requests a listed surplus item |
 | `ALT` | `ALT_UPDATE` | `GUILD` | Broadcasts Main/Alt association |
 | `WLU` | `WISHLIST_UPDATE`| `GUILD` | Broadcasts recipe wishlist updates |
+| `BTN` | `BOUNTY_NEW` | `GUILD` | Broadcasts a newly posted gathering material bounty |
+| `BTC` | `BOUNTY_CLAIM` | `GUILD` | Broadcasts that a gatherer claimed a bounty |
+| `BTM` | `BOUNTY_MAILED` | `GUILD` | Broadcasts that materials were mailed (`IN_TRANSIT`) |
+| `BTF` | `BOUNTY_FULFILL` | `GUILD` | Fulfills bounty after 3-factor mail/bag verification |
+| `BTX` | `BOUNTY_CANCEL` | `GUILD` | Cancels an active bounty |
 
 ---
 
@@ -166,19 +167,21 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 - Automatically increments `GSFHubCache.revisions.recipes` and triggers `GSF.Sync:SendMyData()`.
 
 ### 2. Recipe Search Index (`Modules/Professions/RecipeBook.lua`)
-- Provides fast, multi-factor search across all guild members (online and offline).
-- Indexed by: Result Item Name, Enchant Name, Required Reagent Name, Profession Type, and Online Status.
+- Multi-factor search across all guild members (online and offline).
+- Indexed by: Result Item Name, Enchant Name, Reagent Name, Profession Type, and Online Status.
 
-### 3. Work Order Manager (`Modules/WorkOrders/WorkOrders.lua`)
-- Handles order creation, unique ID generation (`<Player>-<Timestamp>-<Random>`), claiming, completion, and 7-day expiration cleanup.
+### 3. Supply Chain Bounties (`Modules/SupplyChain/SupplyBounties.lua`)
+- 1-click recipe breakdown turning missing crafting reagents into bounties.
+- **3-Factor Handshake:** Verifies claimer name, unique `[GSF-BT:XYZ]` mail token, and stack count upon `MAIL_SHOW` and `BAG_UPDATE`.
 
-### 4. Recipe Drops Coordinator (`Modules/Drops/RecipeDrops.lua`)
-- Listens to `CHAT_MSG_LOOT` and `LOOT_OPENED`.
-- Detects recipe item patterns (`itemType == "Recipe"` or pattern keyword search).
-- Cross-references eligible guild crafters who have not learned it yet and matching wishlists.
+### 4. 1–375 Resource Farming Atlas (`Modules/Gathering/AtlasData.lua`)
+- Encyclopedic database covering 1–300 Vanilla and 300–375 TBC resources with native `itemID`s for automatic locale translation.
+
+### 5. Draggable Goals HUD (`UI/Widgets/GoalsHUD.lua`)
+- Onscreen overlay frame displaying visual progress bars and dynamic bag counting on `BAG_UPDATE`.
 
 ---
 
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`).
-- GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip`, and publishes a GitHub Release using native GitHub CLI.
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`).
+- GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

@@ -51,9 +51,16 @@
 - **Proactive Clarification:** Whenever there is room for interpretation, multiple valid UX/technical approaches, or uncertainty in design requirements, the agent must NEVER make unilateral assumptions.
 - **Option Presentation:** The agent must proactively stop, clearly present the available options with trade-offs and a recommended path, and let the user make the final decision.
 
-### 5. 🗺️ Roadmap & Documentation Synchronization Policy
-- **Real-Time Roadmap Sync:** Whenever phase plans are created, restructured, completed, or updated, both **`ROADMAP.md`** and **`README.md`** MUST be updated in real time to reflect the latest release state, mermaid diagram, and upcoming milestones.
-- **Documentation Integrity:** Ensures public repository documentation always mirrors the internal `.gemini/plans/` architecture.
+### 5. 🗺️ Universal Documentation & Architecture Synchronization Policy
+- **Mandatory Real-Time Synchronization Suite:** Whenever any feature, module, API, opcode, UI tab, database key, or milestone is added, modified, or removed, ALL of the following documentation artifacts MUST be updated in real time:
+  1. **`README.md`**: Feature overviews, UI tab descriptions, slash commands, and status badges.
+  2. **`ROADMAP.md`**: Milestone timeline diagrams, version checklists, and links to phase plans.
+  3. **`ARCHITECTURE.md`**: System diagrams, database schemas, P2P opcode tables, and module lifecycles.
+  4. **`CHANGELOG.md`**: Keep a Changelog 1.1.0 entries (under `[Unreleased]` during dev or tagged sections upon release).
+  5. **`docs/index.html`**: GitHub Pages web portal feature cards, slash command cheat sheet, and setup guide.
+  6. **`GSFHub.toc`**: Addon file manifest, Interface version, and addon release version.
+  7. **`.gemini/plans/`**: Relevant persistent phase implementation plan.
+- **Zero Stale Documentation:** Guarantees that the codebase, developer architecture, public repository documentation, and web portal always remain 100% in sync with zero discrepancies.
 
 ### 6. 🛡️ Non-Destructive Data Migration & Backward Compatibility Policy
 - When modifying `Database.lua` or core modules, NEVER delete or break existing SavedVariables keys (`myWishlist`, `characterProfessions`, `alts`, `myGoals`, `myWorkOrders`).
