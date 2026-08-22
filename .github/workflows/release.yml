@@ -25,7 +25,7 @@ jobs:
           mkdir -p package/GSFHub
           
           # Copy addon files to package directory
-          cp -r GSFHub.toc Libs Locales Core Comm Modules UI README.md package/GSFHub/
+          cp -r GSFHub.toc Libs Locales Core Comm Modules UI README.md CHANGELOG.md LICENSE package/GSFHub/
           
           # Create zip
           cd package
