@@ -45,13 +45,14 @@ A new World of Warcraft client version has been published by Blizzard:
 - **Release Date:** \`${LATEST_DATE}\`
 
 #### 🛠️ Action Items:
-1. Update \`## Interface: ${EXPECTED_TOC}\` in \`GSFHub.toc\`.
+1. Update \`## Interface: ${EXPECTED_TOC}\` in \`GSFHub.toc\` and \`Core/Constants.lua\`.
 2. Check for any breaking UI/API changes in this patch.
-3. Bump addon patch version (e.g. \`v1.1.1\`) and tag release.
+3. Commit with auto-closing keyword: \`fix(toc): update interface to ${EXPECTED_TOC} for WoW Classic ${LATEST_VERSION} (closes #<issue_id>)\`.
+4. Tag and push release (e.g. \`v1.2.1\`).
 EOF
 )
 
-    gh issue create --title "🚨 ${ISSUE_TITLE}" --body "${ISSUE_BODY}"
+    gh issue create --title "🚨 ${ISSUE_TITLE}" --body "${ISSUE_BODY}" --label "bug"
     echo "Created GitHub Issue for new client interface ${EXPECTED_TOC}."
   else
     echo "Issue already exists (#${EXISTING_ISSUE}). Skipping creation."
