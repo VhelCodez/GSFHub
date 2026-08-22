@@ -31,11 +31,12 @@ graph LR
 
 ## 🔮 Upcoming Milestones
 
-### 🌐 v1.1.0 - Multi-Language Architecture *(Next Up)*
+### 🌐 v1.1.0 - Multi-Language & Version Reminders *(Next Up)*
 - [ ] **Client Auto-Detection:** Automatically detects WoW client locale via `GetLocale()` (defaults to German on `deDE` clients, English `enUS` otherwise).
 - [ ] **In-Game Language Switcher:** Dropdown in the Settings tab to switch between *"Auto (Client-Sprache)"*, *"English (enUS)"*, and *"Deutsch (deDE)"* with real-time UI refresh.
 - [ ] **Authentic German Dictionary (`Locales/deDE.lua`):** Complete translations for all tabs, professions, work orders, surplus stockpile, drops, toasts, and slash commands.
 - [ ] **Bulletproof Fallback Engine:** Guarantees zero blank labels by seamlessly falling back to English for unlocalized keys.
+- [ ] **P2P Version Gossip & Update Reminders:** In-game alert when guild members run a newer version, with a CurseForge/GitHub 1-click copy dialog.
 
 ---
 
