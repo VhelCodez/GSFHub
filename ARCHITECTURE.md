@@ -5,7 +5,7 @@
 ---
 
 ## 🎯 Target Environment & Compatibility
-- **Game Version:** World of Warcraft Classic TBC (`Interface: 20504`, compatible with modern Classic 2.5.x / 1.15+ frame engines).
+- **Game Version:** World of Warcraft Classic TBC (`Interface: 20506`, compatible with modern Classic 2.5.x / 1.15+ frame engines).
 - **Runtime Environment:** Lua 5.1 / Modern FrameXML with `BackdropTemplate` mixins.
 - **Dependencies:** 100% self-contained. All required libraries (`LibStub`, `Ace3`, `LibDeflate`, `LibDataBroker`, `LibDBIcon`) are embedded directly in `Libs/`.
 

@@ -2,7 +2,7 @@
 
 ## 🎮 Project Identity & Scope
 - **Project Name:** GSFHub (Guild Self-Found Hub)
-- **Target Platform:** World of Warcraft Classic TBC (`Interface: 20504`, modern 2.5.x / 1.15+ engine).
+- **Target Platform:** World of Warcraft Classic TBC (`Interface: 20506`, modern 2.5.x / 1.15+ engine).
 - **Core Purpose:** Decentralized guild self-found (GSF) & SSF guild coordination: professions, recipes, work orders, surplus exchange, recipe drops, and gathering supply chain.
 - **Repository:** `https://github.com/VhelCodez/GSFHub`
 

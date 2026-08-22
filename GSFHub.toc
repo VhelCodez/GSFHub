@@ -1,4 +1,4 @@
-## Interface: 20504
+## Interface: 20506
 ## Title: GSFHub |cff33ff99(Guild Self-Found Hub)|r
 ## Notes: Decentralized profession manager, crafting work orders, surplus exchange, and recipe drops coordinator for SSF/GSF guilds.
 ## Author: GSF Community
