@@ -1,12 +1,16 @@
 local ADDON_NAME, GSF = ...
 
 GSF.COMM_PREFIX = "GSFHUB"
-GSF.VERSION = "1.0.0"
+GSF.VERSION = "1.1.0"
 GSF.PROTOCOL_VERSION = 1
+
+-- Download & Issue Tracker URLs (CurseForge ready)
+GSF.DOWNLOAD_URL = "https://github.com/VhelCodez/GSFHub/releases"
+GSF.ISSUES_URL = "https://github.com/VhelCodez/GSFHub/issues/new/choose"
 
 -- Network Protocol Opcodes
 GSF.OPCODE = {
-	HELLO           = "HLO",  -- Broadcast heartbeat and revision digest
+	HELLO           = "HLO",  -- Broadcast heartbeat, version, and revision digest
 	REQ_DATA        = "RQD",  -- Request data diff or full member profile
 	RESP_DATA       = "RSD",  -- Respond with requested profile
 	WORK_ORDER_NEW  = "WON",  -- Create a new work order

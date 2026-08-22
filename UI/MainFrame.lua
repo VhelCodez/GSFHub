@@ -30,6 +30,18 @@ function MainFrame:Initialize()
 	title:SetText(string.format("|cff%s%s|r  |cffffffff%s|r", GSF.COLORS.PRIMARY, GSF.L["ADDON_TITLE"], GSF.VERSION))
 	self.title = title
 
+	-- Update Badge (Hidden by default, shown when newer version is detected)
+	local updateBtn = CreateFrame("Button", "GSFHubUpdateBadge", self, "UIPanelButtonTemplate")
+	updateBtn:SetSize(130, 20)
+	updateBtn:SetPoint("RIGHT", self, "TOPRIGHT", -38, -16)
+	updateBtn:Hide()
+	updateBtn:SetScript("OnClick", function()
+		if GSF.VersionCheck then
+			GSF.VersionCheck:OpenUpdateDialog()
+		end
+	end)
+	self.updateBtn = updateBtn
+
 	-- Close Button
 	local closeBtn = CreateFrame("Button", nil, self, "UIPanelCloseButton")
 	closeBtn:SetPoint("TOPRIGHT", self, "TOPRIGHT", -4, -4)
@@ -80,6 +92,42 @@ function MainFrame:Initialize()
 	self:SetScript("OnShow", function()
 		self:RefreshCurrentTab()
 	end)
+
+	-- If a newer version was already found during login
+	if GSF.latestKnownVersion and GSF.VersionCheck and GSF.VersionCheck:CompareVersions(GSF.latestKnownVersion, GSF.VERSION) > 0 then
+		self:ShowUpdateBadge(GSF.latestKnownVersion)
+	end
+end
+
+function MainFrame:UpdateLocalizedTexts()
+	if not self.initialized then return end
+	self.title:SetText(string.format("|cff%s%s|r  |cffffffff%s|r", GSF.COLORS.PRIMARY, GSF.L["ADDON_TITLE"], GSF.VERSION))
+	
+	local tabTitles = {
+		GSF.L["TAB_PROFESSIONS"],
+		GSF.L["TAB_WORK_ORDERS"],
+		GSF.L["TAB_SURPLUS"],
+		GSF.L["TAB_DROPS"],
+		GSF.L["TAB_ROSTER"],
+	}
+
+	for i = 1, NUM_TABS do
+		if tabs[i] then
+			tabs[i]:SetText(tabTitles[i])
+		end
+	end
+
+	if GSF.TabProfessions and GSF.TabProfessions.UpdateTexts then GSF.TabProfessions:UpdateTexts() end
+	if GSF.TabWorkOrders and GSF.TabWorkOrders.UpdateTexts then GSF.TabWorkOrders:UpdateTexts() end
+	if GSF.TabSurplus and GSF.TabSurplus.UpdateTexts then GSF.TabSurplus:UpdateTexts() end
+	if GSF.TabDrops and GSF.TabDrops.UpdateTexts then GSF.TabDrops:UpdateTexts() end
+	if GSF.TabRoster and GSF.TabRoster.UpdateTexts then GSF.TabRoster:UpdateTexts() end
+end
+
+function MainFrame:ShowUpdateBadge(remoteVersion)
+	if not self.updateBtn then return end
+	self.updateBtn:SetText(string.format("|cffffd100⚡ " .. GSF.L["UPDATE_BADGE"] .. "|r", remoteVersion or "New"))
+	self.updateBtn:Show()
 end
 
 function MainFrame:SelectTab(id)

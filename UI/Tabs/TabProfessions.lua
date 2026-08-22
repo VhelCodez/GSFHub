@@ -89,7 +89,7 @@ function Tab:Create(parent)
 	detailTitle:SetPoint("TOPLEFT", rightPane, "TOPLEFT", 15, -15)
 	detailTitle:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
 	detailTitle:SetJustifyH("LEFT")
-	detailTitle:SetText("Select a recipe to view crafters & reagents")
+	detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"])
 	self.detailTitle = detailTitle
 
 	local reagentsLabel = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -101,7 +101,7 @@ function Tab:Create(parent)
 	reagentsText:SetPoint("TOPLEFT", reagentsLabel, "BOTTOMLEFT", 0, -6)
 	reagentsText:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
 	reagentsText:SetJustifyH("LEFT")
-	reagentsText:SetText("None")
+	reagentsText:SetText(GSF.L["NO_EXTRA_REAGENTS"])
 	self.reagentsText = reagentsText
 
 	local craftersLabel = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -128,7 +128,7 @@ function Tab:Create(parent)
 		end
 	end)
 
-	local wishlistBtn = GSF.UI:CreateButton(rightPane, "Wishlist", 90, 24)
+	local wishlistBtn = GSF.UI:CreateButton(rightPane, GSF.L["WISHLIST_BTN"], 90, 24)
 	wishlistBtn:SetPoint("LEFT", orderBtn, "RIGHT", 10, 0)
 	self.wishlistBtn = wishlistBtn
 
@@ -139,6 +139,17 @@ function Tab:Create(parent)
 	end)
 
 	return frame
+end
+
+function Tab:UpdateTexts()
+	if not self.frame then return end
+	if self.orderBtn then self.orderBtn:SetText(GSF.L["REQUEST_CRAFT"]) end
+	if self.wishlistBtn then self.wishlistBtn:SetText(GSF.L["WISHLIST_BTN"]) end
+	if self.onlineCheck then self.onlineCheck.text:SetText(GSF.L["FILTER_ONLINE_ONLY"]) end
+	if not selectedRecipe and self.detailTitle then
+		self.detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"])
+	end
+	self:Refresh()
 end
 
 function Tab:Refresh()

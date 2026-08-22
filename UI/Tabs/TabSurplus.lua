@@ -159,6 +159,12 @@ function Tab:OpenOfferModal()
 	self.modal:Show()
 end
 
+function Tab:UpdateTexts()
+	if not self.frame then return end
+	if self.offerBtn then self.offerBtn:SetText("+ " .. GSF.L["POST_SURPLUS"]) end
+	self:Refresh()
+end
+
 function Tab:Refresh()
 	if not self.frame or not self.frame:IsShown() then return end
 
@@ -191,7 +197,7 @@ function Tab:Refresh()
 			details:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -4)
 			card.details = details
 
-			local actionBtn = GSF.UI:CreateButton(card, "Request", 80, 20)
+			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_SURPLUS"], 80, 20)
 			actionBtn:SetPoint("RIGHT", card, "RIGHT", -12, 0)
 			card.actionBtn = actionBtn
 
@@ -209,17 +215,17 @@ function Tab:Refresh()
 
 		local ownerFormatted = GSF.Alts:GetFormattedName(item.owner)
 		local noteStr = item.notes ~= "" and ("  •  " .. item.notes) or ""
-		card.details:SetText(string.format("Offered by: %s%s", ownerFormatted, noteStr))
+		card.details:SetText(string.format(GSF.L["SURPLUS_OFFERED_BY"] .. "%s", ownerFormatted, noteStr))
 
 		if item.owner == myName then
-			card.actionBtn:SetText("Remove")
+			card.actionBtn:SetText(GSF.L["REMOVE_SURPLUS"])
 			card.actionBtn:SetScript("OnClick", function()
 				GSF.Surplus:RemoveItem(item.id)
 				Tab:Refresh()
 			end)
 			card.mailBtn:Hide()
 		else
-			card.actionBtn:SetText("Whisper")
+			card.actionBtn:SetText(GSF.L["CLAIM_SURPLUS"])
 			card.actionBtn:SetScript("OnClick", function()
 				ChatFrame_OpenChat(string.format("/w %s Hi, could I please get the surplus [%s] you listed in GSFHub?", item.owner, item.name))
 			end)

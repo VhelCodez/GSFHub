@@ -8,14 +8,22 @@ This document outlines the version roadmap and upcoming features for **GSFHub (G
 
 ```mermaid
 graph LR
-    v1["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(In Progress)"]
-    v11 --> v12["v1.2.0<br/><b>Gathering & Supply Chain</b><br/>(Planned)"]
+    v1["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language & Updates</b><br/>(Released)"]
+    v11 --> v12["v1.2.0<br/><b>Gathering & Supply Chain</b><br/>(In Progress)"]
     v12 --> v13["v1.3.0+<br/><b>Discord & Beyond</b><br/>(Future)"]
 ```
 
 ---
 
 ## 🚀 Released Versions
+
+### ✅ v1.1.0 - Multi-Language Architecture & Version Reminders *(Released)*
+- [x] **Client Auto-Detection:** Automatically detects WoW client locale via `GetLocale()` (defaults to German on `deDE` clients, English `enUS` otherwise).
+- [x] **In-Game Language Switcher:** Dropdown in the Settings tab to switch between *"Auto (Client-Sprache)"*, *"English (enUS)"*, and *"Deutsch (deDE)"* with real-time UI refresh.
+- [x] **Authentic German Dictionary (`Locales/deDE.lua`):** Complete translations for all tabs, professions, work orders, surplus stockpile, drops, toasts, and slash commands.
+- [x] **Bulletproof Fallback Engine:** Guarantees zero blank labels by seamlessly falling back to English for unlocalized keys.
+- [x] **P2P Version Gossip & Update Reminders:** In-game alert when guild members run a newer version, with a CurseForge/GitHub 1-click copy dialog.
+- [x] **In-Game Diagnostic & Bug Report Helper:** `/gsf bug` command and Settings button generating pre-formatted GitHub issue diagnostics.
 
 ### ✅ v1.0.0 - Foundation & Core Suite *(Released)*
 - [x] **Decentralized Profession Directory:** Auto-scans trade skills (Alchemy, BS, Enchanting, Engi, LW, Tailoring, JC, Cooking, First Aid, Lockpicking).
@@ -31,16 +39,7 @@ graph LR
 
 ## 🔮 Upcoming Milestones
 
-### 🌐 v1.1.0 - Multi-Language & Version Reminders *(Next Up)*
-- [ ] **Client Auto-Detection:** Automatically detects WoW client locale via `GetLocale()` (defaults to German on `deDE` clients, English `enUS` otherwise).
-- [ ] **In-Game Language Switcher:** Dropdown in the Settings tab to switch between *"Auto (Client-Sprache)"*, *"English (enUS)"*, and *"Deutsch (deDE)"* with real-time UI refresh.
-- [ ] **Authentic German Dictionary (`Locales/deDE.lua`):** Complete translations for all tabs, professions, work orders, surplus stockpile, drops, toasts, and slash commands.
-- [ ] **Bulletproof Fallback Engine:** Guarantees zero blank labels by seamlessly falling back to English for unlocalized keys.
-- [ ] **P2P Version Gossip & Update Reminders:** In-game alert when guild members run a newer version, with a CurseForge/GitHub 1-click copy dialog.
-
----
-
-### 🌾 v1.2.0 - Gathering Suite & Guild Supply Chain *(Planned)*
+### 🌾 v1.2.0 - Gathering Suite & Guild Supply Chain *(Next Up)*
 - [ ] **Guild Roles System (`Core/Roles.lua`):** Role badges (`Gatherer`, `Crafter`, `Angler/Cook`, `Miner`, `Herbalist`, etc.) with automated profession detection and custom user tags.
 - [ ] **Crafter ➔ Gatherer Bounties (`Modules/SupplyChain/`):** 1-click recipe breakdown turning missing crafting reagents into targeted bounties for guild gatherers.
 - [ ] **TBC Resource Farming Atlas (`Modules/Gathering/Atlas.lua`):** In-game encyclopedia of all TBC nodes (Mining, Herbs, Skinning, Primals, Fish) with required skill, best zones, and food buff notes.

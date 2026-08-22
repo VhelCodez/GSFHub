@@ -3,6 +3,7 @@ local ADDON_NAME, GSF = ...
 GSF.DB = {}
 
 local defaultSettings = {
+	selectedLocale = "auto",
 	enableToasts = true,
 	enableSounds = true,
 	announceDropsToParty = true,
@@ -66,6 +67,11 @@ function GSF.DB:Initialize()
 	-- Bind to GSF instance
 	GSF.db = GSFHubDB
 	GSF.cache = GSFHubCache
+
+	-- Update active localization language
+	if GSF.UpdateActiveLanguage then
+		GSF:UpdateActiveLanguage()
+	end
 
 	-- Clean expired work orders (> 7 days)
 	self:CleanupExpiredOrders()

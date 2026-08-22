@@ -10,6 +10,7 @@ function GSF.Protocol:Encode(opcode, payload)
 	local packet = {
 		op = opcode,
 		ver = GSF.PROTOCOL_VERSION,
+		addonVer = GSF.VERSION,
 		sender = GSF.DB:GetPlayerName(),
 		data = payload or {},
 		time = time(),

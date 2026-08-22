@@ -112,12 +112,31 @@ function GSFHub:HandleSlashCommand(input)
 	elseif cmd == "main" and args[2] then
 		GSF.Alts:SetMyMain(args[2])
 		self:Printf("Main character set to '%s'.", args[2])
+	elseif cmd == "bug" or cmd == "report" or cmd == "issue" then
+		if GSF.FeedbackDialog then
+			GSF.FeedbackDialog:Show()
+		end
+	elseif cmd == "update" then
+		if GSF.VersionCheck then
+			GSF.VersionCheck:OpenUpdateDialog()
+		end
+	elseif cmd == "lang" or cmd == "language" then
+		if args[2] then
+			GSF:SetLanguage(args[2])
+			self:Printf("Language set to '%s'.", args[2])
+		else
+			self:Printf("Current language: %s (Auto: %s)", GSF:GetSelectedLanguage(), GetLocale())
+		end
+	elseif cmd == "version" or cmd == "ver" then
+		self:Printf("GSFHub Version %s (Protocol v%d)", GSF.VERSION, GSF.PROTOCOL_VERSION)
 	elseif cmd == "help" then
 		self:Print("Available Commands:")
 		print("  |cff33ff99/gsf|r - Toggle main interface")
 		print("  |cff33ff99/gsf scan|r - Scan currently open profession window")
 		print("  |cff33ff99/gsf sync|r - Request full synchronization from guild")
 		print("  |cff33ff99/gsf main <Name>|r - Set your main character name")
+		print("  |cff33ff99/gsf bug|r - Open bug report & diagnostics modal")
+		print("  |cff33ff99/gsf lang <auto|enUS|deDE>|r - Switch language")
 	else
 		if GSF.MainFrame then
 			GSF.MainFrame:Toggle()

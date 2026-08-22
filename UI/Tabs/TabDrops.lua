@@ -33,8 +33,12 @@ function Tab:Create(parent)
 	addBox:SetPoint("TOPLEFT", wishScroll, "BOTTOMLEFT", 5, -10)
 	self.addBox = addBox
 
-	local addBtn = GSF.UI:CreateButton(frame, "Add Link", 90, 22)
+	local addBtn = GSF.UI:CreateButton(frame, GSF.L["ADD_TO_WISHLIST"], 90, 22)
 	addBtn:SetPoint("LEFT", addBox, "RIGHT", 10, 0)
+	self.addBtn = addBtn
+	self.dropTitle = dropTitle
+	self.wishTitle = wishTitle
+
 	addBtn:SetScript("OnClick", function()
 		local text = addBox:GetText()
 		if text and text:trim() ~= "" then
@@ -45,6 +49,14 @@ function Tab:Create(parent)
 	end)
 
 	return frame
+end
+
+function Tab:UpdateTexts()
+	if not self.frame then return end
+	if self.dropTitle then self.dropTitle:SetText(GSF.L["RECIPE_DROPS_TITLE"]) end
+	if self.wishTitle then self.wishTitle:SetText(GSF.L["WISHLIST_TITLE"]) end
+	if self.addBtn then self.addBtn:SetText(GSF.L["ADD_TO_WISHLIST"]) end
+	self:Refresh()
 end
 
 function Tab:Refresh()

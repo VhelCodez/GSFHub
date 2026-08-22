@@ -79,6 +79,11 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 	local packet, err = GSF.Protocol:Decode(message)
 	if not packet or not packet.op then return end
 
+	-- Check peer addon version for updates
+	if packet.addonVer and GSF.VersionCheck then
+		GSF.VersionCheck:CheckPeerVersion(packet.addonVer, sender)
+	end
+
 	local op = packet.op
 	local data = packet.data or {}
 

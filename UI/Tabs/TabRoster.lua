@@ -12,18 +12,22 @@ function Tab:Create(parent)
 	local mainLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
 	mainLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -15)
 	mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
+	self.mainLabel = mainLabel
 
 	local mainPrompt = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	mainPrompt:SetPoint("TOPLEFT", mainLabel, "BOTTOMLEFT", 0, -6)
 	mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
+	self.mainPrompt = mainPrompt
 
-	local mainBox = GSF.UI:CreateEditBox(frame, 160, 22)
+	local mainBox = GSF.UI:CreateEditBox(frame, 140, 22)
 	mainBox:SetPoint("LEFT", mainPrompt, "RIGHT", 10, 0)
-	mainBox:SetText(GSF.db.mainCharacter or GSF.DB:GetPlayerName())
+	mainBox:SetText(GSF.db and GSF.db.mainCharacter or GSF.DB:GetPlayerName())
 	self.mainBox = mainBox
 
-	local saveMainBtn = GSF.UI:CreateButton(frame, GSF.L["SAVE_MAIN"], 90, 22)
-	saveMainBtn:SetPoint("LEFT", mainBox, "RIGHT", 10, 0)
+	local saveMainBtn = GSF.UI:CreateButton(frame, GSF.L["SAVE_MAIN"], 80, 22)
+	saveMainBtn:SetPoint("LEFT", mainBox, "RIGHT", 8, 0)
+	self.saveMainBtn = saveMainBtn
+
 	saveMainBtn:SetScript("OnClick", function()
 		local text = mainBox:GetText()
 		GSF.Alts:SetMyMain(text)
@@ -31,37 +35,11 @@ function Tab:Create(parent)
 		Tab:Refresh()
 	end)
 
-	-- Settings Section (Top Right)
-	local toastCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	toastCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 430, -15)
-	toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
-	toastCheck.text:SetFontObject("GameFontHighlightSmall")
-	toastCheck:SetChecked(GSF.db.enableToasts)
-	toastCheck:SetScript("OnClick", function(cb)
-		GSF.db.enableToasts = cb:GetChecked()
-	end)
-
-	local soundCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -4)
-	soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
-	soundCheck.text:SetFontObject("GameFontHighlightSmall")
-	soundCheck:SetChecked(GSF.db.enableSounds)
-	soundCheck:SetScript("OnClick", function(cb)
-		GSF.db.enableSounds = cb:GetChecked()
-	end)
-
-	local dropAnnounceCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	dropAnnounceCheck:SetPoint("TOPLEFT", soundCheck, "BOTTOMLEFT", 0, -4)
-	dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
-	dropAnnounceCheck.text:SetFontObject("GameFontHighlightSmall")
-	dropAnnounceCheck.SetChecked(dropAnnounceCheck, GSF.db.announceDropsToParty)
-	dropAnnounceCheck:SetScript("OnClick", function(cb)
-		GSF.db.announceDropsToParty = cb:GetChecked()
-	end)
-
 	-- Sync Action Button
-	local syncBtn = GSF.UI:CreateButton(frame, GSF.L["FORCE_SYNC"], 160, 24)
-	syncBtn:SetPoint("TOPLEFT", mainPrompt, "BOTTOMLEFT", 0, -16)
+	local syncBtn = GSF.UI:CreateButton(frame, GSF.L["FORCE_SYNC"], 150, 22)
+	syncBtn:SetPoint("TOPLEFT", mainPrompt, "BOTTOMLEFT", 0, -12)
+	self.syncBtn = syncBtn
+
 	syncBtn:SetScript("OnClick", function()
 		if GSF.Sync then
 			GSF.Sync:BroadcastHello(true)
@@ -70,41 +48,149 @@ function Tab:Create(parent)
 	end)
 
 	local statText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	statText:SetPoint("LEFT", syncBtn, "RIGHT", 15, 0)
+	statText:SetPoint("LEFT", syncBtn, "RIGHT", 12, 0)
 	self.statText = statText
+
+	-- Bug Report / Feedback Button (Left under sync)
+	local bugBtn = GSF.UI:CreateButton(frame, GSF.L["REPORT_BUG_BTN"], 200, 22)
+	bugBtn:SetPoint("TOPLEFT", syncBtn, "BOTTOMLEFT", 0, -8)
+	self.bugBtn = bugBtn
+
+	bugBtn:SetScript("OnClick", function()
+		if GSF.FeedbackDialog then
+			GSF.FeedbackDialog:Show()
+		end
+	end)
+
+	-- Settings Section (Top Right)
+	local langLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	langLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 440, -12)
+	langLabel:SetText(GSF.L["LANGUAGE_LABEL"])
+	self.langLabel = langLabel
+
+	local langDropdown = CreateFrame("Button", "GSFLangDropdown", frame, "UIDropDownMenuTemplate")
+	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, 2)
+	UIDropDownMenu_SetWidth(langDropdown, 160)
+	self.langDropdown = langDropdown
+
+	local function GetLangText(code)
+		if code == "deDE" then return GSF.L["LANG_DE"]
+		elseif code == "enUS" then return GSF.L["LANG_EN"]
+		else return GSF.L["LANG_AUTO"] end
+	end
+
+	local curLocale = GSF.db and GSF.db.selectedLocale or "auto"
+	UIDropDownMenu_SetText(langDropdown, GetLangText(curLocale))
+
+	local langOptions = {
+		{ text = GSF.L["LANG_AUTO"], value = "auto" },
+		{ text = GSF.L["LANG_EN"], value = "enUS" },
+		{ text = GSF.L["LANG_DE"], value = "deDE" },
+	}
+
+	UIDropDownMenu_Initialize(langDropdown, function(self, level)
+		for _, opt in ipairs(langOptions) do
+			local info = UIDropDownMenu_CreateInfo()
+			info.text = opt.text
+			info.value = opt.value
+			info.func = function(btn)
+				GSF:SetLanguage(btn.value)
+				UIDropDownMenu_SetSelectedValue(langDropdown, btn.value)
+				UIDropDownMenu_SetText(langDropdown, GetLangText(btn.value))
+				Tab:UpdateTexts()
+			end
+			info.checked = ((GSF.db and GSF.db.selectedLocale or "auto") == opt.value)
+			UIDropDownMenu_AddButton(info, level)
+		end
+	end)
+
+	local toastCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	toastCheck:SetPoint("TOPLEFT", langDropdown, "BOTTOMLEFT", 15, -4)
+	toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
+	toastCheck.text:SetFontObject("GameFontHighlightSmall")
+	toastCheck:SetChecked(GSF.db and GSF.db.enableToasts)
+	self.toastCheck = toastCheck
+
+	toastCheck:SetScript("OnClick", function(cb)
+		GSF.db.enableToasts = cb:GetChecked()
+	end)
+
+	local soundCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -2)
+	soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
+	soundCheck.text:SetFontObject("GameFontHighlightSmall")
+	soundCheck:SetChecked(GSF.db and GSF.db.enableSounds)
+	self.soundCheck = soundCheck
+
+	soundCheck:SetScript("OnClick", function(cb)
+		GSF.db.enableSounds = cb:GetChecked()
+	end)
+
+	local dropAnnounceCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	dropAnnounceCheck:SetPoint("TOPLEFT", soundCheck, "BOTTOMLEFT", 0, -2)
+	dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
+	dropAnnounceCheck.text:SetFontObject("GameFontHighlightSmall")
+	dropAnnounceCheck:SetChecked(GSF.db and GSF.db.announceDropsToParty)
+	self.dropAnnounceCheck = dropAnnounceCheck
+
+	dropAnnounceCheck:SetScript("OnClick", function(cb)
+		GSF.db.announceDropsToParty = cb:GetChecked()
+	end)
 
 	-- Roster Table Header
 	local headerBar = CreateFrame("Frame", nil, frame)
 	headerBar:SetSize(700, 20)
-	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -120)
+	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -135)
 	if BackdropTemplateMixin then Mixin(headerBar, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(headerBar, false)
 	headerBar:SetBackdropColor(0.15, 0.15, 0.20, 0.9)
 
 	local h1 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	h1:SetPoint("LEFT", headerBar, "LEFT", 10, 0)
-	h1:SetText("Character")
+	h1:SetText(GSF.L["TABLE_CHARACTER"])
+	self.h1 = h1
 
 	local h2 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	h2:SetPoint("LEFT", headerBar, "LEFT", 140, 0)
-	h2:SetText("Main Account")
+	h2:SetText(GSF.L["TABLE_MAIN"])
+	self.h2 = h2
 
 	local h3 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	h3:SetPoint("LEFT", headerBar, "LEFT", 260, 0)
-	h3:SetText("Professions")
+	h3:SetText(GSF.L["TABLE_PROFESSIONS"])
+	self.h3 = h3
 
 	local h4 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	h4:SetPoint("RIGHT", headerBar, "RIGHT", -15, 0)
-	h4:SetText("Last Seen")
+	h4:SetText(GSF.L["TABLE_LAST_SEEN"])
+	self.h4 = h4
 
 	-- Roster Table Scroll
-	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 270)
+	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 250)
 	scrollFrame:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -4)
 	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 15)
 	self.content = content
 	self.memberRows = {}
 
 	return frame
+end
+
+function Tab:UpdateTexts()
+	if not self.frame then return end
+	self.mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
+	self.mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
+	self.saveMainBtn:SetText(GSF.L["SAVE_MAIN"])
+	self.syncBtn:SetText(GSF.L["FORCE_SYNC"])
+	self.bugBtn:SetText(GSF.L["REPORT_BUG_BTN"])
+	self.langLabel:SetText(GSF.L["LANGUAGE_LABEL"])
+	self.toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
+	self.soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
+	self.dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
+	self.h1:SetText(GSF.L["TABLE_CHARACTER"])
+	self.h2:SetText(GSF.L["TABLE_MAIN"])
+	self.h3:SetText(GSF.L["TABLE_PROFESSIONS"])
+	self.h4:SetText(GSF.L["TABLE_LAST_SEEN"])
+	self:Refresh()
 end
 
 function Tab:Refresh()
@@ -130,7 +216,7 @@ function Tab:Refresh()
 		end
 	end
 
-	self.statText:SetText(string.format("Cached: %d Members  •  %d Recipes", numMembers, numRecipes))
+	self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
 
 	table.sort(memberList, function(a, b)
 		return (a.lastSeen or 0) > (b.lastSeen or 0)
@@ -183,13 +269,13 @@ function Tab:Refresh()
 				table.insert(profList, string.format("%s (%d)", pName, pData.curRank or 0))
 			end
 		end
-		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or "None recorded")
+		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or "None")
 
 		local mins = math.floor((time() - (member.lastSeen or time())) / 60)
 		if isOnline then
 			row.lastSeen:SetText("|cff00ff00Online|r")
 		elseif mins < 60 then
-			row.lastSeen:SetText(mins .. "m ago")
+			row.lastSeen:SetText(string.format(GSF.L["MINS_AGO"], mins))
 		elseif mins < 1440 then
 			row.lastSeen:SetText(math.floor(mins / 60) .. "h ago")
 		else
@@ -200,5 +286,5 @@ function Tab:Refresh()
 		yOffset = yOffset + 26
 	end
 
-	self.content:SetHeight(math.max(yOffset, 270))
+	self.content:SetHeight(math.max(yOffset, 250))
 end

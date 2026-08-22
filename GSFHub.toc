@@ -2,7 +2,7 @@
 ## Title: GSFHub |cff33ff99(Guild Self-Found Hub)|r
 ## Notes: Decentralized profession manager, crafting work orders, surplus exchange, and recipe drops coordinator for SSF/GSF guilds.
 ## Author: GSF Community
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: GSFHubDB, GSFHubCache
 ## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate
 ## DefaultState: enabled
@@ -11,12 +11,15 @@
 Libs\Libs.xml
 
 # Localization
+Locales\Localization.lua
 Locales\enUS.lua
+Locales\deDE.lua
 
 # Core System
 Core\Constants.lua
 Core\Database.lua
 Core\Alts.lua
+Core\VersionCheck.lua
 Core\Core.lua
 
 # Networking & Communication
@@ -35,6 +38,8 @@ Modules\TradeMail\MailHelper.lua
 # UI & Widgets
 UI\Widgets\Backdrop.lua
 UI\Widgets\Toast.lua
+UI\Widgets\URLDialog.lua
+UI\Widgets\FeedbackDialog.lua
 UI\Minimap.lua
 UI\TradeSkillHook.lua
 UI\Tabs\TabProfessions.lua

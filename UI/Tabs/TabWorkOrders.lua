@@ -160,6 +160,13 @@ function Tab:OpenCreateModal(prefillItem, prefillProf)
 	self.modal:Show()
 end
 
+function Tab:UpdateTexts()
+	if not self.frame then return end
+	if self.filterProfCheck then self.filterProfCheck.text:SetText(GSF.L["FILTER_MY_PROFESSIONS"]) end
+	if self.newOrderBtn then self.newOrderBtn:SetText("+ " .. GSF.L["CREATE_WORK_ORDER"]) end
+	self:Refresh()
+end
+
 function Tab:Refresh()
 	if not self.frame or not self.frame:IsShown() then return end
 
@@ -195,7 +202,7 @@ function Tab:Refresh()
 			statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
 			card.statusText = statusText
 
-			local actionBtn = GSF.UI:CreateButton(card, "Claim", 80, 20)
+			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_ORDER"], 80, 20)
 			actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
 			card.actionBtn = actionBtn
 
@@ -208,7 +215,7 @@ function Tab:Refresh()
 
 		card:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -yOffset)
 
-		local matsStr = order.matsProvided and "|cff00ff00Mats Provided|r" or "|cffff7f00No Mats|r"
+		local matsStr = order.matsProvided and ("|cff00ff00" .. GSF.L["MATS_PROVIDED"] .. "|r") or ("|cffff7f00" .. GSF.L["NO_MATS"] .. "|r")
 		local reqFormatted = GSF.Alts:GetFormattedName(order.requester)
 		
 		card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, order.item, order.count or 1, order.profession or "Any"))
@@ -216,23 +223,23 @@ function Tab:Refresh()
 		card.notes:SetText(order.notes ~= "" and ("Note: " .. order.notes) or "")
 
 		if order.status == GSF.ORDER_STATUS.OPEN then
-			card.statusText:SetText("|cff00ff00OPEN|r")
-			card.actionBtn:SetText("Claim")
+			card.statusText:SetText("|cff00ff00" .. GSF.L["STATUS_OPEN"] .. "|r")
+			card.actionBtn:SetText(GSF.L["CLAIM_ORDER"])
 			card.actionBtn:SetScript("OnClick", function()
 				GSF.WorkOrders:ClaimOrder(order.id)
 				Tab:Refresh()
 			end)
 		elseif order.status == GSF.ORDER_STATUS.CLAIMED then
 			local crafterFormatted = GSF.Alts:GetFormattedName(order.crafter)
-			card.statusText:SetText(string.format("|cffffd100CLAIMED|r by %s", crafterFormatted))
+			card.statusText:SetText(string.format("|cffffd100" .. GSF.L["STATUS_CLAIMED"] .. "|r (%s)", crafterFormatted))
 			if order.crafter == myName or order.requester == myName then
-				card.actionBtn:SetText("Complete")
+				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"])
 				card.actionBtn:SetScript("OnClick", function()
 					GSF.WorkOrders:CompleteOrder(order.id)
 					Tab:Refresh()
 				end)
 			else
-				card.actionBtn:SetText("In Progress")
+				card.actionBtn:SetText(GSF.L["STATUS_CLAIMED"])
 			end
 		end
 
