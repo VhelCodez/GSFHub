@@ -1,0 +1,36 @@
+name: "💡 Feature Request / Suggestion"
+description: "Suggest an idea, enhancement, or quality-of-life improvement for GSFHub"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make GSF / SSF guild communication even better? Let us know!
+
+  - type: input
+    id: summary
+    attributes:
+      label: "Feature Summary"
+      description: "A short, one-sentence summary of your idea."
+      placeholder: "e.g. Add filtering by gem color in the recipe directory"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Detailed Description"
+      description: "Explain how you envision this feature working."
+      placeholder: "I would like to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: "Why would this help GSF / SSF Guilds?"
+      description: "How does this improve the Guild Self-Found experience or communication?"
+      placeholder: "This helps players because..."
+    validations:
+      required: false
