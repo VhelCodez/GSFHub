@@ -1,0 +1,31 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Editor and IDE directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.bak
+
+# Temporary / SavedVariables test files
+*.lua.bak
+*.toc.bak
+*.tmp
+*.log
+WTF/
+Logs/
+Errors/
+Screenshots/
+
+# Release archives
+*.zip
+*.tar.gz

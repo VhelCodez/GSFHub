@@ -1,0 +1,126 @@
+local ADDON_NAME, GSF = ...
+
+local AceAddon = LibStub("AceAddon-3.0")
+local AceEvent = LibStub("AceEvent-3.0")
+local AceTimer = LibStub("AceTimer-3.0")
+local AceConsole = LibStub("AceConsole-3.0")
+
+local GSFHub = AceAddon:NewAddon("GSFHub", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
+GSF.Addon = GSFHub
+
+function GSFHub:OnInitialize()
+	-- Initialize Database & Cache
+	GSF.DB:Initialize()
+
+	-- Register Slash Commands
+	self:RegisterChatCommand("gsf", "HandleSlashCommand")
+	self:RegisterChatCommand("gsfhub", "HandleSlashCommand")
+	self:RegisterChatCommand("gsfcraft", "HandleSlashCommand")
+
+	self:Print(string.format(GSF.L["LOADED_MESSAGE"]))
+end
+
+function GSFHub:OnEnable()
+	-- Register core game events
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("GUILD_ROSTER_UPDATE")
+
+	-- Initialize Minimap Button
+	if GSF.Minimap then
+		GSF.Minimap:Initialize()
+	end
+
+	-- Initialize Network Sync
+	if GSF.Sync then
+		GSF.Sync:Initialize()
+	end
+
+	-- Initialize Modules
+	if GSF.Scanner then
+		GSF.Scanner:Initialize()
+	end
+
+	if GSF.RecipeDrops then
+		GSF.RecipeDrops:Initialize()
+	end
+
+	if GSF.TradeSkillHook then
+		GSF.TradeSkillHook:Initialize()
+	end
+
+	if GSF.TradeHelper then
+		GSF.TradeHelper:Initialize()
+	end
+
+	if GSF.MailHelper then
+		GSF.MailHelper:Initialize()
+	end
+end
+
+function GSFHub:PLAYER_ENTERING_WORLD()
+	local guild = GSF.DB:GetGuildName()
+	if guild then
+		GSF.cache.guildName = guild
+		GSF.cache.realmName = GetRealmName()
+		if GSF.Sync then
+			-- Stagger initial sync to allow guild channel to connect
+			self:ScheduleTimer(function()
+				GSF.Sync:BroadcastHello()
+			end, 3)
+		end
+	end
+end
+
+function GSFHub:GUILD_ROSTER_UPDATE()
+	if IsInGuild() then
+		local numMembers = GetNumGuildMembers()
+		for i = 1, numMembers do
+			local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline = GetGuildRosterInfo(i)
+			if name then
+				local shortName = strsplit("-", name, 2)
+				local member = GSF.DB:EnsureMemberRecord(shortName)
+				if isOnline then
+					member.lastSeen = time()
+				end
+			end
+		end
+	end
+end
+
+function GSFHub:HandleSlashCommand(input)
+	local args = {}
+	for word in string.gmatch(input or "", "%S+") do
+		table.insert(args, word)
+	end
+	local cmd = (args[1] or ""):lower()
+
+	if cmd == "" or cmd == "ui" or cmd == "toggle" then
+		if GSF.MainFrame then
+			GSF.MainFrame:Toggle()
+		end
+	elseif cmd == "scan" then
+		if GSF.Scanner then
+			GSF.Scanner:ScanCurrentWindow()
+		else
+			self:Print("Trade skill scanner not ready.")
+		end
+	elseif cmd == "sync" then
+		if GSF.Sync then
+			GSF.Sync:BroadcastHello(true)
+			self:Print("Broadcasting synchronization request to guild...")
+		end
+	elseif cmd == "main" and args[2] then
+		GSF.Alts:SetMyMain(args[2])
+		self:Printf("Main character set to '%s'.", args[2])
+	elseif cmd == "help" then
+		self:Print("Available Commands:")
+		print("  |cff33ff99/gsf|r - Toggle main interface")
+		print("  |cff33ff99/gsf scan|r - Scan currently open profession window")
+		print("  |cff33ff99/gsf sync|r - Request full synchronization from guild")
+		print("  |cff33ff99/gsf main <Name>|r - Set your main character name")
+	else
+		if GSF.MainFrame then
+			GSF.MainFrame:Toggle()
+		end
+	end
+end

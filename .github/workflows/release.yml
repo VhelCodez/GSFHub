@@ -1,0 +1,40 @@
+name: Package and Release WoW Addon
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package Addon Archive
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          ARCHIVE_NAME="GSFHub-${TAG_NAME}.zip"
+          mkdir -p package/GSFHub
+          
+          # Copy addon files to package directory
+          cp -r GSFHub.toc Libs Locales Core Comm Modules UI README.md package/GSFHub/
+          
+          # Create zip
+          cd package
+          zip -r "../${ARCHIVE_NAME}" GSFHub
+          cd ..
+          
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE_NAME }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
