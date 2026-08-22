@@ -55,6 +55,7 @@ function GSF.Sync:SendMyData(targetName)
 		surplus = GSF.db.mySurplus or {},
 		wishlist = GSF.db.myWishlist or {},
 		orders = GSF.db.myWorkOrders or {},
+		bounties = GSF.cache.bounties or {},
 	}
 
 	if targetName then
@@ -69,6 +70,33 @@ function GSF.Sync:BroadcastAlt(characterName, mainName)
 		char = characterName,
 		main = mainName,
 	}, "GUILD")
+end
+
+function GSF.Sync:BroadcastBountyNew(bounty)
+	self:SendPacket(GSF.OPCODE.BOUNTY_NEW, { bounty = bounty }, "GUILD")
+end
+
+function GSF.Sync:BroadcastBountyClaim(bountyId, claimer, claimerMain)
+	self:SendPacket(GSF.OPCODE.BOUNTY_CLAIM, {
+		id = bountyId,
+		claimer = claimer,
+		claimerMain = claimerMain,
+	}, "GUILD")
+end
+
+function GSF.Sync:BroadcastBountyMailed(bountyId, mailedAt)
+	self:SendPacket(GSF.OPCODE.BOUNTY_MAILED, {
+		id = bountyId,
+		mailedAt = mailedAt,
+	}, "GUILD")
+end
+
+function GSF.Sync:BroadcastBountyFulfill(bountyId)
+	self:SendPacket(GSF.OPCODE.BOUNTY_FULFILL, { id = bountyId }, "GUILD")
+end
+
+function GSF.Sync:BroadcastBountyCancel(bountyId)
+	self:SendPacket(GSF.OPCODE.BOUNTY_CANCEL, { id = bountyId }, "GUILD")
 end
 
 function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
@@ -118,12 +146,19 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 
 		-- Merge work orders
 		if data.orders then
-			for id, order in pairs(data.orders) do
-				GSF.cache.workOrders[id] = order
+			for orderId, order in pairs(data.orders) do
+				GSF.cache.workOrders[orderId] = order
 			end
 		end
 
-		-- Refresh UI if active
+		-- Merge bounties
+		if data.bounties then
+			if not GSF.cache.bounties then GSF.cache.bounties = {} end
+			for bId, b in pairs(data.bounties) do
+				GSF.cache.bounties[bId] = b
+			end
+		end
+
 		if GSF.MainFrame and GSF.MainFrame:IsShown() then
 			GSF.MainFrame:RefreshCurrentTab()
 		end
@@ -132,9 +167,9 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 		if data.order and data.order.id then
 			GSF.cache.workOrders[data.order.id] = data.order
 			
-			-- Check if toast should fire
-			if GSF.WorkOrders then
-				GSF.WorkOrders:OnOrderReceived(data.order, sender)
+			if GSF.Toast and GSF.db.enableToasts then
+				local reqName = GSF.Alts:GetFormattedName(data.order.requester)
+				GSF.Toast:ShowToast(string.format(GSF.L["ORDER_POSTED_TOAST"], data.order.item or "Item", data.order.count or 1, reqName))
 			end
 
 			if GSF.MainFrame and GSF.MainFrame:IsShown() then
@@ -194,6 +229,66 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 	elseif op == GSF.OPCODE.ALT_UPDATE then
 		if data.char and data.main then
 			GSF.Alts:SetMain(data.char, data.main)
+			if GSF.MainFrame and GSF.MainFrame:IsShown() then
+				GSF.MainFrame:RefreshCurrentTab()
+			end
+		end
+
+	-- BOUNTY OPCODES
+	elseif op == GSF.OPCODE.BOUNTY_NEW then
+		if data.bounty and data.bounty.id then
+			if not GSF.cache.bounties then GSF.cache.bounties = {} end
+			GSF.cache.bounties[data.bounty.id] = data.bounty
+
+			if GSF.Toast and GSF.db.enableToasts then
+				local reqName = GSF.Alts:GetFormattedName(data.bounty.requester)
+				local toastMsg = string.format(GSF.L["BOUNTY_POSTED_TOAST"] or "New Bounty: %s x%d requested by %s!", data.bounty.item, data.bounty.count, reqName)
+				GSF.Toast:ShowToast(toastMsg, "Interface\\Icons\\INV_Misc_Coin_02")
+			end
+
+			if GSF.MainFrame and GSF.MainFrame:IsShown() then
+				GSF.MainFrame:RefreshCurrentTab()
+			end
+		end
+
+	elseif op == GSF.OPCODE.BOUNTY_CLAIM then
+		if data.id and GSF.cache.bounties and GSF.cache.bounties[data.id] then
+			local b = GSF.cache.bounties[data.id]
+			b.status = GSF.ORDER_STATUS.CLAIMED
+			b.claimer = data.claimer or sender
+			b.claimerMain = data.claimerMain or data.claimer or sender
+
+			if GSF.MainFrame and GSF.MainFrame:IsShown() then
+				GSF.MainFrame:RefreshCurrentTab()
+			end
+		end
+
+	elseif op == GSF.OPCODE.BOUNTY_MAILED then
+		if data.id and GSF.cache.bounties and GSF.cache.bounties[data.id] then
+			local b = GSF.cache.bounties[data.id]
+			b.status = GSF.ORDER_STATUS.IN_TRANSIT
+			b.mailedAt = data.mailedAt or time()
+
+			if GSF.MainFrame and GSF.MainFrame:IsShown() then
+				GSF.MainFrame:RefreshCurrentTab()
+			end
+		end
+
+	elseif op == GSF.OPCODE.BOUNTY_FULFILL then
+		if data.id and GSF.cache.bounties and GSF.cache.bounties[data.id] then
+			local b = GSF.cache.bounties[data.id]
+			b.status = GSF.ORDER_STATUS.COMPLETED
+			b.completedAt = time()
+
+			if GSF.MainFrame and GSF.MainFrame:IsShown() then
+				GSF.MainFrame:RefreshCurrentTab()
+			end
+		end
+
+	elseif op == GSF.OPCODE.BOUNTY_CANCEL then
+		if data.id and GSF.cache.bounties and GSF.cache.bounties[data.id] then
+			GSF.cache.bounties[data.id].status = GSF.ORDER_STATUS.CANCELLED
+
 			if GSF.MainFrame and GSF.MainFrame:IsShown() then
 				GSF.MainFrame:RefreshCurrentTab()
 			end

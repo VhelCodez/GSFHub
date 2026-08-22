@@ -128,13 +128,32 @@ function Tab:Create(parent)
 		end
 	end)
 
-	local wishlistBtn = GSF.UI:CreateButton(rightPane, GSF.L["WISHLIST_BTN"], 90, 24)
-	wishlistBtn:SetPoint("LEFT", orderBtn, "RIGHT", 10, 0)
+	local wishlistBtn = GSF.UI:CreateButton(rightPane, GSF.L["WISHLIST_BTN"], 80, 24)
+	wishlistBtn:SetPoint("LEFT", orderBtn, "RIGHT", 6, 0)
 	self.wishlistBtn = wishlistBtn
 
 	wishlistBtn:SetScript("OnClick", function()
 		if selectedRecipe and GSF.RecipeDrops then
 			GSF.RecipeDrops:AddToWishlist(selectedRecipe.itemLink or selectedRecipe.name)
+		end
+	end)
+
+	local reqMatsBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_MATS_BTN"] or "Request Mats", 110, 24)
+	reqMatsBtn:SetPoint("LEFT", wishlistBtn, "RIGHT", 6, 0)
+	self.reqMatsBtn = reqMatsBtn
+
+	reqMatsBtn:SetScript("OnClick", function()
+		if selectedRecipe and GSF.SupplyBounties then
+			if selectedRecipe.reagents and #selectedRecipe.reagents > 0 then
+				for _, r in ipairs(selectedRecipe.reagents) do
+					GSF.SupplyBounties:CreateBounty(r.name, r.count, selectedRecipe.profession or "Crafting", "For " .. selectedRecipe.name)
+				end
+			else
+				GSF.SupplyBounties:CreateBounty(selectedRecipe.name, 1, selectedRecipe.profession or "Crafting", "Recipe craft request")
+			end
+			if GSF.MainFrame then
+				GSF.MainFrame:SelectTab(5) -- Switch to Atlas & Bounties
+			end
 		end
 	end)
 
@@ -145,6 +164,7 @@ function Tab:UpdateTexts()
 	if not self.frame then return end
 	if self.orderBtn then self.orderBtn:SetText(GSF.L["REQUEST_CRAFT"]) end
 	if self.wishlistBtn then self.wishlistBtn:SetText(GSF.L["WISHLIST_BTN"]) end
+	if self.reqMatsBtn then self.reqMatsBtn:SetText(GSF.L["REQUEST_MATS_BTN"] or "Request Mats") end
 	if self.onlineCheck then self.onlineCheck.text:SetText(GSF.L["FILTER_ONLINE_ONLY"]) end
 	if not selectedRecipe and self.detailTitle then
 		self.detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"])

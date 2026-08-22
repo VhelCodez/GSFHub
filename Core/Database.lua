@@ -8,6 +8,8 @@ local defaultSettings = {
 	enableSounds = true,
 	announceDropsToParty = true,
 	autoScanOnOpen = true,
+	showGoalsHUD = true,
+	goalsHUDPos = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -20, y = -180 },
 	minimap = {
 		hide = false,
 		minimapPos = 220,
@@ -16,6 +18,8 @@ local defaultSettings = {
 	myWishlist = {},
 	myWorkOrders = {},
 	mySurplus = {},
+	myGoals = {},
+	myRoleTags = {},
 	characterProfessions = {},
 }
 
@@ -24,12 +28,14 @@ local defaultCache = {
 	realmName = "",
 	members = {},
 	workOrders = {},
+	bounties = {},
 	recentDrops = {},
 	alts = {},
 	revisions = {
 		recipes = 0,
 		orders = 0,
 		surplus = 0,
+		bounties = 0,
 	},
 }
 

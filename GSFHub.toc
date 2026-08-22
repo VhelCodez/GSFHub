@@ -1,8 +1,8 @@
 ## Interface: 20506
 ## Title: GSFHub |cff33ff99(Guild Self-Found Hub)|r
-## Notes: Decentralized profession manager, crafting work orders, surplus exchange, and recipe drops coordinator for SSF/GSF guilds.
+## Notes: Decentralized profession manager, crafting work orders, surplus exchange, recipe drops coordinator, 1-375 resource farming atlas, and guild supply chain for SSF/GSF guilds.
 ## Author: GSF Community
-## Version: 1.1.1
+## Version: 1.2.0
 ## SavedVariables: GSFHubDB, GSFHubCache
 ## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate
 ## DefaultState: enabled
@@ -19,6 +19,7 @@ Locales\deDE.lua
 Core\Constants.lua
 Core\Database.lua
 Core\Alts.lua
+Core\Roles.lua
 Core\VersionCheck.lua
 Core\Core.lua
 
@@ -32,6 +33,8 @@ Modules\Professions\RecipeBook.lua
 Modules\WorkOrders\WorkOrders.lua
 Modules\Surplus\SurplusExchange.lua
 Modules\Drops\RecipeDrops.lua
+Modules\Gathering\AtlasData.lua
+Modules\SupplyChain\SupplyBounties.lua
 Modules\TradeMail\TradeHelper.lua
 Modules\TradeMail\MailHelper.lua
 
@@ -40,11 +43,13 @@ UI\Widgets\Backdrop.lua
 UI\Widgets\Toast.lua
 UI\Widgets\URLDialog.lua
 UI\Widgets\FeedbackDialog.lua
+UI\Widgets\GoalsHUD.lua
 UI\Minimap.lua
 UI\TradeSkillHook.lua
 UI\Tabs\TabProfessions.lua
 UI\Tabs\TabWorkOrders.lua
 UI\Tabs\TabSurplus.lua
 UI\Tabs\TabDrops.lua
+UI\Tabs\TabAtlas.lua
 UI\Tabs\TabRoster.lua
 UI\MainFrame.lua

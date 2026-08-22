@@ -8,14 +8,23 @@ This document outlines the version roadmap and upcoming features for **GSFHub (G
 
 ```mermaid
 graph LR
-    v1["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language & Updates</b><br/>(Released)"]
-    v11 --> v12["v1.2.0<br/><b>Gathering & Supply Chain</b><br/>(In Progress)"]
-    v12 --> v13["v1.3.0+<br/><b>Discord & Beyond</b><br/>(Future)"]
+    v1["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
+    v11 --> v12["v1.2.0<br/><b>Gathering & Supply Chain</b><br/>(Released)"]
+    v12 --> v13["v1.3.0+<br/><b>Discord & Beyond</b><br/>(Next Up)"]
 ```
 
 ---
 
 ## 🚀 Released Versions
+
+### ✅ v1.2.0 - Gathering Suite & Guild Supply Chain *(Released)*
+- [x] **1–375 Resource Farming Atlas (`AtlasData.lua`):** Complete encyclopedia of all Vanilla (1–300) and TBC (300–375) resources: Mining, Herbalism, Skinning, Elements/Primals, Cloth, and Fishing.
+- [x] **Crafter ➔ Gatherer Supply Chain Bounties (`SupplyBounties.lua`):** 1-click recipe breakdown turning missing crafting reagents into targeted bounties for guild gatherers.
+- [x] **In-Transit Postal Tracking:** Full postal lifecycle (`OPEN`, `CLAIMED`, `IN_TRANSIT`, `COMPLETED`) with real-time transit duration timer.
+- [x] **3-Factor Verification Handshake:** Automatic mail receipt detection verifying sender, unique bounty token, and item quantities.
+- [x] **Guild Role Specializations (`Roles.lua`):** Role badges (`[⛏️ Miner]`, `[🌿 Herbalist]`, `[🔪 Skinner]`, `[✨ Master Crafter]`) rendered in Roster and tooltips.
+- [x] **Draggable Personal Goals HUD (`GoalsHUD.lua`):** Draggable onscreen tracker with real-time bag loot auto-counters.
+- [x] **Resource Atlas UI Tab (`TabAtlas.lua`):** 6-tab expansion with category/skill filters, search, and 1-click pin/request buttons.
 
 ### ✅ v1.1.0 - Multi-Language Architecture & Version Reminders *(Released)*
 - [x] **Client Auto-Detection:** Automatically detects WoW client locale via `GetLocale()` (defaults to German on `deDE` clients, English `enUS` otherwise).
@@ -39,16 +48,7 @@ graph LR
 
 ## 🔮 Upcoming Milestones
 
-### 🌾 v1.2.0 - Gathering Suite & Guild Supply Chain *(Next Up)*
-- [ ] **Guild Roles System (`Core/Roles.lua`):** Role badges (`Gatherer`, `Crafter`, `Angler/Cook`, `Miner`, `Herbalist`, etc.) with automated profession detection and custom user tags.
-- [ ] **Crafter ➔ Gatherer Bounties (`Modules/SupplyChain/`):** 1-click recipe breakdown turning missing crafting reagents into targeted bounties for guild gatherers.
-- [ ] **TBC Resource Farming Atlas (`Modules/Gathering/Atlas.lua`):** In-game encyclopedia of all TBC nodes (Mining, Herbs, Skinning, Primals, Fish) with required skill, best zones, and food buff notes.
-- [ ] **Personal Farming Goals HUD (`Modules/Gathering/PersonalGoals.lua`):** Set personal quotas (e.g. *200x Furious Crawdad*), track live bag count with a visual progress bar, and 1-click cook or post surplus once complete.
-- [ ] **Gatherer Service Broadcasts (`Modules/Gathering/ServiceOfferings.lua`):** Publish active farming sessions so crafters can whisper active farmers in real-time.
-
----
-
-### 🔮 v1.3.0 & Beyond - Discord Integration & Community Extensions
+### 🔮 v1.3.0 & Beyond - Discord Integration & Community Extensions *(Next Up)*
 - [ ] **Discord Bot & Web Export Integration:** One-click JSON/text export string to view guild crafters, work orders, and known recipes in Discord channels or a web viewer.
 - [ ] **Community-Driven Enhancements:** Future features prioritized based on guild feedback and user suggestions.
 

@@ -137,6 +137,19 @@ function Tab:Create(parent)
 		GSF.db.announceDropsToParty = cb:GetChecked()
 	end)
 
+	local goalsHUDCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	goalsHUDCheck:SetPoint("TOPLEFT", dropAnnounceCheck, "BOTTOMLEFT", 0, -2)
+	goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Goals HUD")
+	goalsHUDCheck.text:SetFontObject("GameFontHighlightSmall")
+	goalsHUDCheck:SetChecked(GSF.db and GSF.db.showGoalsHUD)
+	self.goalsHUDCheck = goalsHUDCheck
+
+	goalsHUDCheck:SetScript("OnClick", function(cb)
+		if GSF.GoalsHUD then
+			GSF.GoalsHUD:Toggle()
+		end
+	end)
+
 	-- Roster Table Header
 	local headerBar = CreateFrame("Frame", nil, frame)
 	headerBar:SetSize(700, 20)
@@ -186,6 +199,7 @@ function Tab:UpdateTexts()
 	self.toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
 	self.soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
 	self.dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
+	if self.goalsHUDCheck then self.goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Goals HUD") end
 	self.h1:SetText(GSF.L["TABLE_CHARACTER"])
 	self.h2:SetText(GSF.L["TABLE_MAIN"])
 	self.h3:SetText(GSF.L["TABLE_PROFESSIONS"])
@@ -260,7 +274,9 @@ function Tab:Refresh()
 		local isOnline = (time() - (member.lastSeen or 0)) < 900
 		local statusDot = isOnline and "|cff00ff00●|r" or "|cff777777●|r"
 
-		row.name:SetText(string.format("%s %s", statusDot, member.name or "Unknown"))
+		local roleBadges = GSF.Roles and GSF.Roles:GetRoleBadgesString(member.name) or ""
+		local nameStr = roleBadges ~= "" and string.format("%s %s %s", statusDot, member.name or "Unknown", roleBadges) or string.format("%s %s", statusDot, member.name or "Unknown")
+		row.name:SetText(nameStr)
 		row.main:SetText(member.main or member.name or "")
 
 		local profList = {}

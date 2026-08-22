@@ -55,6 +55,14 @@ function GSFHub:OnEnable()
 	if GSF.MailHelper then
 		GSF.MailHelper:Initialize()
 	end
+
+	if GSF.SupplyBounties then
+		GSF.SupplyBounties:Initialize()
+	end
+
+	if GSF.GoalsHUD then
+		GSF.GoalsHUD:Initialize()
+	end
 end
 
 function GSFHub:PLAYER_ENTERING_WORLD()
@@ -129,9 +137,20 @@ function GSFHub:HandleSlashCommand(input)
 		end
 	elseif cmd == "version" or cmd == "ver" then
 		self:Printf("GSFHub Version %s (Protocol v%d)", GSF.VERSION, GSF.PROTOCOL_VERSION)
+	elseif cmd == "hud" or cmd == "goals" then
+		if GSF.GoalsHUD then
+			GSF.GoalsHUD:Toggle()
+		end
+	elseif cmd == "atlas" or cmd == "gathering" or cmd == "mats" then
+		if GSF.MainFrame then
+			GSF.MainFrame:Show()
+			GSF.MainFrame:SelectTab(5)
+		end
 	elseif cmd == "help" then
 		self:Print("Available Commands:")
 		print("  |cff33ff99/gsf|r - Toggle main interface")
+		print("  |cff33ff99/gsf atlas|r - Open Resource Farming Atlas & Bounties")
+		print("  |cff33ff99/gsf hud|r - Toggle onscreen Goals HUD tracker")
 		print("  |cff33ff99/gsf scan|r - Scan currently open profession window")
 		print("  |cff33ff99/gsf sync|r - Request full synchronization from guild")
 		print("  |cff33ff99/gsf main <Name>|r - Set your main character name")

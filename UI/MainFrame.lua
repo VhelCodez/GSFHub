@@ -3,7 +3,7 @@ local ADDON_NAME, GSF = ...
 local MainFrame = CreateFrame("Frame", "GSFHubMainFrame", UIParent)
 GSF.MainFrame = MainFrame
 
-local NUM_TABS = 5
+local NUM_TABS = 6
 local tabs = {}
 local tabContents = {}
 local activeTab = 1
@@ -60,7 +60,8 @@ function MainFrame:Initialize()
 	tabContents[2] = GSF.TabWorkOrders:Create(contentArea)
 	tabContents[3] = GSF.TabSurplus:Create(contentArea)
 	tabContents[4] = GSF.TabDrops:Create(contentArea)
-	tabContents[5] = GSF.TabRoster:Create(contentArea)
+	tabContents[5] = GSF.TabAtlas:Create(contentArea)
+	tabContents[6] = GSF.TabRoster:Create(contentArea)
 
 	-- Create Bottom Tabs
 	local tabTitles = {
@@ -68,6 +69,7 @@ function MainFrame:Initialize()
 		GSF.L["TAB_WORK_ORDERS"],
 		GSF.L["TAB_SURPLUS"],
 		GSF.L["TAB_DROPS"],
+		GSF.L["TAB_ATLAS"],
 		GSF.L["TAB_ROSTER"],
 	}
 
@@ -79,7 +81,7 @@ function MainFrame:Initialize()
 			MainFrame:SelectTab(i)
 		end)
 		if i == 1 then
-			tab:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 15, 2)
+			tab:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 10, 2)
 		else
 			tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", -16, 0)
 		end
@@ -108,6 +110,7 @@ function MainFrame:UpdateLocalizedTexts()
 		GSF.L["TAB_WORK_ORDERS"],
 		GSF.L["TAB_SURPLUS"],
 		GSF.L["TAB_DROPS"],
+		GSF.L["TAB_ATLAS"],
 		GSF.L["TAB_ROSTER"],
 	}
 
@@ -121,6 +124,7 @@ function MainFrame:UpdateLocalizedTexts()
 	if GSF.TabWorkOrders and GSF.TabWorkOrders.UpdateTexts then GSF.TabWorkOrders:UpdateTexts() end
 	if GSF.TabSurplus and GSF.TabSurplus.UpdateTexts then GSF.TabSurplus:UpdateTexts() end
 	if GSF.TabDrops and GSF.TabDrops.UpdateTexts then GSF.TabDrops:UpdateTexts() end
+	if GSF.TabAtlas and GSF.TabAtlas.UpdateTexts then GSF.TabAtlas:UpdateTexts() end
 	if GSF.TabRoster and GSF.TabRoster.UpdateTexts then GSF.TabRoster:UpdateTexts() end
 end
 
@@ -153,7 +157,9 @@ function MainFrame:RefreshCurrentTab()
 		GSF.TabSurplus:Refresh()
 	elseif activeTab == 4 and GSF.TabDrops then
 		GSF.TabDrops:Refresh()
-	elseif activeTab == 5 and GSF.TabRoster then
+	elseif activeTab == 5 and GSF.TabAtlas then
+		GSF.TabAtlas:Refresh()
+	elseif activeTab == 6 and GSF.TabRoster then
 		GSF.TabRoster:Refresh()
 	end
 end

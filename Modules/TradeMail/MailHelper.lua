@@ -5,10 +5,12 @@ GSF.MailHelper = {}
 AceEvent:Embed(GSF.MailHelper)
 
 GSF.MailHelper.stagedMail = nil
+local activeSendingBountyId = nil
 
 function GSF.MailHelper:Initialize()
 	self:RegisterEvent("MAIL_SHOW", "OnMailShow")
 	self:RegisterEvent("MAIL_CLOSED", "OnMailClosed")
+	self:RegisterEvent("MAIL_SEND_SUCCESS", "OnMailSendSuccess")
 end
 
 function GSF.MailHelper:PrepareMail(recipient, subject, items)
@@ -16,12 +18,29 @@ function GSF.MailHelper:PrepareMail(recipient, subject, items)
 		recipient = recipient,
 		subject = subject or "GSF Delivery",
 		items = items or {},
+		bountyId = nil,
 	}
 
 	if MailFrame and MailFrame:IsShown() then
 		self:PopulateMail()
 	else
 		GSF.Addon:Printf("Open any Mailbox to auto-fill mail for |cff33ff99%s|r.", recipient)
+	end
+end
+
+function GSF.MailHelper:PrepareBountyMail(recipient, bountyId, itemName, count)
+	local subject = string.format("GSF Bounty: %s (GSF-BT:%s)", itemName, bountyId)
+	self.stagedMail = {
+		recipient = recipient,
+		subject = subject,
+		items = { { name = itemName, count = count } },
+		bountyId = bountyId,
+	}
+
+	if MailFrame and MailFrame:IsShown() then
+		self:PopulateMail()
+	else
+		GSF.Addon:Printf("Open any Mailbox to auto-fill bounty mail for |cff33ff99%s|r.", recipient)
 	end
 end
 
@@ -45,6 +64,8 @@ function GSF.MailHelper:PopulateMail()
 		SendMailSubjectEditBox:SetText(self.stagedMail.subject or "GSF Delivery")
 	end
 
+	activeSendingBountyId = self.stagedMail.bountyId
+
 	-- Stage items into mail attachments
 	if self.stagedMail.items and #self.stagedMail.items > 0 then
 		local mailSlot = 1
@@ -52,7 +73,11 @@ function GSF.MailHelper:PopulateMail()
 			if mailSlot > 12 then break end
 			local bag, slot = GSF.TradeHelper:FindItemInBags(itemInfo.name or itemInfo.link)
 			if bag and slot then
-				C_Container and C_Container.PickupContainerItem and C_Container.PickupContainerItem(bag, slot) or PickupContainerItem(bag, slot)
+				if C_Container and C_Container.PickupContainerItem then
+					C_Container.PickupContainerItem(bag, slot)
+				else
+					PickupContainerItem(bag, slot)
+				end
 				ClickSendMailItemButton(mailSlot)
 				mailSlot = mailSlot + 1
 			end
@@ -63,6 +88,14 @@ function GSF.MailHelper:PopulateMail()
 	self.stagedMail = nil
 end
 
+function GSF.MailHelper:OnMailSendSuccess()
+	if activeSendingBountyId and GSF.SupplyBounties then
+		GSF.SupplyBounties:MarkBountyMailed(activeSendingBountyId)
+		activeSendingBountyId = nil
+	end
+end
+
 function GSF.MailHelper:OnMailClosed()
 	self.stagedMail = nil
+	activeSendingBountyId = nil
 end

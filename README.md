@@ -79,9 +79,10 @@
 
 Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 
+- **v1.0.0 (Released):** Core profession directory, work orders, surplus exchange, recipe drops & P2P sync.
 - **v1.1.0 (Released):** Multi-Language architecture (English & German), in-game language switcher, P2P version gossip & update reminders, and in-game diagnostic bug report helper.
-- **v1.2.0 (In Progress):** Gathering Suite & Guild Supply Chain (Role hierarchy, Crafter ➔ Gatherer bounties, TBC Farming Atlas, Personal Goals HUD).
-- **v1.3.0+ (Future):** Discord integration & community-driven extensions.
+- **v1.2.0 (Released):** Gathering Suite & Guild Supply Chain (1-375 Resource Farming Atlas, Crafter ➔ Gatherer bounties with in-transit mail tracking & 3-factor verification, Role hierarchy badges, and draggable Goals HUD).
+- **v1.3.0+ (Next Up):** Discord integration & community-driven extensions.
 
 ---
 
