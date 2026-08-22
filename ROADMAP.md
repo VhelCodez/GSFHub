@@ -10,7 +10,7 @@ This document outlines the version roadmap and upcoming features for **GSFHub (G
 graph LR
     v1["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(In Progress)"]
     v11 --> v12["v1.2.0<br/><b>Gathering & Supply Chain</b><br/>(Planned)"]
-    v12 --> v13["v1.3.0+<br/><b>Raid & Milestones</b><br/>(Future)"]
+    v12 --> v13["v1.3.0+<br/><b>Discord & Beyond</b><br/>(Future)"]
 ```
 
 ---
@@ -48,11 +48,9 @@ graph LR
 
 ---
 
-### ⚔️ v1.3.0 & Beyond - Raid Coordination & Guild Milestones *(Future Ideas)*
-- [ ] **TBC Attunement Matrix & Key Ring Tracker:** Track dungeon/raid keychains and group attunement progress across guild members.
-- [ ] **Resistance Gear & Cooldown Matrix:** Stockpile coordinator for resistance gear and daily profession cooldowns (Primal Might, Tailoring cloths).
-- [ ] **Guild Self-Found Milestones & Badges:** Hall of fame, guild firsts, and self-found achievement tracking.
-- [ ] **Web & Discord Export Integration:** One-click JSON/text export string to view guild crafters outside of the game.
+### 🔮 v1.3.0 & Beyond - Discord Integration & Community Extensions
+- [ ] **Discord Bot & Web Export Integration:** One-click JSON/text export string to view guild crafters, work orders, and known recipes in Discord channels or a web viewer.
+- [ ] **Community-Driven Enhancements:** Future features prioritized based on guild feedback and user suggestions.
 
 ---
 
