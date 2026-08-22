@@ -71,7 +71,8 @@
   - **Work Orders:** Active requests board and "+ New Work Order" dialog.
   - **Surplus Pool:** Guild material exchange and bag item listing modal.
   - **Drops & Wishlist:** Recent group recipe drops log and personal wishlist manager.
-  - **Roster & Sync:** Main/Alt linking, sync statistics, audio/toast toggles, and guild member roster.
+  - **Resource Atlas:** 1–375 encyclopedic resource database with best farming zones and 1-click Pin to HUD.
+  - **Roster & Sync:** Role badges, Main/Alt linking, sync statistics, audio/toast toggles, and guild member roster.
 
 ---
 
@@ -81,12 +82,15 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 
 - **v1.0.0 (Released):** Core profession directory, work orders, surplus exchange, recipe drops & P2P sync.
 - **v1.1.0 (Released):** Multi-Language architecture (English & German), in-game language switcher, P2P version gossip & update reminders, and in-game diagnostic bug report helper.
-- **v1.2.0 (Released):** Gathering Suite & Guild Supply Chain (1-375 Resource Farming Atlas, Crafter ➔ Gatherer bounties with in-transit mail tracking & 3-factor verification, Role hierarchy badges, and draggable Goals HUD).
-- **v1.3.0+ (Next Up):** Discord integration & community-driven extensions.
+- **v1.2.0 (Released):** Gathering Suite & Guild Supply Chain (1–375 Resource Atlas, Bounties with in-transit mail tracking & 3-Factor Handshake, Role hierarchy badges, and draggable Goals HUD).
+- **v1.3.0 (Next Up):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
+- **v1.4.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
+- **v1.5.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).
+- **v1.6.0 (Planned):** Guild Intelligence, Macro Economy Analytics, Streamlined Stockpile Shortage Watcher & Activity Honor Roll.
 
 ---
 
 ## 🛠️ Architecture & Compatibility
 
-- **Target Engine:** Modern WoW Classic TBC (`Interface: 20504`, compatible with modern Classic Lua/FrameXML).
+- **Target Engine:** Modern WoW Classic TBC (`Interface: 20506`, compatible with modern Classic Lua/FrameXML).
 - **Libraries Embedded:** `LibStub`, `CallbackHandler-1.0`, `AceAddon-3.0`, `AceEvent-3.0`, `AceComm-3.0`, `AceSerializer-3.0`, `AceTimer-3.0`, `AceConsole-3.0`, `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibDeflate`.
