@@ -76,3 +76,16 @@
 ### 10. 📑 Live Walkthrough & CHANGELOG Maintenance Policy
 - Whenever a phase or patch is completed and prepared for release, both **`walkthrough.md`** and **`CHANGELOG.md`** MUST be updated immediately with structured `[Added]`, `[Changed]`, `[Fixed]`, and `[Compatibility]` sections.
 - Guarantees that CurseForge, Wago, and GitHub Releases always have clean, professional, user-facing release notes ready for players.
+
+### 11. 📝 Conventional Commits Standard Policy
+- **Mandatory Format:** All Git commit messages MUST follow the **Conventional Commits v1.0.0** specification: `<type>(<optional-scope>): <short description in present tense>`.
+- **Standard Types:**
+  - `feat`: New user-facing feature (correlates with SemVer MINOR).
+  - `fix`: Bug fix or patch (correlates with SemVer PATCH).
+  - `docs`: Documentation, README, guides, licenses, phase plans.
+  - `ci`: GitHub Actions workflows, deployment scripts, CI/CD configuration.
+  - `refactor`: Code reorganization without changing functional behavior.
+  - `perf`: Performance or memory optimizations.
+  - `test`: Automated verification scripts or unit tests.
+  - `chore`: Tooling or non-functional maintenance.
+- **Auto-Closing Integration:** Always append closing keywords (e.g. `(closes #<id>)` or `(fixes #<id>)`) when resolving an open GitHub Issue.
