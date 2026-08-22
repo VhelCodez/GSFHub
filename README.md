@@ -1,6 +1,15 @@
 # GSFHub (Guild Self-Found Hub) for WoW Classic TBC
 
+[![Latest Release](https://img.shields.io/github/v/release/VhelCodez/GSFHub?color=blue&label=Release)](https://github.com/VhelCodez/GSFHub/releases)
+[![WoW Classic](https://img.shields.io/badge/WoW%20Classic-TBC%202.5.6%20(20506)-orange.svg)](https://wago.tools)
+[![Locales](https://img.shields.io/badge/Locales-English%20%7C%20Deutsch-brightgreen.svg)](Locales/)
+[![Web Guide](https://img.shields.io/badge/Web%20Guide-Live%20Docs-9333ea.svg)](https://vhelcodez.github.io/GSFHub/)
+[![Blizzard Sync](https://img.shields.io/github/actions/workflow/status/VhelCodez/GSFHub/check-client-version.yml?label=Blizzard%20Sync)](https://github.com/VhelCodez/GSFHub/actions)
+[![License](https://img.shields.io/github/license/VhelCodez/GSFHub?color=yellow)](LICENSE)
+
 **GSFHub** is a decentralized, peer-to-peer World of Warcraft Classic TBC addon designed specifically for **Guild Self-Found (GSF)** and **Solo Self-Found (SSF)** guilds. It provides an all-in-one suite for profession coordination, recipe lookups, crafting requests, surplus material sharing, recipe drop distribution, and alt management.
+
+👉 **[Explore the Interactive Web Guide & Documentation](https://vhelcodez.github.io/GSFHub/)**
 
 ---
 

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GSFHub — Guild Self-Found Suite for WoW Classic TBC</title>
+  <meta name="description" content="Decentralized Peer-to-Peer Guild Self-Found (GSF) and Solo Self-Found (SSF) coordination addon for World of Warcraft Classic TBC.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            wow: {
+              gold: '#ffd100',
+              goldLight: '#ffe680',
+              goldDark: '#b39200',
+              border: '#4a3b2c',
+              bgDark: '#0d1117',
+              cardDark: '#161b22',
+              cardBorder: '#30363d',
+              accent: '#38bdf8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #ffe680 0%, #ffd100 50%, #b38b00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .parchment-border {
+      border: 1px solid #4a3b2c;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body class="bg-wow-bgDark text-gray-200 font-sans antialiased selection:bg-wow-gold selection:text-black">
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-wow-bgDark/90 backdrop-blur-md border-b border-wow-cardBorder">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🌿</span>
+        <span class="font-cinzel text-xl font-bold gold-gradient-text tracking-wider">GSFHub</span>
+        <span class="text-xs bg-wow-cardDark border border-wow-cardBorder text-wow-gold font-mono px-2 py-0.5 rounded-full">v1.2.0 (TBC 2.5.6)</span>
+      </div>
+      <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
+        <a href="#features" class="hover:text-wow-gold transition-colors">Features</a>
+        <a href="#commands" class="hover:text-wow-gold transition-colors">Slash Commands</a>
+        <a href="#setup" class="hover:text-wow-gold transition-colors">Guild Setup</a>
+        <a href="#roadmap" class="hover:text-wow-gold transition-colors">Roadmap</a>
+        <a href="https://github.com/VhelCodez/GSFHub" target="_blank" class="flex items-center space-x-1.5 text-white hover:text-wow-gold transition-colors">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a href="https://github.com/VhelCodez/GSFHub/releases/latest" class="bg-wow-gold hover:bg-wow-goldLight text-black font-semibold px-4 py-1.5 rounded-lg shadow transition-all duration-200">
+          Download ZIP
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative py-20 overflow-hidden border-b border-wow-cardBorder bg-gradient-to-b from-wow-bgDark via-[#121820] to-wow-bgDark">
+    <div class="max-w-5xl mx-auto px-4 text-center">
+      <div class="inline-flex items-center space-x-2 bg-wow-cardDark border border-wow-cardBorder px-3 py-1 rounded-full text-xs font-mono text-wow-gold mb-6">
+        <span>⚡ Version 1.2.0 Live</span>
+        <span>•</span>
+        <span>WoW Classic TBC 2.5.6 Ready</span>
+      </div>
+      <h1 class="font-cinzel text-4xl sm:text-6xl font-extrabold gold-gradient-text mb-6 tracking-wide leading-tight">
+        Decentralized Guild Self-Found Suite
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
+        Coordinate professions, work orders, surplus materials, recipe drops, and a complete 1–375 resource farming supply chain with <strong>zero external servers</strong>. 100% peer-to-peer over the hidden in-game guild channel.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="https://github.com/VhelCodez/GSFHub/releases/latest" class="bg-wow-gold hover:bg-wow-goldLight text-black font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-wow-gold/20 transition-all text-base flex items-center space-x-2">
+          <span>📦 Download Latest Release (v1.2.0)</span>
+        </a>
+        <a href="#features" class="bg-wow-cardDark hover:bg-[#21262d] border border-wow-cardBorder text-gray-200 font-semibold px-8 py-3.5 rounded-xl transition-all text-base">
+          Explore Features
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Section -->
+  <section id="features" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text mb-4">Complete Feature Ecosystem</h2>
+      <p class="text-gray-400 max-w-2xl mx-auto">Everything your guild needs to thrive in a self-found environment without auction house dependencies.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <!-- Feature 1 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          📖
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">Offline Recipe Directory</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Auto-scans 10 trade skills. Search any recipe, item, or reagent across all guild crafters—even when they are offline! Includes 1-click craft request integration.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          📋
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">Crafting Work Orders</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Post custom crafting and enchanting requests with material toggles (<code class="text-xs text-wow-gold">Mats Provided</code> vs <code class="text-xs text-wow-gold">No Mats</code>), quantity, and notes. Crafters claim orders to prevent duplicate work.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          📦
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">Surplus Material Stockpile</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Share surplus ores, herbs, cloth, gems, and consumables directly from your bags. Browse the virtual guild stockpile and request materials with 1 click.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          🗺️
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">1–375 Resource Farming Atlas</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Complete Vanilla (1–300) and TBC (300–375) encyclopedic database for Mining, Herbalism, Skinning, Elements/Primals, Cloth, and Fishing with optimal farming locations.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          📬
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">Supply Bounties & Postal Handshake</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          1-click recipe breakdown into gathering bounties. Features full <code class="text-xs text-wow-gold">IN_TRANSIT</code> tracking and a <strong>3-Factor Handshake</strong> auto-detecting mail arrival and bag loot.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl p-6 hover:border-wow-gold/50 transition-all group">
+        <div class="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+          🎯
+        </div>
+        <h3 class="font-cinzel text-xl font-bold text-white mb-2">Draggable Personal Goals HUD</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Movable onscreen overlay with visual progress bars and live bag loot auto-counters. Pin items from the Resource Atlas or active Guild Bounties with 1 click.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Slash Commands Cheat Sheet -->
+  <section id="commands" class="py-16 bg-wow-cardDark/50 border-y border-wow-cardBorder">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center mb-10">
+        <h2 class="font-cinzel text-3xl font-bold gold-gradient-text mb-2">Slash Commands Reference</h2>
+        <p class="text-gray-400 text-sm">Quick in-game commands to access any view instantly.</p>
+      </div>
+
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-2xl overflow-hidden shadow-2xl">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-[#121820] text-gray-400 font-mono text-xs uppercase border-b border-wow-cardBorder">
+            <tr>
+              <th class="py-3 px-6">Command</th>
+              <th class="py-3 px-6">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-wow-cardBorder font-mono text-xs">
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Toggle the main GSFHub interface window.</td>
+            </tr>
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf atlas</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Open directly to the 1–375 Resource Farming Atlas & Bounties tab.</td>
+            </tr>
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf hud</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Toggle the onscreen Personal Goals HUD overlay.</td>
+            </tr>
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf scan</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Manually trigger a profession scan and broadcast updates to the guild.</td>
+            </tr>
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf bug</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Open the in-game Diagnostic & Bug Report copy modal.</td>
+            </tr>
+            <tr class="hover:bg-[#1a202c]/50 transition-colors">
+              <td class="py-3 px-6 text-wow-gold font-bold">/gsf help</td>
+              <td class="py-3 px-6 text-gray-300 font-sans">Display all available slash commands in chat.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Guild Setup Guide -->
+  <section id="setup" class="py-20 max-w-5xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="font-cinzel text-3xl font-bold gold-gradient-text mb-3">Guild Leader & Officer Quick Start</h2>
+      <p class="text-gray-400 text-sm">Getting your guild set up with GSFHub takes less than 2 minutes.</p>
+    </div>
+
+    <div class="space-y-6">
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-xl p-6 flex items-start space-x-4">
+        <span class="w-8 h-8 bg-wow-gold/10 border border-wow-gold/30 rounded-lg flex items-center justify-center font-bold text-wow-gold shrink-0">1</span>
+        <div>
+          <h3 class="font-bold text-white text-base mb-1">Install the Addon</h3>
+          <p class="text-sm text-gray-400">Download and extract the <code class="text-xs text-wow-gold">GSFHub</code> folder directly into your <code class="text-xs text-gray-300">World of Warcraft/_classic_/Interface/AddOns/</code> directory.</p>
+        </div>
+      </div>
+
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-xl p-6 flex items-start space-x-4">
+        <span class="w-8 h-8 bg-wow-gold/10 border border-wow-gold/30 rounded-lg flex items-center justify-center font-bold text-wow-gold shrink-0">2</span>
+        <div>
+          <h3 class="font-bold text-white text-base mb-1">Open Trade Skills Once</h3>
+          <p class="text-sm text-gray-400">Open your character's profession windows (e.g. Tailoring, Alchemy, Blacksmithing). GSFHub silently indexes all known recipes and assigns your guild role badges (<code class="text-xs text-wow-gold">[✨ Master Crafter]</code>, <code class="text-xs text-wow-gold">[🌿 Herbalist]</code>).</p>
+        </div>
+      </div>
+
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-xl p-6 flex items-start space-x-4">
+        <span class="w-8 h-8 bg-wow-gold/10 border border-wow-gold/30 rounded-lg flex items-center justify-center font-bold text-wow-gold shrink-0">3</span>
+        <div>
+          <h3 class="font-bold text-white text-base mb-1">Automatic Peer-to-Peer Mesh</h3>
+          <p class="text-sm text-gray-400">No server or database setup required! As guild members log in, GSFHub exchanges differential compressed packets automatically over the hidden guild communication channel.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-wow-cardBorder py-10 bg-wow-bgDark text-center text-xs text-gray-500 font-mono">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span>🌿 GSFHub</span>
+        <span>•</span>
+        <span>Created for Guild Self-Found Communities</span>
+      </div>
+      <div class="flex items-center space-x-6">
+        <a href="https://github.com/VhelCodez/GSFHub" class="hover:text-wow-gold transition-colors">GitHub</a>
+        <a href="https://github.com/VhelCodez/GSFHub/releases" class="hover:text-wow-gold transition-colors">Releases</a>
+        <a href="https://github.com/VhelCodez/GSFHub/blob/main/CHANGELOG.md" class="hover:text-wow-gold transition-colors">Changelog</a>
+        <a href="https://github.com/VhelCodez/GSFHub/issues" class="hover:text-wow-gold transition-colors">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
