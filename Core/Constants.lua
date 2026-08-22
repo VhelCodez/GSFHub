@@ -1,7 +1,7 @@
 local ADDON_NAME, GSF = ...
 
 GSF.COMM_PREFIX = "GSFHUB"
-GSF.VERSION = "1.1.0"
+GSF.VERSION = "1.1.1"
 GSF.PROTOCOL_VERSION = 1
 
 -- Download & Issue Tracker URLs (CurseForge ready)
