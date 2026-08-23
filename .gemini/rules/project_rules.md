@@ -96,3 +96,7 @@
   - `test`: Automated verification scripts or unit tests.
   - `chore`: Tooling or non-functional maintenance.
 - **Auto-Closing Integration:** Always append closing keywords (e.g. `(closes #<id>)` or `(fixes #<id>)`) when resolving an open GitHub Issue.
+
+### 12. 💡 Ideas Incubator & Backlog Policy
+- **Mandatory Storage for Unplanned Ideas:** Any temporary, unassigned, future, or exploratory ideas discussed during brainstorming MUST be stored persistently in **`.gemini/ideas/`** (e.g. `idea_incubator.md` or topic-specific markdown files).
+- **Scope Protection:** Keeps active phase implementation plans strictly focused and scoped while guaranteeing that zero creative thoughts or future feature concepts are forgotten.
