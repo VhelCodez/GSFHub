@@ -38,6 +38,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            echo "Release ${{ github.ref_name }} already exists. Recreating release..."
+            gh release delete "${{ github.ref_name }}" --yes
+          fi
           gh release create "${{ github.ref_name }}" "${ARCHIVE_NAME}" \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
