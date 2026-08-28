@@ -185,10 +185,20 @@ end
 
 function Tab:UpdateTexts()
 	if not self.frame then return end
+	if self.searchLabel then self.searchLabel:SetText(GSF.L["SEARCH_RECIPES"]) end
+	if self.filterLabel then self.filterLabel:SetText(GSF.L["PROFESSION"] or "Profession:") end
+	if self.filterBtn and self.getProfFilter then
+		local cur = self.getProfFilter()
+		local locText = (cur == "ALL") and GSF.L["FILTER_ALL_PROFESSIONS"] or GSF:GetLocalizedProfession(cur)
+		UIDropDownMenu_SetText(self.filterBtn, locText)
+	end
+	if self.onlineCheck then self.onlineCheck.text:SetText(GSF.L["FILTER_ONLINE_ONLY"]) end
+	if self.emptyText then self.emptyText:SetText(GSF.L["NO_RECIPES_FOUND"]) end
+	if self.reagentsLabel then self.reagentsLabel:SetText(GSF.L["REAGENTS_REQUIRED"]) end
+	if self.craftersLabel then self.craftersLabel:SetText(GSF.L["CRAFTERS_KNOWN"]) end
 	if self.orderBtn then self.orderBtn:SetText(GSF.L["REQUEST_CRAFT"]) end
 	if self.wishlistBtn then self.wishlistBtn:SetText(GSF.L["WISHLIST_BTN"]) end
 	if self.reqMatsBtn then self.reqMatsBtn:SetText(GSF.L["REQUEST_MATS_BTN"] or "Request Mats") end
-	if self.onlineCheck then self.onlineCheck.text:SetText(GSF.L["FILTER_ONLINE_ONLY"]) end
 	if not selectedRecipe and self.detailTitle then
 		self.detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"])
 	end

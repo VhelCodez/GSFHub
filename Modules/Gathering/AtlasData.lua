@@ -926,8 +926,33 @@ local ATLAS_DB = {
 	},
 }
 
+local LOCALIZED_NODES_DE = {
+	["Copper Vein"] = "Kupfervorkommen",
+	["Tin Vein"] = "Zinnvorkommen",
+	["Silver Vein"] = "Silbervorkommen",
+	["Iron Deposit"] = "Eisenvorkommen",
+	["Gold Vein"] = "Goldvorkommen",
+	["Mithril Deposit"] = "Mithrilvorkommen",
+	["Truesilver Deposit"] = "Echtsilbervorkommen",
+	["Small Thorium Vein"] = "Kleines Thoriumvorkommen",
+	["Rich Thorium Vein"] = "Reiches Thoriumvorkommen",
+	["Dark Iron Deposit"] = "Dunkeleisenvorkommen",
+	["Fel Iron Deposit"] = "Teufelseisenvorkommen",
+	["Adamantite Deposit"] = "Adamantitvorkommen",
+	["Rich Adamantite Deposit"] = "Reiches Adamantitvorkommen",
+	["Khorium Vein"] = "Khoriumvorkommen",
+	["Nethercite Deposit"] = "Netherzitvorkommen",
+}
+
 function GSF.Atlas:GetDisplayName(entry)
 	if not entry then return "" end
+	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
+	if lang == "deDE" and LOCALIZED_NODES_DE[entry.name] then
+		return LOCALIZED_NODES_DE[entry.name]
+	end
+	if entry.category == "Mining" then
+		return entry.name
+	end
 	if entry.itemID then
 		local itemName = GetItemInfo and GetItemInfo(entry.itemID)
 		if itemName and itemName ~= "" then

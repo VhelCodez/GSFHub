@@ -207,6 +207,10 @@ end
 function Tab:UpdateTexts()
 	if not self.frame then return end
 	if self.searchLabel then self.searchLabel:SetText(GSF.L["SEARCH_ATLAS"]) end
+	if self.catDropdown then
+		local cat = activeCategory or "All"
+		UIDropDownMenu_SetText(self.catDropdown, GSF.L["CAT_" .. cat:upper()] or cat)
+	end
 	if self.atlasViewBtn then self.atlasViewBtn:SetText(GSF.L["VIEW_ATLAS"]) end
 	if self.bountyViewBtn then self.bountyViewBtn:SetText(GSF.L["VIEW_BOUNTIES"]) end
 	if self.zonesLabel then self.zonesLabel:SetText(GSF.L["BEST_FARMING_ZONES"]) end

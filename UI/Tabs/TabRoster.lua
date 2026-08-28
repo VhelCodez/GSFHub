@@ -55,114 +55,10 @@ function Tab:Create(parent)
 	statText:SetPoint("LEFT", syncBtn, "RIGHT", 12, 0)
 	self.statText = statText
 
-	-- Bug Report / Feedback Button (Left under sync)
-	local bugBtn = GSF.UI:CreateButton(frame, GSF.L["REPORT_BUG_BTN"], 200, 22)
-	bugBtn:SetPoint("TOPLEFT", syncBtn, "BOTTOMLEFT", 0, -8)
-	self.bugBtn = bugBtn
-
-	bugBtn:SetScript("OnClick", function()
-		if GSF.FeedbackDialog then
-			GSF.FeedbackDialog:Show()
-		end
-	end)
-
-	-- Settings Section (Top Right)
-	local langLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	langLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 430, -12)
-	langLabel:SetText(GSF.L["LANGUAGE_LABEL"])
-	self.langLabel = langLabel
-
-	local langDropdown = CreateFrame("Button", "GSFLangDropdown", frame, "UIDropDownMenuTemplate")
-	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, 2)
-	UIDropDownMenu_SetWidth(langDropdown, 160)
-	self.langDropdown = langDropdown
-
-	local function GetLangText(code)
-		if code == "deDE" then return GSF.L["LANG_DE"]
-		elseif code == "enUS" then return GSF.L["LANG_EN"]
-		else return GSF.L["LANG_AUTO"] end
-	end
-
-	local curLocale = GSF.db and GSF.db.selectedLocale or "auto"
-	UIDropDownMenu_SetText(langDropdown, GetLangText(curLocale))
-
-	local langOptions = {
-		{ text = GSF.L["LANG_AUTO"], value = "auto" },
-		{ text = GSF.L["LANG_EN"], value = "enUS" },
-		{ text = GSF.L["LANG_DE"], value = "deDE" },
-	}
-
-	UIDropDownMenu_Initialize(langDropdown, function(self, level)
-		for _, opt in ipairs(langOptions) do
-			local info = UIDropDownMenu_CreateInfo()
-			info.text = opt.text
-			info.value = opt.value
-			info.func = function(btn)
-				GSF:SetLanguage(btn.value)
-				UIDropDownMenu_SetSelectedValue(langDropdown, btn.value)
-				UIDropDownMenu_SetText(langDropdown, GetLangText(btn.value))
-				Tab:UpdateTexts()
-			end
-			info.checked = ((GSF.db and GSF.db.selectedLocale or "auto") == opt.value)
-			UIDropDownMenu_AddButton(info, level)
-		end
-	end)
-
-	-- 2-column layout for checkboxes to keep well clear of table header at Y = -135
-	local toastCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	toastCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 425, -54)
-	toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
-	toastCheck.text:SetFontObject("GameFontHighlightSmall")
-	toastCheck.text:SetPoint("LEFT", toastCheck, "RIGHT", 2, 1)
-	toastCheck:SetChecked(GSF.db and GSF.db.enableToasts)
-	self.toastCheck = toastCheck
-
-	toastCheck:SetScript("OnClick", function(cb)
-		GSF.db.enableToasts = cb:GetChecked()
-	end)
-
-	local soundCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -4)
-	soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
-	soundCheck.text:SetFontObject("GameFontHighlightSmall")
-	soundCheck.text:SetPoint("LEFT", soundCheck, "RIGHT", 2, 1)
-	soundCheck:SetChecked(GSF.db and GSF.db.enableSounds)
-	self.soundCheck = soundCheck
-
-	soundCheck:SetScript("OnClick", function(cb)
-		GSF.db.enableSounds = cb:GetChecked()
-	end)
-
-	local dropAnnounceCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	dropAnnounceCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 565, -54)
-	dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
-	dropAnnounceCheck.text:SetFontObject("GameFontHighlightSmall")
-	dropAnnounceCheck.text:SetPoint("LEFT", dropAnnounceCheck, "RIGHT", 2, 1)
-	dropAnnounceCheck:SetChecked(GSF.db and GSF.db.announceDropsToParty)
-	self.dropAnnounceCheck = dropAnnounceCheck
-
-	dropAnnounceCheck:SetScript("OnClick", function(cb)
-		GSF.db.announceDropsToParty = cb:GetChecked()
-	end)
-
-	local goalsHUDCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	goalsHUDCheck:SetPoint("TOPLEFT", dropAnnounceCheck, "BOTTOMLEFT", 0, -4)
-	goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Goals HUD")
-	goalsHUDCheck.text:SetFontObject("GameFontHighlightSmall")
-	goalsHUDCheck.text:SetPoint("LEFT", goalsHUDCheck, "RIGHT", 2, 1)
-	goalsHUDCheck:SetChecked(GSF.db and GSF.db.showGoalsHUD)
-	self.goalsHUDCheck = goalsHUDCheck
-
-	goalsHUDCheck:SetScript("OnClick", function(cb)
-		if GSF.GoalsHUD then
-			GSF.GoalsHUD:Toggle()
-		end
-	end)
-
-	-- Roster Table Header
+	-- Roster Table Header (moved up with settings separated)
 	local headerBar = CreateFrame("Frame", nil, frame)
 	headerBar:SetSize(700, 20)
-	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -135)
+	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -68)
 	if BackdropTemplateMixin then Mixin(headerBar, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(headerBar, false)
 	headerBar:SetBackdropColor(0.15, 0.15, 0.20, 0.9)
@@ -187,8 +83,8 @@ function Tab:Create(parent)
 	h4:SetText(GSF.L["TABLE_LAST_SEEN"])
 	self.h4 = h4
 
-	-- Roster Table Scroll
-	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 250)
+	-- Roster Table Scroll (expanded to 340 height)
+	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 340)
 	scrollFrame:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -4)
 	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 15)
 	self.content = content
@@ -199,20 +95,14 @@ end
 
 function Tab:UpdateTexts()
 	if not self.frame then return end
-	self.mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
-	self.mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
-	self.saveMainBtn:SetText(GSF.L["SAVE_MAIN"])
-	self.syncBtn:SetText(GSF.L["FORCE_SYNC"])
-	self.bugBtn:SetText(GSF.L["REPORT_BUG_BTN"])
-	self.langLabel:SetText(GSF.L["LANGUAGE_LABEL"])
-	self.toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
-	self.soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
-	self.dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
-	if self.goalsHUDCheck then self.goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Goals HUD") end
-	self.h1:SetText(GSF.L["TABLE_CHARACTER"])
-	self.h2:SetText(GSF.L["TABLE_MAIN"])
-	self.h3:SetText(GSF.L["TABLE_PROFESSIONS"])
-	self.h4:SetText(GSF.L["TABLE_LAST_SEEN"])
+	if self.mainLabel then self.mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"]) end
+	if self.mainPrompt then self.mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"]) end
+	if self.saveMainBtn then self.saveMainBtn:SetText(GSF.L["SAVE_MAIN"]) end
+	if self.syncBtn then self.syncBtn:SetText(GSF.L["FORCE_SYNC"]) end
+	if self.h1 then self.h1:SetText(GSF.L["TABLE_CHARACTER"]) end
+	if self.h2 then self.h2:SetText(GSF.L["TABLE_MAIN"]) end
+	if self.h3 then self.h3:SetText(GSF.L["TABLE_PROFESSIONS"]) end
+	if self.h4 then self.h4:SetText(GSF.L["TABLE_LAST_SEEN"]) end
 	self:Refresh()
 end
 

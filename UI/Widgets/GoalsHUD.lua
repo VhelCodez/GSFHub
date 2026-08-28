@@ -44,7 +44,6 @@ function GSF.GoalsHUD:Initialize()
 	hideTex:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
 	hideBtn:SetScript("OnClick", function()
 		f:Hide()
-		if GSF.db then GSF.db.showGoalsHUD = false end
 	end)
 
 	-- Scroll content
@@ -52,6 +51,23 @@ function GSF.GoalsHUD:Initialize()
 	content:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -24)
 	content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -6, 6)
 	f.content = content
+
+	-- Empty state prompt
+	local emptyText = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	emptyText:SetPoint("CENTER", content, "CENTER", 0, 0)
+	emptyText:SetWidth(200)
+	emptyText:SetJustifyH("CENTER")
+	emptyText:SetText(GSF.L["HUD_EMPTY_PROMPT"] or "No active goals. Pin a resource from the Atlas!")
+	f.emptyText = emptyText
+
+	f:SetScript("OnShow", function()
+		if GSF.db then GSF.db.showGoalsHUD = true end
+		GSF.GoalsHUD:NotifyStateChange()
+	end)
+	f:SetScript("OnHide", function()
+		if GSF.db then GSF.db.showGoalsHUD = false end
+		GSF.GoalsHUD:NotifyStateChange()
+	end)
 
 	hudFrame = f
 
@@ -66,7 +82,7 @@ function GSF.GoalsHUD:Initialize()
 	end)
 	self.bagWatcher = bagWatcher
 
-	if GSF.db and GSF.db.showGoalsHUD and GSF.db.myGoals and #GSF.db.myGoals > 0 then
+	if GSF.db and GSF.db.showGoalsHUD then
 		hudFrame:Show()
 		self:Refresh()
 	else
@@ -216,17 +232,53 @@ function GSF.GoalsHUD:Refresh()
 		yOffset = yOffset + 32
 	end
 
-	hudFrame:SetHeight(math.max(yOffset + 34, 45))
+	local count = GSF.db.myGoals and #GSF.db.myGoals or 0
+	if count == 0 then
+		if hudFrame.emptyText then
+			hudFrame.emptyText:SetText(GSF.L["HUD_EMPTY_PROMPT"] or "No active goals. Pin a resource from the Atlas!")
+			hudFrame.emptyText:Show()
+		end
+		hudFrame:SetHeight(65)
+	else
+		if hudFrame.emptyText then
+			hudFrame.emptyText:Hide()
+		end
+		hudFrame:SetHeight(math.max(yOffset + 34, 45))
+	end
 end
 
-function GSF.GoalsHUD:Toggle()
+function GSF.GoalsHUD:IsShown()
+	return (hudFrame and hudFrame:IsShown()) and true or false
+end
+
+function GSF.GoalsHUD:SetShown(show)
 	if not hudFrame then self:Initialize() end
-	if hudFrame:IsShown() then
-		hudFrame:Hide()
-		if GSF.db then GSF.db.showGoalsHUD = false end
-	else
+	if show then
 		hudFrame:Show()
 		if GSF.db then GSF.db.showGoalsHUD = true end
 		self:Refresh()
+	else
+		hudFrame:Hide()
+		if GSF.db then GSF.db.showGoalsHUD = false end
+	end
+	self:NotifyStateChange()
+end
+
+function GSF.GoalsHUD:Toggle()
+	self:SetShown(not self:IsShown())
+end
+
+function GSF.GoalsHUD:ResetPosition()
+	if not hudFrame then self:Initialize() end
+	hudFrame:ClearAllPoints()
+	hudFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -180)
+	if GSF.db then
+		GSF.db.goalsHUDPos = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -20, y = -180 }
+	end
+end
+
+function GSF.GoalsHUD:NotifyStateChange()
+	if GSF.TabSettings and GSF.TabSettings.goalsHUDCheck then
+		GSF.TabSettings.goalsHUDCheck:SetChecked(self:IsShown())
 	end
 end

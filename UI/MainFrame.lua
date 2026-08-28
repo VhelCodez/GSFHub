@@ -6,7 +6,10 @@ GSF.MainFrame = MainFrame
 local NUM_TABS = 6
 local tabs = {}
 local tabContents = {}
+local tabSettings = nil
 local activeTab = 1
+local lastActiveTab = 1
+local inSettings = false
 
 function MainFrame:Initialize()
 	self:SetSize(760, 480)
@@ -33,7 +36,7 @@ function MainFrame:Initialize()
 	-- Update Badge (Hidden by default, shown when newer version is detected)
 	local updateBtn = CreateFrame("Button", "GSFHubUpdateBadge", self, "UIPanelButtonTemplate")
 	updateBtn:SetSize(130, 20)
-	updateBtn:SetPoint("RIGHT", self, "TOPRIGHT", -38, -16)
+	updateBtn:SetPoint("RIGHT", self, "TOPRIGHT", -65, -16)
 	updateBtn:Hide()
 	updateBtn:SetScript("OnClick", function()
 		if GSF.VersionCheck then
@@ -49,6 +52,25 @@ function MainFrame:Initialize()
 		self:Hide()
 	end)
 
+	-- Settings Cog Button (Top Right next to Close)
+	local settingsBtn = CreateFrame("Button", "GSFHubSettingsButton", self)
+	settingsBtn:SetSize(22, 22)
+	settingsBtn:SetPoint("RIGHT", closeBtn, "LEFT", 2, 0)
+	local setTex = settingsBtn:CreateTexture(nil, "ARTWORK")
+	setTex:SetAllPoints()
+	setTex:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+	settingsBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+	settingsBtn:SetScript("OnEnter", function(b)
+		GameTooltip:SetOwner(b, "ANCHOR_TOP")
+		GameTooltip:SetText(GSF.L["SETTINGS"] or "Settings", 1, 1, 1)
+		GameTooltip:Show()
+	end)
+	settingsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	settingsBtn:SetScript("OnClick", function()
+		MainFrame:ToggleSettings()
+	end)
+	self.settingsBtn = settingsBtn
+
 	-- Container for tab contents
 	local contentArea = CreateFrame("Frame", nil, self)
 	contentArea:SetPoint("TOPLEFT", self, "TOPLEFT", 10, -40)
@@ -62,6 +84,13 @@ function MainFrame:Initialize()
 	tabContents[4] = GSF.TabDrops:Create(contentArea)
 	tabContents[5] = GSF.TabAtlas:Create(contentArea)
 	tabContents[6] = GSF.TabRoster:Create(contentArea)
+
+	-- Instantiate Settings view inside contentArea
+	if GSF.TabSettings then
+		tabSettings = GSF.TabSettings:Create(contentArea)
+		tabSettings:Hide()
+		self.tabSettings = tabSettings
+	end
 
 	-- Create Bottom Tabs
 	local tabTitles = {
@@ -132,6 +161,7 @@ function MainFrame:UpdateLocalizedTexts()
 	if GSF.TabDrops and GSF.TabDrops.UpdateTexts then GSF.TabDrops:UpdateTexts() end
 	if GSF.TabAtlas and GSF.TabAtlas.UpdateTexts then GSF.TabAtlas:UpdateTexts() end
 	if GSF.TabRoster and GSF.TabRoster.UpdateTexts then GSF.TabRoster:UpdateTexts() end
+	if GSF.TabSettings and GSF.TabSettings.UpdateTexts then GSF.TabSettings:UpdateTexts() end
 end
 
 function MainFrame:ShowUpdateBadge(remoteVersion)
@@ -140,8 +170,43 @@ function MainFrame:ShowUpdateBadge(remoteVersion)
 	self.updateBtn:Show()
 end
 
+function MainFrame:OpenSettings()
+	inSettings = true
+	for i = 1, NUM_TABS do
+		tabContents[i]:Hide()
+		PanelTemplates_DeselectTab(tabs[i])
+	end
+	if self.tabSettings then
+		self.tabSettings:Show()
+		if GSF.TabSettings then
+			GSF.TabSettings:Refresh()
+		end
+	end
+end
+
+function MainFrame:CloseSettings()
+	inSettings = false
+	if self.tabSettings then
+		self.tabSettings:Hide()
+	end
+	self:SelectTab(lastActiveTab or 1)
+end
+
+function MainFrame:ToggleSettings()
+	if inSettings then
+		self:CloseSettings()
+	else
+		self:OpenSettings()
+	end
+end
+
 function MainFrame:SelectTab(id)
+	inSettings = false
+	if self.tabSettings then
+		self.tabSettings:Hide()
+	end
 	activeTab = id
+	lastActiveTab = id
 	for i = 1, NUM_TABS do
 		if i == id then
 			tabContents[i]:Show()
@@ -155,6 +220,10 @@ function MainFrame:SelectTab(id)
 end
 
 function MainFrame:RefreshCurrentTab()
+	if inSettings and GSF.TabSettings then
+		GSF.TabSettings:Refresh()
+		return
+	end
 	if activeTab == 1 and GSF.TabProfessions then
 		GSF.TabProfessions:Refresh()
 	elseif activeTab == 2 and GSF.TabWorkOrders then

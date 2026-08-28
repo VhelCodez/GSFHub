@@ -9,10 +9,28 @@ function GSF.RecipeDrops:Initialize()
 	self:RegisterEvent("LOOT_OPENED", "OnLootOpened")
 end
 
-function GSF.RecipeDrops:AddToWishlist(itemLink)
-	if not itemLink then return end
-	local itemName = GetItemInfo(itemLink) or itemLink
-	local itemId = tonumber(itemLink:match("item:(%d+)") or 0)
+function GSF.RecipeDrops:AddToWishlist(input)
+	if not input or input:trim() == "" then return end
+	local trimmed = input:trim()
+
+	local itemName, itemLink = GetItemInfo(trimmed)
+	local itemId = tonumber(trimmed:match("item:(%d+)") or 0)
+
+	-- If plain text input that isn't a known item and doesn't look like a real name
+	if not itemName and itemId == 0 then
+		if #trimmed < 3 or trimmed:lower() == "lorem ipsum" or trimmed:lower() == "d" then
+			if GSF.Addon then
+				GSF.Addon:Print(GSF.L["WISHLIST_INVALID_INPUT"] or "Please provide a valid item link (Shift-Click) or recipe name.")
+			end
+			return
+		end
+		itemName = trimmed
+		itemLink = trimmed
+	else
+		itemName = itemName or trimmed
+		itemLink = itemLink or trimmed
+	end
+
 	local key = itemId > 0 and tostring(itemId) or itemName
 
 	GSF.db.myWishlist = GSF.db.myWishlist or {}
@@ -65,23 +83,33 @@ function GSF.RecipeDrops:OnLootOpened()
 end
 
 function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
-	local itemName, _, itemQuality, _, _, itemType, itemSubType = GetItemInfo(itemLink)
-	if not itemType or itemType ~= "Recipe" then
-		-- Check if name has recipe keywords
-		if not itemName or not (itemName:find("Pattern:") or itemName:find("Plans:") or itemName:find("Schematic:") or itemName:find("Recipe:") or itemName:find("Formula:") or itemName:find("Manual:")) then
-			return
-		end
+	local itemName, _, itemQuality, _, _, itemType, itemSubType, _, _, _, _, classID = GetItemInfo(itemLink)
+
+	local isRecipe = false
+	if classID == 9 or (Enum and Enum.ItemClass and classID == Enum.ItemClass.Recipe) then
+		isRecipe = true
+	elseif itemType == "Recipe" or itemType == "Rezept" then
+		isRecipe = true
+	elseif itemName and (
+		itemName:find("Pattern:") or itemName:find("Plans:") or itemName:find("Schematic:") or 
+		itemName:find("Recipe:") or itemName:find("Formula:") or itemName:find("Manual:") or itemName:find("Design:") or
+		itemName:find("Muster:") or itemName:find("Pläne:") or itemName:find("Bauplan:") or 
+		itemName:find("Rezept:") or itemName:find("Formel:") or itemName:find("Handbuch:") or itemName:find("Vorlage:")
+	) then
+		isRecipe = true
 	end
 
+	if not isRecipe then return end
+
 	local profession = itemSubType or "Unknown"
-	if profession == "Book" or profession == "Unknown" then
-		if itemName:find("Pattern:") then profession = "Tailoring"
-		elseif itemName:find("Plans:") then profession = "Blacksmithing"
-		elseif itemName:find("Schematic:") then profession = "Engineering"
-		elseif itemName:find("Recipe:") then profession = "Alchemy"
-		elseif itemName:find("Formula:") then profession = "Enchanting"
-		elseif itemName:find("Design:") then profession = "Jewelcrafting"
-		elseif itemName:find("Manual:") then profession = "First Aid"
+	if profession == "Book" or profession == "Unknown" or profession == "Buch" or profession == "Rezept" then
+		if itemName:find("Pattern:") or itemName:find("Muster:") then profession = "Tailoring"
+		elseif itemName:find("Plans:") or itemName:find("Pläne:") then profession = "Blacksmithing"
+		elseif itemName:find("Schematic:") or itemName:find("Bauplan:") then profession = "Engineering"
+		elseif itemName:find("Recipe:") or itemName:find("Rezept:") then profession = "Alchemy"
+		elseif itemName:find("Formula:") or itemName:find("Formel:") then profession = "Enchanting"
+		elseif itemName:find("Design:") or itemName:find("Vorlage:") then profession = "Jewelcrafting"
+		elseif itemName:find("Manual:") or itemName:find("Handbuch:") then profession = "First Aid"
 		end
 	end
 

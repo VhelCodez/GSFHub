@@ -169,6 +169,7 @@ end
 function Tab:UpdateTexts()
 	if not self.frame then return end
 	if self.offerBtn then self.offerBtn:SetText("+ " .. GSF.L["POST_SURPLUS"]) end
+	if self.emptyText then self.emptyText:SetText(GSF.L["NO_SURPLUS_LISTED"] or "No surplus materials currently offered.") end
 	self:Refresh()
 end
 

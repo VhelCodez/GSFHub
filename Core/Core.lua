@@ -130,9 +130,16 @@ function GSFHub:HandleSlashCommand(input)
 			self:Print("Trade skill scanner not ready.")
 		end
 	elseif cmd == "sync" then
-		if GSF.Sync then
+		if not IsInGuild() then
+			self:Printf("|cffff9900%s|r", GSF.L["NO_GUILD_WARNING"] or "You are not currently in a guild. Guild synchronization is disabled.")
+		elseif GSF.Sync then
 			GSF.Sync:BroadcastHello(true)
 			self:Print("Broadcasting synchronization request to guild...")
+		end
+	elseif cmd == "settings" or cmd == "config" or cmd == "options" or cmd == "opt" then
+		if GSF.MainFrame then
+			GSF.MainFrame:Show()
+			GSF.MainFrame:OpenSettings()
 		end
 	elseif cmd == "main" and args[2] then
 		GSF.Alts:SetMyMain(args[2])
@@ -166,6 +173,7 @@ function GSFHub:HandleSlashCommand(input)
 	elseif cmd == "help" then
 		self:Print("Available Commands:")
 		print("  |cff33ff99/gsf|r - Toggle main interface")
+		print("  |cff33ff99/gsf settings|r - Open addon configuration & settings")
 		print("  |cff33ff99/gsf atlas|r - Open Resource Farming Atlas & Bounties")
 		print("  |cff33ff99/gsf hud|r - Toggle onscreen Goals HUD tracker")
 		print("  |cff33ff99/gsf scan|r - Scan currently open profession window")

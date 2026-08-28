@@ -17,6 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.2] - 2026-08-28
+
+### Added
+- **Dedicated Settings View (`TabSettings.lua`):** Separated general configuration, goals HUD tracker settings, audio alerts, and diagnostics into a card-based settings view.
+- **Top-Right Header Cog Button (`[⚙]`):** Added a global settings button in the title bar next to the close button, keeping the bottom navigation cleanly at 6 tabs.
+- **Goals HUD Two-Way State Synchronization:** Direct boolean state binding with live frame show/hide events that keeps the settings checkbox in sync in real time.
+- **Goals HUD Position Reset & Empty Prompt:** Added a one-click button to center the HUD and a friendly placeholder prompt when no goals are pinned.
+- **Minimap Icon Visibility Setting:** Checkbox to show or hide the LibDBIcon minimap launcher button.
+- **Auto-Scan on Trade Skill Open Setting:** Exposed the previously orphaned `autoScanOnOpen` toggle in the settings UI.
+- **Work Order "Bearbeiten" (Edit) & Complete Confirmation:** Added an edit action for own open orders and a confirmation dialog before completing an order.
+- **Mining Node Localized Names:** Localized node mapping (*Kupfervorkommen*, *Zinnvorkommen*, *Silbervorkommen*, *Eisenvorkommen*, etc.) so Atlas displays vein names rather than replacing them with ore item names.
+- **German Recipe Drop Detection:** Added `classID == 9` and German recipe prefixes (*Muster:*, *Pläne:*, *Rezept:*, *Formel:*, *Vorlage:*, *Bauplan:*) to guarantee recipe drop detection on German clients.
+- **Wishlist Input Validation:** Added input validation and tooltip hints to prevent random strings like `"d"` or `"Lorem Ipsum"`.
+- **Streamlined Roster Tab (`TabRoster.lua`):** Raised table header to `Y = -68` and expanded scroll height to `340px` for significantly improved roster visibility.
+- **Instant Language Updates:** Switching language now translates 100% of visible UI elements across all tabs live without requiring `/reload`.
+- **Settings Slash Commands:** Added `/gsf settings`, `/gsf config`, and `/gsf opt`.
+
+### Fixed
+- **Decoupled Sound Alerts:** Audio alerts now play independently of visual toast frame rendering.
+
+---
+
 ## [1.2.1] - 2026-08-28
 
 ### Fixed

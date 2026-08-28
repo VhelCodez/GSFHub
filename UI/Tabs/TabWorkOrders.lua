@@ -136,6 +136,10 @@ function Tab:BuildCreateModal(parent)
 		local notes = notesBox:GetText()
 
 		if item and item:trim() ~= "" then
+			if Tab.editOrderId then
+				GSF.WorkOrders:CancelOrder(Tab.editOrderId)
+				Tab.editOrderId = nil
+			end
 			GSF.WorkOrders:CreateOrder(item, qty, prof, mats, notes)
 			modal:Hide()
 			Tab:Refresh()
@@ -145,16 +149,34 @@ function Tab:BuildCreateModal(parent)
 	local cancelBtn = GSF.UI:CreateButton(modal, GSF.L["CANCEL"] or "Cancel", 90, 24)
 	cancelBtn:SetPoint("LEFT", submitBtn, "RIGHT", 20, 0)
 	cancelBtn:SetScript("OnClick", function()
+		Tab.editOrderId = nil
 		modal:Hide()
 	end)
 end
 
-function Tab:OpenCreateModal(prefillItem, prefillProf)
+StaticPopupDialogs["GSF_CONFIRM_COMPLETE_ORDER"] = {
+	text = GSF.L["CONFIRM_COMPLETE_ORDER"] or "Are you sure you want to mark this order as completed?",
+	button1 = GSF.L["YES"] or "Yes",
+	button2 = GSF.L["NO"] or "No",
+	OnAccept = function(dialog, data)
+		if data and data.orderId then
+			GSF.WorkOrders:CompleteOrder(data.orderId)
+			Tab:Refresh()
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+function Tab:OpenCreateModal(prefillItem, prefillProf, prefillQty, prefillNotes, prefillMats, editOrderId)
 	if not self.modal then return end
+	self.editOrderId = editOrderId
 	self.modalItemBox:SetText(prefillItem or "")
-	self.modalQtyBox:SetText("1")
-	self.modalNotesBox:SetText("")
-	self.modalMatsCheck:SetChecked(true)
+	self.modalQtyBox:SetText(tostring(prefillQty or 1))
+	self.modalNotesBox:SetText(prefillNotes or "")
+	self.modalMatsCheck:SetChecked(prefillMats ~= false)
 
 	local prof = prefillProf or "Any"
 	self.selectedProf = prof
@@ -169,6 +191,7 @@ function Tab:UpdateTexts()
 	if not self.frame then return end
 	if self.filterProfCheck then self.filterProfCheck.text:SetText(GSF.L["FILTER_MY_PROFESSIONS"]) end
 	if self.newOrderBtn then self.newOrderBtn:SetText("+ " .. GSF.L["CREATE_WORK_ORDER"]) end
+	if self.emptyText then self.emptyText:SetText(GSF.L["NO_ACTIVE_ORDERS"] or "No active work orders.") end
 	self:Refresh()
 end
 
@@ -245,11 +268,21 @@ function Tab:Refresh()
 					GSF.WorkOrders:CancelOrder(order.id)
 					Tab:Refresh()
 				end)
+				card.whisperBtn:SetText(GSF.L["EDIT"] or "Edit")
+				card.whisperBtn:Show()
+				card.whisperBtn:SetScript("OnClick", function()
+					Tab:OpenCreateModal(order.item, order.profession, order.count, order.notes, order.matsProvided, order.id)
+				end)
 			else
 				card.actionBtn:SetText(GSF.L["CLAIM_ORDER"] or "Claim")
 				card.actionBtn:SetScript("OnClick", function()
 					GSF.WorkOrders:ClaimOrder(order.id)
 					Tab:Refresh()
+				end)
+				card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
+				card.whisperBtn:Show()
+				card.whisperBtn:SetScript("OnClick", function()
+					ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
 				end)
 			end
 		elseif order.status == GSF.ORDER_STATUS.CLAIMED then
@@ -264,23 +297,22 @@ function Tab:Refresh()
 			elseif isMine then
 				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
 				card.actionBtn:SetScript("OnClick", function()
-					GSF.WorkOrders:CompleteOrder(order.id)
-					Tab:Refresh()
+					StaticPopup_Show("GSF_CONFIRM_COMPLETE_ORDER", nil, nil, { orderId = order.id })
 				end)
 			else
 				card.actionBtn:SetText(GSF.L["STATUS_CLAIMED"])
 				card.actionBtn:SetScript("OnClick", nil)
 			end
-		end
 
-		card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
-		if isMine then
-			card.whisperBtn:Hide()
-		else
-			card.whisperBtn:Show()
-			card.whisperBtn:SetScript("OnClick", function()
-				ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
-			end)
+			card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
+			if isMine then
+				card.whisperBtn:Hide()
+			else
+				card.whisperBtn:Show()
+				card.whisperBtn:SetScript("OnClick", function()
+					ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
+				end)
+			end
 		end
 
 		card:Show()

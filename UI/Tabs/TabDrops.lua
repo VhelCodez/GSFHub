@@ -28,9 +28,30 @@ function Tab:Create(parent)
 	self.wishContent = wishContent
 	self.wishRows = {}
 
+	-- Empty state notices
+	local emptyDropsText = dropContent:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+	emptyDropsText:SetPoint("CENTER", dropContent, "CENTER", 0, 0)
+	emptyDropsText:SetWidth(280)
+	emptyDropsText:SetJustifyH("CENTER")
+	emptyDropsText:SetText(GSF.L["NO_RECIPES_FOUND"] or "No recipe drops recorded yet.")
+	self.emptyDropsText = emptyDropsText
+
+	local emptyWishText = wishContent:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+	emptyWishText:SetPoint("CENTER", wishContent, "CENTER", 0, 0)
+	emptyWishText:SetWidth(280)
+	emptyWishText:SetJustifyH("CENTER")
+	emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"] or "Your wishlist is empty.")
+	self.emptyWishText = emptyWishText
+
 	-- Wishlist input bottom right
 	local addBox = GSF.UI:CreateEditBox(frame, 200, 22)
 	addBox:SetPoint("TOPLEFT", wishScroll, "BOTTOMLEFT", 5, -10)
+	addBox:SetScript("OnEnter", function(eb)
+		GameTooltip:SetOwner(eb, "ANCHOR_TOP")
+		GameTooltip:SetText(GSF.L["SHIFT_CLICK_HINT"] or "Shift-Click item or enter name", 1, 1, 1)
+		GameTooltip:Show()
+	end)
+	addBox:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	self.addBox = addBox
 
 	local addBtn = GSF.UI:CreateButton(frame, GSF.L["ADD_TO_WISHLIST"], 90, 22)
@@ -56,6 +77,8 @@ function Tab:UpdateTexts()
 	if self.dropTitle then self.dropTitle:SetText(GSF.L["RECIPE_DROPS_TITLE"]) end
 	if self.wishTitle then self.wishTitle:SetText(GSF.L["WISHLIST_TITLE"]) end
 	if self.addBtn then self.addBtn:SetText(GSF.L["ADD_TO_WISHLIST"]) end
+	if self.emptyDropsText then self.emptyDropsText:SetText(GSF.L["NO_RECIPES_FOUND"] or "No recipe drops recorded yet.") end
+	if self.emptyWishText then self.emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"] or "Your wishlist is empty.") end
 	self:Refresh()
 end
 
@@ -104,6 +127,12 @@ function Tab:Refresh()
 		row:Show()
 		yOffset = yOffset + 62
 	end
+
+	if #recentDrops == 0 then
+		if self.emptyDropsText then self.emptyDropsText:Show() end
+	else
+		if self.emptyDropsText then self.emptyDropsText:Hide() end
+	end
 	self.dropContent:SetHeight(math.max(yOffset, 370))
 
 	-- Refresh Wishlist
@@ -145,5 +174,12 @@ function Tab:Refresh()
 		wOffset = wOffset + 34
 		idx = idx + 1
 	end
+
+	if idx == 1 then
+		if self.emptyWishText then self.emptyWishText:Show() end
+	else
+		if self.emptyWishText then self.emptyWishText:Hide() end
+	end
+
 	self.wishContent:SetHeight(math.max(wOffset, 330))
 end

@@ -45,8 +45,17 @@ function GSF.Toast:Initialize()
 end
 
 function GSF.Toast:ShowToast(text, iconTexture)
+	if not GSF.db then return end
+
+	-- Play audio alert if enabled, independent of visual toast popup
+	if GSF.db.enableSounds then
+		PlaySound(SOUNDKIT.TELL_MESSAGE or 8959)
+	end
+
+	-- Only render visual toast frame if toasts are enabled
+	if not GSF.db.enableToasts then return end
+
 	if not toastFrame then self:Initialize() end
-	if not GSF.db or not GSF.db.enableToasts then return end
 
 	toastFrame.msg:SetText(text or "")
 	if iconTexture then
@@ -55,15 +64,11 @@ function GSF.Toast:ShowToast(text, iconTexture)
 		toastFrame.icon:SetTexture("Interface\\Icons\\INV_Misc_Book_09")
 	end
 
-	if GSF.db.enableSounds then
-		PlaySound(SOUNDKIT.TELL_MESSAGE or 8959)
-	end
-
 	toastFrame:Show()
 	toastFrame:SetAlpha(1)
 
 	C_Timer.After(4.5, function()
-		if toastFrame:IsShown() then
+		if toastFrame and toastFrame:IsShown() then
 			toastFrame:Hide()
 		end
 	end)
