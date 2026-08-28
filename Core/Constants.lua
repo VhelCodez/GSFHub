@@ -1,7 +1,7 @@
 local ADDON_NAME, GSF = ...
 
 GSF.COMM_PREFIX = "GSFHUB"
-GSF.VERSION = "1.2.0"
+GSF.VERSION = "1.2.1"
 GSF.PROTOCOL_VERSION = 2
 
 -- Download & Issue Tracker URLs (CurseForge ready)
@@ -153,3 +153,51 @@ GSF.COLORS = {
 GSF.WORK_ORDER_TIMEOUT = 7 * 24 * 60 * 60 -- 7 days in seconds
 GSF.BOUNTY_TIMEOUT = 7 * 24 * 60 * 60 -- 7 days in seconds
 GSF.CACHE_RETENTION_DAYS = 30
+
+-- Profession Normalization & Localization Helpers
+local CANONICAL_PROFS = {
+	["alchemy"] = "Alchemy",
+	["alchemie"] = "Alchemy",
+	["blacksmithing"] = "Blacksmithing",
+	["schmiedekunst"] = "Blacksmithing",
+	["enchanting"] = "Enchanting",
+	["verzauberkunst"] = "Enchanting",
+	["engineering"] = "Engineering",
+	["ingenieurskunst"] = "Engineering",
+	["leatherworking"] = "Leatherworking",
+	["lederverarbeitung"] = "Leatherworking",
+	["tailoring"] = "Tailoring",
+	["schneiderei"] = "Tailoring",
+	["jewelcrafting"] = "Jewelcrafting",
+	["juwelenschleifen"] = "Jewelcrafting",
+	["mining"] = "Mining",
+	["bergbau"] = "Mining",
+	["herbalism"] = "Herbalism",
+	["kräuterkunde"] = "Herbalism",
+	["krauterkunde"] = "Herbalism",
+	["skinning"] = "Skinning",
+	["kürschnerei"] = "Skinning",
+	["kurschnerei"] = "Skinning",
+	["cooking"] = "Cooking",
+	["kochkunst"] = "Cooking",
+	["first aid"] = "First Aid",
+	["erste hilfe"] = "First Aid",
+	["fishing"] = "Fishing",
+	["angeln"] = "Fishing",
+	["lockpicking"] = "Lockpicking",
+	["schlösserknacken"] = "Lockpicking",
+	["schlosserknacken"] = "Lockpicking",
+}
+
+function GSF:GetCanonicalProfession(name)
+	if not name then return nil end
+	local lower = (type(name) == "string" and name:lower() or ""):gsub("^%s*(.-)%s*$", "%1")
+	return CANONICAL_PROFS[lower] or name
+end
+
+function GSF:GetLocalizedProfession(name)
+	local canon = self:GetCanonicalProfession(name) or name
+	local key = "PROF_" .. canon:upper():gsub("%s+", "_")
+	return (GSF.L and GSF.L[key]) or canon
+end
+

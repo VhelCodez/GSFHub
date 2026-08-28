@@ -16,7 +16,9 @@ function GSF.RecipeBook:Search(searchText, profFilter, onlineOnly)
 		if not onlineOnly or isOnline then
 			if memberData.professions then
 				for profName, profData in pairs(memberData.professions) do
-					if not profFilter or profFilter == "" or profFilter == GSF.L["FILTER_ALL_PROFESSIONS"] or profName == profFilter then
+					local canonFilter = (profFilter and profFilter ~= "" and profFilter ~= GSF.L["FILTER_ALL_PROFESSIONS"] and profFilter ~= "All") and GSF:GetCanonicalProfession(profFilter)
+					local canonProf = GSF:GetCanonicalProfession(profName)
+					if not canonFilter or canonProf == canonFilter then
 						if profData.recipes then
 							for key, recipe in pairs(profData.recipes) do
 								local matches = false

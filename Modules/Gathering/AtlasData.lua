@@ -6,7 +6,7 @@ local ATLAS_DB = {
 	-- MINING (Skill 1 - 375)
 	{
 		name = "Copper Vein",
-		itemID = 2835, -- Copper Ore
+		itemID = 2770, -- Copper Ore
 		category = "Mining",
 		minSkill = 1,
 		icon = "Interface\\Icons\\INV_Ore_Copper_01",
@@ -16,7 +16,7 @@ local ATLAS_DB = {
 	},
 	{
 		name = "Tin Vein",
-		itemID = 3576, -- Tin Ore
+		itemID = 2771, -- Tin Ore
 		category = "Mining",
 		minSkill = 65,
 		icon = "Interface\\Icons\\INV_Ore_Tin_01",
@@ -26,7 +26,7 @@ local ATLAS_DB = {
 	},
 	{
 		name = "Silver Vein",
-		itemID = 2770, -- Silver Ore
+		itemID = 2775, -- Silver Ore
 		category = "Mining",
 		minSkill = 75,
 		icon = "Interface\\Icons\\INV_Ore_Silver_01",

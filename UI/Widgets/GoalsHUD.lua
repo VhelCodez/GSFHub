@@ -106,7 +106,7 @@ function GSF.GoalsHUD:AddGoal(itemName, targetCount, category)
 	self:Refresh()
 
 	if GSF.Toast then
-		GSF.Toast:ShowToast(string.format("🎯 Goal Pinned: %s (x%d)", cleanName, target), "Interface\\Icons\\INV_Misc_Map02")
+		GSF.Toast:ShowToast(string.format("Goal Pinned: %s (x%d)", cleanName, target), "Interface\\Icons\\INV_Misc_Map02")
 	end
 end
 
@@ -121,14 +121,25 @@ function GSF.GoalsHUD:CountItemInBags(itemName)
 	local total = 0
 	local lowerName = itemName:lower()
 
+	local getNumSlots = (C_Container and C_Container.GetContainerNumSlots) or GetContainerNumSlots
+	local getItemInfo = (C_Container and C_Container.GetContainerItemInfo) or GetContainerItemInfo
+	local getItemLink = (C_Container and C_Container.GetContainerItemLink) or GetContainerItemLink
+
 	for bag = 0, 4 do
-		local numSlots = C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bag) or GetContainerNumSlots(bag)
+		local numSlots = getNumSlots and getNumSlots(bag) or 0
 		for slot = 1, numSlots do
-			local itemInfo = C_Container and C_Container.GetContainerItemInfo and C_Container.GetContainerItemInfo(bag, slot)
-			local link = itemInfo and itemInfo.hyperlink or GetContainerItemLink(bag, slot)
-			local count = itemInfo and itemInfo.stackCount or (select(2, GetContainerItemInfo(bag, slot)) or 1)
+			local link = getItemLink and getItemLink(bag, slot)
 			if link and link:lower():find(lowerName, 1, true) then
-				total = total + (count or 1)
+				local count = 1
+				if getItemInfo then
+					local itemInfo = getItemInfo(bag, slot)
+					if type(itemInfo) == "table" then
+						count = itemInfo.stackCount or itemInfo.count or 1
+					else
+						count = select(2, getItemInfo(bag, slot)) or 1
+					end
+				end
+				total = total + count
 			end
 		end
 	end

@@ -41,6 +41,10 @@ function Tab:Create(parent)
 	self.syncBtn = syncBtn
 
 	syncBtn:SetScript("OnClick", function()
+		if not IsInGuild() then
+			GSF.Addon:Printf("|cffff9900%s|r", GSF.L["NO_GUILD_WARNING"] or "You are not currently in a guild. Guild synchronization is disabled.")
+			return
+		end
 		if GSF.Sync then
 			GSF.Sync:BroadcastHello(true)
 			GSF.Addon:Print("Sync request broadcasted to guild.")
@@ -64,7 +68,7 @@ function Tab:Create(parent)
 
 	-- Settings Section (Top Right)
 	local langLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	langLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 440, -12)
+	langLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 430, -12)
 	langLabel:SetText(GSF.L["LANGUAGE_LABEL"])
 	self.langLabel = langLabel
 
@@ -104,10 +108,12 @@ function Tab:Create(parent)
 		end
 	end)
 
+	-- 2-column layout for checkboxes to keep well clear of table header at Y = -135
 	local toastCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	toastCheck:SetPoint("TOPLEFT", langDropdown, "BOTTOMLEFT", 15, -4)
+	toastCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 425, -54)
 	toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
 	toastCheck.text:SetFontObject("GameFontHighlightSmall")
+	toastCheck.text:SetPoint("LEFT", toastCheck, "RIGHT", 2, 1)
 	toastCheck:SetChecked(GSF.db and GSF.db.enableToasts)
 	self.toastCheck = toastCheck
 
@@ -116,9 +122,10 @@ function Tab:Create(parent)
 	end)
 
 	local soundCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -2)
+	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -4)
 	soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
 	soundCheck.text:SetFontObject("GameFontHighlightSmall")
+	soundCheck.text:SetPoint("LEFT", soundCheck, "RIGHT", 2, 1)
 	soundCheck:SetChecked(GSF.db and GSF.db.enableSounds)
 	self.soundCheck = soundCheck
 
@@ -127,9 +134,10 @@ function Tab:Create(parent)
 	end)
 
 	local dropAnnounceCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	dropAnnounceCheck:SetPoint("TOPLEFT", soundCheck, "BOTTOMLEFT", 0, -2)
+	dropAnnounceCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 565, -54)
 	dropAnnounceCheck.text:SetText(GSF.L["ANNOUNCE_DROPS_PARTY"])
 	dropAnnounceCheck.text:SetFontObject("GameFontHighlightSmall")
+	dropAnnounceCheck.text:SetPoint("LEFT", dropAnnounceCheck, "RIGHT", 2, 1)
 	dropAnnounceCheck:SetChecked(GSF.db and GSF.db.announceDropsToParty)
 	self.dropAnnounceCheck = dropAnnounceCheck
 
@@ -138,9 +146,10 @@ function Tab:Create(parent)
 	end)
 
 	local goalsHUDCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	goalsHUDCheck:SetPoint("TOPLEFT", dropAnnounceCheck, "BOTTOMLEFT", 0, -2)
+	goalsHUDCheck:SetPoint("TOPLEFT", dropAnnounceCheck, "BOTTOMLEFT", 0, -4)
 	goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Goals HUD")
 	goalsHUDCheck.text:SetFontObject("GameFontHighlightSmall")
+	goalsHUDCheck.text:SetPoint("LEFT", goalsHUDCheck, "RIGHT", 2, 1)
 	goalsHUDCheck:SetChecked(GSF.db and GSF.db.showGoalsHUD)
 	self.goalsHUDCheck = goalsHUDCheck
 
@@ -230,7 +239,11 @@ function Tab:Refresh()
 		end
 	end
 
-	self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
+	if not IsInGuild() then
+		self.statText:SetText(string.format("|cff888888%s|r", GSF.L["SOLO_MODE"] or "Offline Mode (No Guild)"))
+	else
+		self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
+	end
 
 	table.sort(memberList, function(a, b)
 		return (a.lastSeen or 0) > (b.lastSeen or 0)
@@ -282,10 +295,11 @@ function Tab:Refresh()
 		local profList = {}
 		if member.professions then
 			for pName, pData in pairs(member.professions) do
-				table.insert(profList, string.format("%s (%d)", pName, pData.curRank or 0))
+				local locName = GSF:GetLocalizedProfession(pName)
+				table.insert(profList, string.format("%s (%d)", locName, pData.curRank or 0))
 			end
 		end
-		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or "None")
+		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or (GSF.L["NONE"] or "None"))
 
 		local mins = math.floor((time() - (member.lastSeen or time())) / 60)
 		if isOnline then
@@ -293,9 +307,9 @@ function Tab:Refresh()
 		elseif mins < 60 then
 			row.lastSeen:SetText(string.format(GSF.L["MINS_AGO"], mins))
 		elseif mins < 1440 then
-			row.lastSeen:SetText(math.floor(mins / 60) .. "h ago")
+			row.lastSeen:SetText(math.floor(mins / 60) .. "h")
 		else
-			row.lastSeen:SetText(math.floor(mins / 1440) .. "d ago")
+			row.lastSeen:SetText(math.floor(mins / 1440) .. "d")
 		end
 
 		row:Show()

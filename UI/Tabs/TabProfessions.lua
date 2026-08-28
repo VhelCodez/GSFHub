@@ -26,34 +26,47 @@ function Tab:Create(parent)
 	-- Profession Dropdown / Filter
 	local filterLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	filterLabel:SetPoint("LEFT", searchLabel, "RIGHT", 160, 0)
-	filterLabel:SetText("Profession:")
+	filterLabel:SetText(GSF.L["PROFESSION"] or "Profession:")
+	self.filterLabel = filterLabel
 
-	local currentProfFilter = GSF.L["FILTER_ALL_PROFESSIONS"]
-	local filterBtn = CreateFrame("Button", nil, frame, "UIDropDownMenuTemplate")
+	local currentProfFilter = "ALL"
+	local filterBtn = CreateFrame("Button", "GSFProfFilterDropdown", frame, "UIDropDownMenuTemplate")
 	filterBtn:SetPoint("LEFT", searchBox, "RIGHT", 10, -2)
 	UIDropDownMenu_SetWidth(filterBtn, 140)
-	UIDropDownMenu_SetText(filterBtn, currentProfFilter)
+	UIDropDownMenu_SetText(filterBtn, GSF.L["FILTER_ALL_PROFESSIONS"])
 	self.filterBtn = filterBtn
 
-	local profOptions = {
-		GSF.L["FILTER_ALL_PROFESSIONS"],
+	local profKeys = {
 		"Alchemy", "Blacksmithing", "Enchanting", "Engineering",
 		"Leatherworking", "Tailoring", "Jewelcrafting",
 		"Cooking", "First Aid", "Lockpicking"
 	}
 
 	UIDropDownMenu_Initialize(filterBtn, function(self, level)
-		for _, prof in ipairs(profOptions) do
+		local allInfo = UIDropDownMenu_CreateInfo()
+		allInfo.text = GSF.L["FILTER_ALL_PROFESSIONS"]
+		allInfo.value = "ALL"
+		allInfo.func = function(btn)
+			currentProfFilter = "ALL"
+			UIDropDownMenu_SetSelectedValue(filterBtn, "ALL")
+			UIDropDownMenu_SetText(filterBtn, GSF.L["FILTER_ALL_PROFESSIONS"])
+			Tab:Refresh()
+		end
+		allInfo.checked = (currentProfFilter == "ALL")
+		UIDropDownMenu_AddButton(allInfo, level)
+
+		for _, pKey in ipairs(profKeys) do
+			local locName = GSF:GetLocalizedProfession(pKey)
 			local info = UIDropDownMenu_CreateInfo()
-			info.text = prof
-			info.value = prof
+			info.text = locName
+			info.value = pKey
 			info.func = function(btn)
 				currentProfFilter = btn.value
 				UIDropDownMenu_SetSelectedValue(filterBtn, btn.value)
-				UIDropDownMenu_SetText(filterBtn, btn.value)
+				UIDropDownMenu_SetText(filterBtn, locName)
 				Tab:Refresh()
 			end
-			info.checked = (currentProfFilter == prof)
+			info.checked = (currentProfFilter == pKey)
 			UIDropDownMenu_AddButton(info, level)
 		end
 	end)
@@ -77,6 +90,13 @@ function Tab:Create(parent)
 	self.leftContent = leftContent
 	self.recipeButtons = {}
 
+	local emptyText = leftScroll:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	emptyText:SetPoint("CENTER", leftScroll, "CENTER", 0, 0)
+	emptyText:SetWidth(280)
+	emptyText:SetText(GSF.L["NO_RECIPES_FOUND"])
+	emptyText:Hide()
+	self.emptyText = emptyText
+
 	-- Right Pane (Recipe Details & Crafters)
 	local rightPane = CreateFrame("Frame", nil, frame)
 	rightPane:SetPoint("TOPLEFT", leftScroll, "TOPRIGHT", 25, 0)
@@ -99,7 +119,7 @@ function Tab:Create(parent)
 
 	local reagentsText = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	reagentsText:SetPoint("TOPLEFT", reagentsLabel, "BOTTOMLEFT", 0, -6)
-	reagentsText:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
+	reagentsText:SetWidth(320)
 	reagentsText:SetJustifyH("LEFT")
 	reagentsText:SetText(GSF.L["NO_EXTRA_REAGENTS"])
 	self.reagentsText = reagentsText
@@ -119,6 +139,7 @@ function Tab:Create(parent)
 	-- Action buttons bottom right
 	local orderBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_CRAFT"], 130, 24)
 	orderBtn:SetPoint("BOTTOMLEFT", rightPane, "BOTTOMLEFT", 15, 12)
+	orderBtn:Disable()
 	self.orderBtn = orderBtn
 
 	orderBtn:SetScript("OnClick", function()
@@ -130,6 +151,7 @@ function Tab:Create(parent)
 
 	local wishlistBtn = GSF.UI:CreateButton(rightPane, GSF.L["WISHLIST_BTN"], 80, 24)
 	wishlistBtn:SetPoint("LEFT", orderBtn, "RIGHT", 6, 0)
+	wishlistBtn:Disable()
 	self.wishlistBtn = wishlistBtn
 
 	wishlistBtn:SetScript("OnClick", function()
@@ -140,6 +162,7 @@ function Tab:Create(parent)
 
 	local reqMatsBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_MATS_BTN"] or "Request Mats", 110, 24)
 	reqMatsBtn:SetPoint("LEFT", wishlistBtn, "RIGHT", 6, 0)
+	reqMatsBtn:Disable()
 	self.reqMatsBtn = reqMatsBtn
 
 	reqMatsBtn:SetScript("OnClick", function()
@@ -230,6 +253,12 @@ function Tab:Refresh()
 
 	self.leftContent:SetHeight(math.max(yOffset, 360))
 
+	if #results == 0 then
+		if self.emptyText then self.emptyText:Show() end
+	else
+		if self.emptyText then self.emptyText:Hide() end
+	end
+
 	if selectedRecipe then
 		self:DisplayRecipeDetails(selectedRecipe)
 	end
@@ -237,6 +266,9 @@ end
 
 function Tab:SelectRecipe(recipe)
 	selectedRecipe = recipe
+	if self.orderBtn then self.orderBtn:Enable() end
+	if self.wishlistBtn then self.wishlistBtn:Enable() end
+	if self.reqMatsBtn then self.reqMatsBtn:Enable() end
 	self:DisplayRecipeDetails(recipe)
 end
 
@@ -256,12 +288,13 @@ function Tab:DisplayRecipeDetails(recipe)
 		end
 		self.reagentsText:SetText(table.concat(reagentLines, "\n"))
 	else
-		self.reagentsText:SetText("No extra materials required.")
+		self.reagentsText:SetText(GSF.L["NO_EXTRA_REAGENTS"] or "No extra materials required.")
 	end
 
 	-- Format crafters
 	for _, row in ipairs(self.crafterRows) do row:Hide() end
 
+	local myName = GSF.DB:GetPlayerName()
 	local yOffset = 0
 	for i, crafter in ipairs(recipe.crafters or {}) do
 		local row = self.crafterRows[i]
@@ -277,7 +310,7 @@ function Tab:DisplayRecipeDetails(recipe)
 			skillText:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
 			row.skillText = skillText
 
-			local whisperBtn = GSF.UI:CreateButton(row, "Whisper", 65, 18)
+			local whisperBtn = GSF.UI:CreateButton(row, GSF.L["WHISPER"] or "Whisper", 65, 18)
 			whisperBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
 			row.whisperBtn = whisperBtn
 
@@ -291,9 +324,14 @@ function Tab:DisplayRecipeDetails(recipe)
 		row.nameText:SetText(string.format("%s %s", statusDot, formattedName))
 		row.skillText:SetText(string.format("[%d/%d]", crafter.skill or 0, crafter.maxSkill or 375))
 
-		row.whisperBtn:SetScript("OnClick", function()
-			ChatFrame_OpenChat(string.format("/w %s Hi, could you craft [%s]?", crafter.name, recipe.name))
-		end)
+		if crafter.name == myName then
+			row.whisperBtn:Hide()
+		else
+			row.whisperBtn:Show()
+			row.whisperBtn:SetScript("OnClick", function()
+				ChatFrame_OpenChat(string.format("/w %s Hi, could you craft [%s]?", crafter.name, recipe.name))
+			end)
+		end
 
 		row:Show()
 		yOffset = yOffset + 26

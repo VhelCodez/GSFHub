@@ -33,6 +33,13 @@ function Tab:Create(parent)
 	self.content = content
 	self.orderCards = {}
 
+	local emptyText = scrollFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	emptyText:SetPoint("CENTER", scrollFrame, "CENTER", 0, 0)
+	emptyText:SetWidth(400)
+	emptyText:SetText(GSF.L["NO_ACTIVE_ORDERS"] or "No active work orders right now.")
+	emptyText:Hide()
+	self.emptyText = emptyText
+
 	-- Create Order Modal Dialog
 	self:BuildCreateModal(frame)
 
@@ -51,12 +58,12 @@ function Tab:BuildCreateModal(parent)
 
 	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	title:SetPoint("TOP", modal, "TOP", 0, -15)
-	title:SetText("|cff33ff99Post Work Order|r")
+	title:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, GSF.L["POST_WORK_ORDER_MODAL"] or "Post Work Order"))
 
 	-- Item Name
 	local itemLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	itemLabel:SetPoint("TOPLEFT", modal, "TOPLEFT", 25, -45)
-	itemLabel:SetText("Item or Enchant Name:")
+	itemLabel:SetText(GSF.L["ITEM_OR_ENCHANT"] or "Item or Enchant Name:")
 
 	local itemBox = GSF.UI:CreateEditBox(modal, 320, 22)
 	itemBox:SetPoint("TOPLEFT", itemLabel, "BOTTOMLEFT", 0, -4)
@@ -65,7 +72,7 @@ function Tab:BuildCreateModal(parent)
 	-- Quantity & Profession
 	local qtyLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	qtyLabel:SetPoint("TOPLEFT", itemBox, "BOTTOMLEFT", 0, -10)
-	qtyLabel:SetText("Quantity:")
+	qtyLabel:SetText(GSF.L["QUANTITY"] or "Quantity:")
 
 	local qtyBox = GSF.UI:CreateEditBox(modal, 60, 22)
 	qtyBox:SetPoint("TOPLEFT", qtyLabel, "BOTTOMLEFT", 0, -4)
@@ -74,36 +81,36 @@ function Tab:BuildCreateModal(parent)
 
 	local profLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	profLabel:SetPoint("LEFT", qtyLabel, "RIGHT", 40, 0)
-	profLabel:SetText("Profession:")
+	profLabel:SetText(GSF.L["PROFESSION"] or "Profession:")
 
-	local selectedProf = "Any"
+	self.selectedProf = "Any"
 	local profDropdown = CreateFrame("Button", "GSFOrderProfDropdown", modal, "UIDropDownMenuTemplate")
 	profDropdown:SetPoint("TOPLEFT", profLabel, "BOTTOMLEFT", -15, 2)
 	UIDropDownMenu_SetWidth(profDropdown, 140)
-	UIDropDownMenu_SetText(profDropdown, "Any")
+	UIDropDownMenu_SetText(profDropdown, GSF.L["ANY"] or "Any")
 	self.modalProfDropdown = profDropdown
 
 	local profList = {"Any", "Alchemy", "Blacksmithing", "Enchanting", "Engineering", "Leatherworking", "Tailoring", "Jewelcrafting", "Cooking", "First Aid", "Lockpicking"}
 	UIDropDownMenu_Initialize(profDropdown, function(self, level)
 		for _, p in ipairs(profList) do
 			local info = UIDropDownMenu_CreateInfo()
-			info.text = p
+			local locText = (p == "Any") and (GSF.L["ANY"] or "Any") or GSF:GetLocalizedProfession(p)
+			info.text = locText
 			info.value = p
 			info.func = function(btn)
-				selectedProf = btn.value
+				Tab.selectedProf = btn.value
 				UIDropDownMenu_SetSelectedValue(profDropdown, btn.value)
-				UIDropDownMenu_SetText(profDropdown, btn.value)
+				UIDropDownMenu_SetText(profDropdown, locText)
 			end
-			info.checked = (selectedProf == p)
+			info.checked = (Tab.selectedProf == p)
 			UIDropDownMenu_AddButton(info, level)
 		end
 	end)
-	self.getSelectedProf = function() return selectedProf end
 
 	-- Mats Provided Checkbox
 	local matsCheck = CreateFrame("CheckButton", nil, modal, "UICheckButtonTemplate")
 	matsCheck:SetPoint("TOPLEFT", qtyBox, "BOTTOMLEFT", 0, -12)
-	matsCheck.text:SetText("I will provide materials")
+	matsCheck.text:SetText(GSF.L["WILL_PROVIDE_MATS"] or "I will provide materials")
 	matsCheck.text:SetFontObject("GameFontHighlightSmall")
 	matsCheck:SetChecked(true)
 	self.modalMatsCheck = matsCheck
@@ -111,20 +118,20 @@ function Tab:BuildCreateModal(parent)
 	-- Notes EditBox
 	local notesLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	notesLabel:SetPoint("TOPLEFT", matsCheck, "BOTTOMLEFT", 0, -8)
-	notesLabel:SetText("Notes / Specs / Tip:")
+	notesLabel:SetText(GSF.L["NOTES_SPECS_TIP"] or "Notes / Specs / Tip:")
 
 	local notesBox = GSF.UI:CreateEditBox(modal, 320, 22)
 	notesBox:SetPoint("TOPLEFT", notesLabel, "BOTTOMLEFT", 0, -4)
 	self.modalNotesBox = notesBox
 
 	-- Action Buttons
-	local submitBtn = GSF.UI:CreateButton(modal, "Submit Order", 120, 24)
+	local submitBtn = GSF.UI:CreateButton(modal, GSF.L["SUBMIT_ORDER"] or "Submit Order", 120, 24)
 	submitBtn:SetPoint("BOTTOMLEFT", modal, "BOTTOMLEFT", 40, 15)
 
 	submitBtn:SetScript("OnClick", function()
 		local item = itemBox:GetText()
 		local qty = tonumber(qtyBox:GetText()) or 1
-		local prof = Tab.getSelectedProf()
+		local prof = Tab.selectedProf or "Any"
 		local mats = matsCheck:GetChecked()
 		local notes = notesBox:GetText()
 
@@ -135,7 +142,7 @@ function Tab:BuildCreateModal(parent)
 		end
 	end)
 
-	local cancelBtn = GSF.UI:CreateButton(modal, "Cancel", 90, 24)
+	local cancelBtn = GSF.UI:CreateButton(modal, GSF.L["CANCEL"] or "Cancel", 90, 24)
 	cancelBtn:SetPoint("LEFT", submitBtn, "RIGHT", 20, 0)
 	cancelBtn:SetScript("OnClick", function()
 		modal:Hide()
@@ -149,13 +156,11 @@ function Tab:OpenCreateModal(prefillItem, prefillProf)
 	self.modalNotesBox:SetText("")
 	self.modalMatsCheck:SetChecked(true)
 
-	if prefillProf then
-		UIDropDownMenu_SetSelectedValue(self.modalProfDropdown, prefillProf)
-		UIDropDownMenu_SetText(self.modalProfDropdown, prefillProf)
-	else
-		UIDropDownMenu_SetSelectedValue(self.modalProfDropdown, "Any")
-		UIDropDownMenu_SetText(self.modalProfDropdown, "Any")
-	end
+	local prof = prefillProf or "Any"
+	self.selectedProf = prof
+	UIDropDownMenu_SetSelectedValue(self.modalProfDropdown, prof)
+	local locText = (prof == "Any") and (GSF.L["ANY"] or "Any") or GSF:GetLocalizedProfession(prof)
+	UIDropDownMenu_SetText(self.modalProfDropdown, locText)
 
 	self.modal:Show()
 end
@@ -175,6 +180,12 @@ function Tab:Refresh()
 	local myName = GSF.DB:GetPlayerName()
 
 	for _, card in ipairs(self.orderCards) do card:Hide() end
+
+	if #orders == 0 then
+		if self.emptyText then self.emptyText:Show() end
+	else
+		if self.emptyText then self.emptyText:Hide() end
+	end
 
 	local yOffset = 0
 	for i, order in ipairs(orders) do
@@ -206,7 +217,7 @@ function Tab:Refresh()
 			actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
 			card.actionBtn = actionBtn
 
-			local whisperBtn = GSF.UI:CreateButton(card, "Whisper", 70, 20)
+			local whisperBtn = GSF.UI:CreateButton(card, GSF.L["WHISPER"] or "Whisper", 70, 20)
 			whisperBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
 			card.whisperBtn = whisperBtn
 
@@ -215,37 +226,62 @@ function Tab:Refresh()
 
 		card:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -yOffset)
 
+		local isMine = (order.requester == myName)
+		local isCrafter = (order.crafter == myName)
+
 		local matsStr = order.matsProvided and ("|cff00ff00" .. GSF.L["MATS_PROVIDED"] .. "|r") or ("|cffff7f00" .. GSF.L["NO_MATS"] .. "|r")
 		local reqFormatted = GSF.Alts:GetFormattedName(order.requester)
+		local profDisplay = (order.profession and order.profession ~= "Any") and GSF:GetLocalizedProfession(order.profession) or (GSF.L["ANY"] or "Any")
 		
-		card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, order.item, order.count or 1, order.profession or "Any"))
-		card.details:SetText(string.format("Requested by: %s  •  %s", reqFormatted, matsStr))
-		card.notes:SetText(order.notes ~= "" and ("Note: " .. order.notes) or "")
+		card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, order.item, order.count or 1, profDisplay))
+		card.details:SetText(string.format("%s %s  •  %s", GSF.L["REQUESTED_BY"] or "Requested by:", reqFormatted, matsStr))
+		card.notes:SetText(order.notes ~= "" and ((GSF.L["NOTE"] or "Note:") .. " " .. order.notes) or "")
 
 		if order.status == GSF.ORDER_STATUS.OPEN then
 			card.statusText:SetText("|cff00ff00" .. GSF.L["STATUS_OPEN"] .. "|r")
-			card.actionBtn:SetText(GSF.L["CLAIM_ORDER"])
-			card.actionBtn:SetScript("OnClick", function()
-				GSF.WorkOrders:ClaimOrder(order.id)
-				Tab:Refresh()
-			end)
+			if isMine then
+				card.actionBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
+				card.actionBtn:SetScript("OnClick", function()
+					GSF.WorkOrders:CancelOrder(order.id)
+					Tab:Refresh()
+				end)
+			else
+				card.actionBtn:SetText(GSF.L["CLAIM_ORDER"] or "Claim")
+				card.actionBtn:SetScript("OnClick", function()
+					GSF.WorkOrders:ClaimOrder(order.id)
+					Tab:Refresh()
+				end)
+			end
 		elseif order.status == GSF.ORDER_STATUS.CLAIMED then
 			local crafterFormatted = GSF.Alts:GetFormattedName(order.crafter)
 			card.statusText:SetText(string.format("|cffffd100" .. GSF.L["STATUS_CLAIMED"] .. "|r (%s)", crafterFormatted))
-			if order.crafter == myName or order.requester == myName then
-				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"])
+			if isCrafter then
+				card.actionBtn:SetText(GSF.L["UNCLAIM_ORDER"] or "Release")
+				card.actionBtn:SetScript("OnClick", function()
+					GSF.WorkOrders:UnclaimOrder(order.id)
+					Tab:Refresh()
+				end)
+			elseif isMine then
+				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
 				card.actionBtn:SetScript("OnClick", function()
 					GSF.WorkOrders:CompleteOrder(order.id)
 					Tab:Refresh()
 				end)
 			else
 				card.actionBtn:SetText(GSF.L["STATUS_CLAIMED"])
+				card.actionBtn:SetScript("OnClick", nil)
 			end
 		end
 
-		card.whisperBtn:SetScript("OnClick", function()
-			ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
-		end)
+		card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
+		if isMine then
+			card.whisperBtn:Hide()
+		else
+			card.whisperBtn:Show()
+			card.whisperBtn:SetScript("OnClick", function()
+				ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
+			end)
+		end
 
 		card:Show()
 		yOffset = yOffset + 68

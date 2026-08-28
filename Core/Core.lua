@@ -24,6 +24,7 @@ function GSFHub:OnEnable()
 	-- Register core game events
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("GUILD_ROSTER_UPDATE")
+	self:RegisterEvent("PLAYER_GUILD_UPDATE")
 
 	-- Initialize Minimap Button
 	if GSF.Minimap then
@@ -66,16 +67,32 @@ function GSFHub:OnEnable()
 end
 
 function GSFHub:PLAYER_ENTERING_WORLD()
+	GSF.cache.realmName = GetRealmName()
 	local guild = GSF.DB:GetGuildName()
 	if guild then
 		GSF.cache.guildName = guild
-		GSF.cache.realmName = GetRealmName()
 		if GSF.Sync then
 			-- Stagger initial sync to allow guild channel to connect
 			self:ScheduleTimer(function()
 				GSF.Sync:BroadcastHello()
 			end, 3)
 		end
+	else
+		GSF.cache.guildName = ""
+	end
+end
+
+function GSFHub:PLAYER_GUILD_UPDATE()
+	local guild = GSF.DB:GetGuildName()
+	if guild and guild ~= "" and guild ~= GSF.cache.guildName then
+		GSF.cache.guildName = guild
+		if GSF.Sync then
+			self:ScheduleTimer(function()
+				GSF.Sync:BroadcastHello()
+			end, 3)
+		end
+	elseif not guild then
+		GSF.cache.guildName = ""
 	end
 end
 

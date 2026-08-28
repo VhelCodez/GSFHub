@@ -16,13 +16,18 @@ function GSF.RecipeDrops:AddToWishlist(itemLink)
 	local key = itemId > 0 and tostring(itemId) or itemName
 
 	GSF.db.myWishlist = GSF.db.myWishlist or {}
+	if GSF.db.myWishlist[key] then
+		GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", itemLink)
+		return
+	end
+
 	GSF.db.myWishlist[key] = {
 		name = itemName,
 		link = itemLink,
 		addedAt = time(),
 	}
 
-	GSF.Addon:Printf("Added %s to your recipe wishlist.", itemLink)
+	GSF.Addon:Printf(GSF.L["ADDED_TO_WISHLIST"] or "Added %s to your recipe wishlist.", itemLink)
 
 	if GSF.Sync then
 		GSF.Sync:SendMyData()
@@ -33,7 +38,7 @@ function GSF.RecipeDrops:RemoveFromWishlist(key)
 	if GSF.db.myWishlist and GSF.db.myWishlist[tostring(key)] then
 		local item = GSF.db.myWishlist[tostring(key)]
 		GSF.db.myWishlist[tostring(key)] = nil
-		GSF.Addon:Printf("Removed %s from wishlist.", item.link or item.name)
+		GSF.Addon:Printf(GSF.L["REMOVED_FROM_WISHLIST"] or "Removed %s from wishlist.", item.link or item.name)
 
 		if GSF.Sync then
 			GSF.Sync:SendMyData()

@@ -65,6 +65,23 @@ function GSF.WorkOrders:CompleteOrder(orderId)
 	return true
 end
 
+function GSF.WorkOrders:UnclaimOrder(orderId)
+	local order = GSF.cache.workOrders[orderId]
+	if not order then return false end
+
+	order.status = GSF.ORDER_STATUS.OPEN
+	order.crafter = nil
+
+	if GSF.Sync then
+		GSF.Sync:SendPacket(GSF.OPCODE.WORK_ORDER_STAT, {
+			orderId = orderId,
+			status = GSF.ORDER_STATUS.OPEN,
+		}, "GUILD")
+	end
+
+	return true
+end
+
 function GSF.WorkOrders:CancelOrder(orderId)
 	local order = GSF.cache.workOrders[orderId]
 	if not order then return false end

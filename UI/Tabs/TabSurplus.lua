@@ -35,6 +35,13 @@ function Tab:Create(parent)
 	self.content = content
 	self.surplusCards = {}
 
+	local emptyText = scrollFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	emptyText:SetPoint("CENTER", scrollFrame, "CENTER", 0, 0)
+	emptyText:SetWidth(400)
+	emptyText:SetText(GSF.L["NO_SURPLUS_LISTED"] or "No surplus materials currently offered.")
+	emptyText:Hide()
+	self.emptyText = emptyText
+
 	-- Offer Modal
 	self:BuildOfferModal(frame)
 
@@ -53,11 +60,11 @@ function Tab:BuildOfferModal(parent)
 
 	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	title:SetPoint("TOP", modal, "TOP", 0, -15)
-	title:SetText("|cff33ff99Offer Surplus Material|r")
+	title:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, GSF.L["OFFER_MODAL_TITLE"] or "Offer Surplus Material"))
 
 	local bagLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	bagLabel:SetPoint("TOPLEFT", modal, "TOPLEFT", 20, -45)
-	bagLabel:SetText("Select an item from your bags:")
+	bagLabel:SetText(GSF.L["SELECT_BAG_ITEM"] or "Select an item from your bags:")
 
 	local bagScroll, bagContent = GSF.UI:CreateScrollList(modal, 370, 160)
 	bagScroll:SetPoint("TOPLEFT", bagLabel, "BOTTOMLEFT", 0, -6)
@@ -68,7 +75,7 @@ function Tab:BuildOfferModal(parent)
 
 	local qtyLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	qtyLabel:SetPoint("TOPLEFT", bagScroll, "BOTTOMLEFT", 0, -12)
-	qtyLabel:SetText("Quantity:")
+	qtyLabel:SetText(GSF.L["QUANTITY"] or "Quantity:")
 
 	local qtyBox = GSF.UI:CreateEditBox(modal, 60, 22)
 	qtyBox:SetPoint("TOPLEFT", qtyLabel, "BOTTOMLEFT", 0, -4)
@@ -77,13 +84,13 @@ function Tab:BuildOfferModal(parent)
 
 	local notesLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	notesLabel:SetPoint("LEFT", qtyLabel, "RIGHT", 40, 0)
-	notesLabel:SetText("Notes (Optional):")
+	notesLabel:SetText(GSF.L["NOTES"] or "Notes:")
 
 	local notesBox = GSF.UI:CreateEditBox(modal, 240, 22)
 	notesBox:SetPoint("TOPLEFT", notesLabel, "BOTTOMLEFT", 0, -4)
 	self.modalNotesBox = notesBox
 
-	local postBtn = GSF.UI:CreateButton(modal, "Offer Item", 120, 24)
+	local postBtn = GSF.UI:CreateButton(modal, GSF.L["OFFER_ITEM_BTN"] or "Offer Item", 120, 24)
 	postBtn:SetPoint("BOTTOMLEFT", modal, "BOTTOMLEFT", 40, 15)
 	postBtn:SetScript("OnClick", function()
 		if selectedBagItem then
@@ -95,7 +102,7 @@ function Tab:BuildOfferModal(parent)
 		end
 	end)
 
-	local cancelBtn = GSF.UI:CreateButton(modal, "Cancel", 90, 24)
+	local cancelBtn = GSF.UI:CreateButton(modal, GSF.L["CANCEL"] or "Cancel", 90, 24)
 	cancelBtn:SetPoint("LEFT", postBtn, "RIGHT", 20, 0)
 	cancelBtn:SetScript("OnClick", function() modal:Hide() end)
 
@@ -174,6 +181,12 @@ function Tab:Refresh()
 
 	for _, card in ipairs(self.surplusCards) do card:Hide() end
 
+	if #items == 0 then
+		if self.emptyText then self.emptyText:Show() end
+	else
+		if self.emptyText then self.emptyText:Hide() end
+	end
+
 	local yOffset = 0
 	for i, item in ipairs(items) do
 		local card = self.surplusCards[i]
@@ -201,7 +214,7 @@ function Tab:Refresh()
 			actionBtn:SetPoint("RIGHT", card, "RIGHT", -12, 0)
 			card.actionBtn = actionBtn
 
-			local mailBtn = GSF.UI:CreateButton(card, "Mail", 60, 20)
+			local mailBtn = GSF.UI:CreateButton(card, GSF.L["MAIL"] or "Mail", 60, 20)
 			mailBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
 			card.mailBtn = mailBtn
 
@@ -230,6 +243,7 @@ function Tab:Refresh()
 				ChatFrame_OpenChat(string.format("/w %s Hi, could I please get the surplus [%s] you listed in GSFHub?", item.owner, item.name))
 			end)
 			card.mailBtn:Show()
+			card.mailBtn:SetText(GSF.L["MAIL"] or "Mail")
 			card.mailBtn:SetScript("OnClick", function()
 				if GSF.MailHelper then
 					GSF.MailHelper:PrepareMail(item.owner, "GSF Surplus Request: " .. item.name)

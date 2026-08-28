@@ -42,7 +42,11 @@ function GSF.TradeHelper:PopulateTradeFrame()
 		if tradeSlot > 6 then break end
 		local bag, slot = self:FindItemInBags(itemInfo.name or itemInfo.link)
 		if bag and slot then
-			C_Container and C_Container.PickupContainerItem and C_Container.PickupContainerItem(bag, slot) or PickupContainerItem(bag, slot)
+			if C_Container and C_Container.PickupContainerItem then
+				C_Container.PickupContainerItem(bag, slot)
+			elseif PickupContainerItem then
+				PickupContainerItem(bag, slot)
+			end
 			ClickTradeButton(tradeSlot)
 			tradeSlot = tradeSlot + 1
 		end
@@ -56,10 +60,13 @@ function GSF.TradeHelper:FindItemInBags(itemIdentifier)
 	if not itemIdentifier then return nil end
 	local searchName = (itemIdentifier:match("%[(.+)%]") or itemIdentifier):lower()
 
+	local getNumSlots = (C_Container and C_Container.GetContainerNumSlots) or GetContainerNumSlots
+	local getItemLink = (C_Container and C_Container.GetContainerItemLink) or GetContainerItemLink
+
 	for bag = 0, 4 do
-		local numSlots = C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bag) or GetContainerNumSlots(bag)
+		local numSlots = getNumSlots and getNumSlots(bag) or 0
 		for slot = 1, numSlots do
-			local link = C_Container and C_Container.GetContainerItemLink and C_Container.GetContainerItemLink(bag, slot) or GetContainerItemLink(bag, slot)
+			local link = getItemLink and getItemLink(bag, slot)
 			if link then
 				local name = (GetItemInfo(link) or ""):lower()
 				if name == searchName or (link:lower():find(searchName, 1, true)) then

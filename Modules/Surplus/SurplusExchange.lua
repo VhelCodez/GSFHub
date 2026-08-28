@@ -86,18 +86,25 @@ end
 
 function GSF.Surplus:GetBagItems()
 	local bagItems = {}
-	for bag = 0, 4 do
-		local numSlots = C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bag) or GetContainerNumSlots(bag)
-		for slot = 1, numSlots do
-			local info = C_Container and C_Container.GetContainerItemInfo and C_Container.GetContainerItemInfo(bag, slot)
-			local link = C_Container and C_Container.GetContainerItemLink and C_Container.GetContainerItemLink(bag, slot) or GetContainerItemLink(bag, slot)
-			local count = info and (info.stackCount or info.count) or 1
-			if not info and GetContainerItemInfo then
-				local _, c = GetContainerItemInfo(bag, slot)
-				count = c or 1
-			end
+	local getNumSlots = (C_Container and C_Container.GetContainerNumSlots) or GetContainerNumSlots
+	local getItemInfo = (C_Container and C_Container.GetContainerItemInfo) or GetContainerItemInfo
+	local getItemLink = (C_Container and C_Container.GetContainerItemLink) or GetContainerItemLink
 
+	for bag = 0, 4 do
+		local numSlots = getNumSlots and getNumSlots(bag) or 0
+		for slot = 1, numSlots do
+			local link = getItemLink and getItemLink(bag, slot)
 			if link then
+				local count = 1
+				if getItemInfo then
+					local info = getItemInfo(bag, slot)
+					if type(info) == "table" then
+						count = info.stackCount or info.count or 1
+					else
+						count = select(2, getItemInfo(bag, slot)) or 1
+					end
+				end
+
 				table.insert(bagItems, {
 					bag = bag,
 					slot = slot,

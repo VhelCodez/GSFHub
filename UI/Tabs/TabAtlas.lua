@@ -30,7 +30,7 @@ function Tab:Create(parent)
 	local catDropdown = CreateFrame("Button", "GSFAtlasCatDropdown", frame, "UIDropDownMenuTemplate")
 	catDropdown:SetPoint("LEFT", searchBox, "RIGHT", 5, -2)
 	UIDropDownMenu_SetWidth(catDropdown, 120)
-	UIDropDownMenu_SetText(catDropdown, "All Categories")
+	UIDropDownMenu_SetText(catDropdown, GSF.L["CAT_ALL"] or "All Categories")
 	self.catDropdown = catDropdown
 
 	local categories = { "All", "Mining", "Herbalism", "Skinning", "Elemental", "Cloth", "Fishing" }
@@ -51,11 +51,11 @@ function Tab:Create(parent)
 	end)
 
 	-- Toggle View Buttons (Atlas vs Bounties)
-	local atlasViewBtn = GSF.UI:CreateButton(frame, GSF.L["VIEW_ATLAS"] or "🗺️ Resource Atlas", 130, 22)
+	local atlasViewBtn = GSF.UI:CreateButton(frame, GSF.L["VIEW_ATLAS"] or "Resource Atlas", 130, 22)
 	atlasViewBtn:SetPoint("LEFT", catDropdown, "RIGHT", 10, 2)
 	self.atlasViewBtn = atlasViewBtn
 
-	local bountyViewBtn = GSF.UI:CreateButton(frame, GSF.L["VIEW_BOUNTIES"] or "📦 Guild Bounties", 130, 22)
+	local bountyViewBtn = GSF.UI:CreateButton(frame, GSF.L["VIEW_BOUNTIES"] or "Guild Bounties", 130, 22)
 	bountyViewBtn:SetPoint("LEFT", atlasViewBtn, "RIGHT", 6, 0)
 	self.bountyViewBtn = bountyViewBtn
 
@@ -139,8 +139,9 @@ function Tab:Create(parent)
 	self.tipsText = tipsText
 
 	-- Action Buttons bottom right
-	local pinBtn = GSF.UI:CreateButton(rightPane, GSF.L["PIN_TO_HUD"] or "🎯 Pin to HUD", 120, 24)
+	local pinBtn = GSF.UI:CreateButton(rightPane, GSF.L["PIN_TO_HUD"] or "Pin to HUD", 120, 24)
 	pinBtn:SetPoint("BOTTOMLEFT", rightPane, "BOTTOMLEFT", 15, 12)
+	pinBtn:Disable()
 	self.pinBtn = pinBtn
 
 	pinBtn:SetScript("OnClick", function()
@@ -150,8 +151,9 @@ function Tab:Create(parent)
 		end
 	end)
 
-	local bountyBtn = GSF.UI:CreateButton(rightPane, GSF.L["POST_BOUNTY_BTN"] or "📜 Request Bounty", 140, 24)
+	local bountyBtn = GSF.UI:CreateButton(rightPane, GSF.L["POST_BOUNTY_BTN"] or "Request Bounty", 140, 24)
 	bountyBtn:SetPoint("LEFT", pinBtn, "RIGHT", 10, 0)
+	bountyBtn:Disable()
 	self.bountyBtn = bountyBtn
 
 	bountyBtn:SetScript("OnClick", function()
@@ -170,11 +172,12 @@ function Tab:Create(parent)
 	bountiesContainer:Hide()
 	self.bountiesContainer = bountiesContainer
 
-	local bountyScroll, bountyContent = GSF.UI:CreateScrollList(bountiesContainer, 720, 370)
-	bountyScroll:SetPoint("TOPLEFT", bountiesContainer, "TOPLEFT", 5, 0)
-	bountyScroll:SetPoint("BOTTOMRIGHT", bountiesContainer, "BOTTOMRIGHT", -5, 10)
-	self.bountyContent = bountyContent
 	self.bountyCards = {}
+	local bountyScroll, bountyContent = GSF.UI:CreateScrollList(bountiesContainer, 700, 360)
+	bountyScroll:SetPoint("TOPLEFT", bountiesContainer, "TOPLEFT", 5, -5)
+	bountyScroll:SetPoint("BOTTOMRIGHT", bountiesContainer, "BOTTOMRIGHT", -5, 5)
+	self.bountyScroll = bountyScroll
+	self.bountyContent = bountyContent
 
 	return frame
 end
@@ -183,10 +186,14 @@ function Tab:SelectResource(res)
 	selectedResource = res
 	if not res then return end
 
+	if self.pinBtn then self.pinBtn:Enable() end
+	if self.bountyBtn then self.bountyBtn:Enable() end
+
 	local dispName = GSF.Atlas:GetDisplayName(res)
+	local catLoc = GSF.L["CAT_" .. (res.category or ""):upper()] or res.category
 	self.detailIcon:SetTexture(res.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 	self.detailTitle:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, dispName))
-	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r", res.category, res.minSkill or 1))
+	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r", catLoc, res.minSkill or 1))
 
 	local zoneLines = {}
 	for _, z in ipairs(res.zones or {}) do

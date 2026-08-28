@@ -17,6 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-08-28
+
+### Fixed
+- **Lua Error in Container Queries (`TradeHelper.lua`, `SurplusExchange.lua`, `GoalsHUD.lua`):** Fixed modern Classic container API evaluation trap that caused `attempt to call a nil value` when querying empty bag slots.
+- **Lua Error in Bounties (`SupplyBounties.lua`):** Implemented missing `GSF.Alts:GetMyMain()` and corrected communication module reference to `GSF.Sync`.
+- **Addon Title Restored:** Preserved canonical `"GSFHub"` title across all localizations instead of localized literal translation.
+- **Missing Font Glyphs (`[][]` Box Characters):** Stripped unsupported raw UTF-8 emojis from buttons, toast notifications, headers, and badge labels.
+- **Bottom Tab Label Truncation:** Shortened tab titles (*Berufe, Aufträge, Überschuss, Beute & Wunsch, Atlas, Gilde & Sync*) and added `PanelTemplates_TabResize` for responsive button sizing.
+- **Mining Node Icons & IDs (`AtlasData.lua`):** Corrected Copper Vein (`2770` Copper Ore), Tin Vein (`2771` Tin Ore), and Silver Vein (`2775` Silver Ore) item associations.
+- **Work Order State Reset & Lifecycle (`TabWorkOrders.lua`):** Properly resets profession selection to `"Any"` on modal creation, adds cancel action for own open orders, and enables crafter release/unclaim.
+- **Wishlist Duplicate Spam (`RecipeDrops.lua`):** Added duplicate item verification and localized user chat notifications.
+- **Settings Layout & Sync Overflow (`TabRoster.lua`):** Arranged settings checkboxes into a 2x2 grid to prevent overlapping table headers, shortened sync button text to `"Vollständiger Sync"`, and added a clear alert when unguilded.
+- **Dynamic Guild Detection (`Core.lua`):** Registered `PLAYER_GUILD_UPDATE` event and cached realm names unconditionally for unguilded players.
+
+---
+
 ## [1.2.0] - 2026-08-22
 
 ### Added

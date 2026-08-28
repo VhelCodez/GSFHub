@@ -111,7 +111,7 @@ function GSF.SupplyBounties:FulfillBounty(bountyId)
 	end
 
 	if GSF.Toast then
-		local fulfillToast = string.format(GSF.L["BOUNTY_FULFILLED_TOAST"] or "🎉 Bounty Fulfilled: Received %s x%d!", b.item, b.count)
+		local fulfillToast = string.format(GSF.L["BOUNTY_FULFILLED_TOAST"] or "Bounty Fulfilled: Received %s x%d!", b.item, b.count)
 		GSF.Toast:ShowToast(fulfillToast, "Interface\\Icons\\Spell_Holy_SealOfSacrifice")
 	end
 

@@ -80,10 +80,13 @@ function MainFrame:Initialize()
 		tab:SetScript("OnClick", function()
 			MainFrame:SelectTab(i)
 		end)
+		if PanelTemplates_TabResize then
+			PanelTemplates_TabResize(tab, 0)
+		end
 		if i == 1 then
 			tab:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 10, 2)
 		else
-			tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", -16, 0)
+			tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", -15, 0)
 		end
 		tabs[i] = tab
 	end
@@ -117,6 +120,9 @@ function MainFrame:UpdateLocalizedTexts()
 	for i = 1, NUM_TABS do
 		if tabs[i] then
 			tabs[i]:SetText(tabTitles[i])
+			if PanelTemplates_TabResize then
+				PanelTemplates_TabResize(tabs[i], 0)
+			end
 		end
 	end
 
@@ -130,7 +136,7 @@ end
 
 function MainFrame:ShowUpdateBadge(remoteVersion)
 	if not self.updateBtn then return end
-	self.updateBtn:SetText(string.format("|cffffd100⚡ " .. GSF.L["UPDATE_BADGE"] .. "|r", remoteVersion or "New"))
+	self.updateBtn:SetText(string.format("|cffffd100" .. GSF.L["UPDATE_BADGE"] .. "|r", remoteVersion or "New"))
 	self.updateBtn:Show()
 end
 
