@@ -64,24 +64,30 @@
 | Command | Description |
 | :--- | :--- |
 | `/gsf` or `/gsfhub` | Toggle the main GSFHub window |
+| `/gsf settings` | Open addon settings and preferences |
+| `/gsf atlas` | Open Resource Farming Atlas & Bounties |
+| `/gsf hud` | Toggle onscreen Goals HUD tracker |
 | `/gsf scan` | Force-scan the currently open profession window |
 | `/gsf sync` | Request a full synchronization broadcast from online guild members |
 | `/gsf main <Name>` | Set your Main character's name |
+| `/gsf bug` | Open bug report and diagnostic modal |
 | `/gsf help` | Show in-game command help |
 
 ---
 
 ## 🖥️ UI Navigation
 
+- **Header Cog Button (`[⚙]`):** Convenient 1-click shortcut in the top-right header next to Close to toggle the dedicated Settings view from anywhere.
 - **Minimap Button:** Left-click toggles the main window; right-click scans the open profession; hover over the icon to view active orders and sync status.
 - **TradeSkill Frame Integration:** A dedicated **"GSF Sync"** button appears in the top-right corner of standard TradeSkill and Craft frames.
 - **Tabs:**
   - **Professions:** Search recipes by name or reagent, filter by trade skill, view required reagents, and browse crafters.
-  - **Work Orders:** Active requests board and "+ New Work Order" dialog.
+  - **Work Orders:** Active requests board, "+ New Work Order" dialog, and order editing for own open orders.
   - **Surplus Pool:** Guild material exchange and bag item listing modal.
   - **Drops & Wishlist:** Recent group recipe drops log and personal wishlist manager.
-  - **Resource Atlas:** 1–375 encyclopedic resource database with best farming zones and 1-click Pin to HUD.
-  - **Roster & Sync:** Role badges, Main/Alt linking, sync statistics, audio/toast toggles, and guild member roster.
+  - **Resource Atlas:** 1–375 encyclopedic resource database with localized node names and 1-click Pin to HUD.
+  - **Roster & Sync:** Role badges, Main/Alt linking, sync statistics, and expanded guild member roster table.
+  - **Settings (`[⚙]`):** Language selector, minimap toggle, decoupled audio alerts, auto-scan on open, and Goals HUD settings with position reset.
 
 ---
 
@@ -92,6 +98,8 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 - **v1.0.0 (Released):** Core profession directory, work orders, surplus exchange, recipe drops & P2P sync.
 - **v1.1.0 (Released):** Multi-Language architecture (English & German), in-game language switcher, P2P version gossip & update reminders, and in-game diagnostic bug report helper.
 - **v1.2.0 (Released):** Gathering Suite & Guild Supply Chain (1–375 Resource Atlas, Bounties with in-transit mail tracking & 3-Factor Handshake, Role hierarchy badges, and draggable Goals HUD).
+- **v1.2.1 (Released):** Critical container API fixes, UI layout collision adjustments, and localization parity.
+- **v1.2.2 (Released):** Dedicated Settings view via header cog, Goals HUD two-way state sync, decoupled audio alerts, localized node names, German drop detection, and live translations.
 - **v1.3.0 (Next Up):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
 - **v1.4.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
 - **v1.5.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).

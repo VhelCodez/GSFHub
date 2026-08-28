@@ -15,9 +15,10 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      UI Presentation Layer                  │
-│   MainFrame (6 Tabs: Professions, WorkOrders, Surplus,      │
-│   Drops, Atlas, Roster) • GoalsHUD • Minimap • Toasts       │
+│                    Presentation Layer                       │
+│   MainFrame.lua • 6-Tab Interface (Professions, Orders,     │
+│   Surplus, Drops, Atlas, Roster) • TabSettings.lua [⚙]      │
+│   GoalsHUD • Minimap • Toasts • Dialogs                     │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
@@ -180,8 +181,12 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 ### 5. Draggable Goals HUD (`UI/Widgets/GoalsHUD.lua`)
 - Onscreen overlay frame displaying visual progress bars and dynamic bag counting on `BAG_UPDATE`.
 
+### 6. Dedicated Settings View (`UI/Tabs/TabSettings.lua`)
+- Card-based preferences interface accessible via title bar cog `[⚙]` or `/gsf settings`.
+- Provides two-way synchronized Goals HUD controls, independent audio alert toggles, auto-scan settings, and diagnostics.
+
 ---
 
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`).
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`).
 - GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

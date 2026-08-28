@@ -20,6 +20,20 @@ graph LR
 
 ## 🚀 Released Milestones
 
+### ✅ v1.2.2 - Settings View & Quality-of-Life Polish *(Released)*
+- [x] **Dedicated Settings View (`TabSettings.lua`):** Modular card layout for Language, Minimap, Goals HUD, Audio, and Diagnostics.
+- [x] **Header Cog Button (`[⚙]`):** Fast 1-click access to Settings from any view while preserving 6 bottom tabs.
+- [x] **Goals HUD Two-Way State Synchronization:** Live binding between UI checkbox and HUD frame events.
+- [x] **Decoupled Audio Alerts:** Audio chimes play independently of visual toast frame suppression.
+- [x] **Mining Node Localized Names:** Dedicated German vein name resolution (*Kupfervorkommen*, *Eisenvorkommen*, etc.).
+- [x] **German Recipe Drop Detection:** `classID == 9` and German prefix support (*Muster:*, *Pläne:*, *Rezept:*).
+- [x] **Work Order Editing & Completion Confirmation:** Edit own open orders and confirmation safety prompt on completion.
+
+### ✅ v1.2.1 - Client Compatibility & UI Fixes *(Released)*
+- [x] **Modern Container API Traps:** Resolved `attempt to call a nil value` across bag slot querying.
+- [x] **UI Layout Collision Adjustments:** Dynamic tab resizing and layout spacing fixes.
+- [x] **Full Dual-Language Key Parity:** Added complete German dictionary keys.
+
 ### ✅ v1.2.0 - Gathering Suite & Guild Supply Chain *(Released)*
 - [x] **1–375 Resource Farming Atlas (`AtlasData.lua`):** Complete encyclopedia of Vanilla (1–300) and TBC (300–375) resources with native multilingual `itemID` resolution.
 - [x] **Crafter ➔ Gatherer Supply Chain Bounties (`SupplyBounties.lua`):** 1-click recipe breakdown into material requests.

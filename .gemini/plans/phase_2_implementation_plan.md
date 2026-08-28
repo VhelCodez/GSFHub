@@ -18,3 +18,7 @@
    - Added Tab 5: Resource Atlas & Guild Bounties with category and skill filters.
 6. **100% German & English Localization:**
    - 117 keys across `enUS.lua` and `deDE.lua` (100% parity).
+
+## 🔧 v1.2.1 & v1.2.2 Maintenance & Polish (Released)
+- **v1.2.1:** Resolved modern container API queries, layout collisions, and full German key parity.
+- **v1.2.2:** Added dedicated Settings view (`TabSettings.lua`), header cog button `[⚙]`, 2-way Goals HUD state synchronization, decoupled audio alerts, localized German mining vein names, German recipe drop detection, wishlist input validation, and work order editing/completion confirmation.
