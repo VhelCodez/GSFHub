@@ -30,7 +30,7 @@ function Tab:Create(parent)
 	self.langLabel = langLabel
 
 	local langDropdown = CreateFrame("Button", "GSFSettingsLangDropdown", genCard, "UIDropDownMenuTemplate")
-	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, 2)
+	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, -8)
 	UIDropDownMenu_SetWidth(langDropdown, 160)
 	self.langDropdown = langDropdown
 
@@ -243,7 +243,7 @@ function Tab:Create(parent)
 
 	issuesBtn:SetScript("OnClick", function()
 		if GSF.URLDialog then
-			GSF.URLDialog:Open(GSF.ISSUES_URL or "https://github.com/VhelCodez/GSFHub/issues/new/choose", GSF.L["FEEDBACK_LINK_LABEL"] or "GitHub Issues:")
+			GSF.URLDialog:ShowDialog("GitHub Issues", GSF.L["FEEDBACK_LINK_LABEL"] or "GitHub Issues Link:", GSF.ISSUES_URL or "https://github.com/VhelCodez/GSFHub/issues/new/choose")
 		end
 	end)
 

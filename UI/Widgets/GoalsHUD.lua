@@ -90,7 +90,7 @@ function GSF.GoalsHUD:Initialize()
 	end
 end
 
-function GSF.GoalsHUD:AddGoal(itemName, targetCount, category)
+function GSF.GoalsHUD:AddGoal(itemName, targetCount, category, bountyId)
 	if not itemName or itemName:trim() == "" then return end
 	if not GSF.db then return end
 	if not GSF.db.myGoals then GSF.db.myGoals = {} end
@@ -103,6 +103,8 @@ function GSF.GoalsHUD:AddGoal(itemName, targetCount, category)
 	for _, g in ipairs(GSF.db.myGoals) do
 		if g.name:lower() == cleanName:lower() then
 			g.target = target
+			if bountyId then g.bountyId = bountyId end
+			if category then g.category = category end
 			exists = true
 			break
 		end
@@ -113,6 +115,7 @@ function GSF.GoalsHUD:AddGoal(itemName, targetCount, category)
 			name = cleanName,
 			target = target,
 			category = category or "General",
+			bountyId = bountyId,
 		})
 	end
 
@@ -129,6 +132,17 @@ end
 function GSF.GoalsHUD:RemoveGoal(index)
 	if not GSF.db or not GSF.db.myGoals then return end
 	table.remove(GSF.db.myGoals, index)
+	self:Refresh()
+end
+
+function GSF.GoalsHUD:RemoveGoalByName(name)
+	if not GSF.db or not GSF.db.myGoals or not name then return end
+	local lower = name:lower():trim()
+	for i = #GSF.db.myGoals, 1, -1 do
+		if GSF.db.myGoals[i].name:lower():trim() == lower then
+			table.remove(GSF.db.myGoals, i)
+		end
+	end
 	self:Refresh()
 end
 
@@ -197,14 +211,12 @@ function GSF.GoalsHUD:Refresh()
 			row.barText = barText
 
 			local removeBtn = CreateFrame("Button", nil, row)
-			removeBtn:SetSize(12, 12)
-			removeBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -2, 0)
+			removeBtn:SetSize(16, 16)
+			removeBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, 1)
 			local rmTex = removeBtn:CreateTexture(nil, "ARTWORK")
 			rmTex:SetAllPoints()
 			rmTex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-			removeBtn:SetScript("OnClick", function()
-				GSF.GoalsHUD:RemoveGoal(i)
-			end)
+			row.removeBtn = removeBtn
 
 			row.bar = bar
 			table.insert(goalRows, row)
@@ -212,11 +224,23 @@ function GSF.GoalsHUD:Refresh()
 
 		row:SetPoint("TOPLEFT", hudFrame.content, "TOPLEFT", 0, -yOffset)
 
+		local gIdx = i
+		local gData = goal
+		row.removeBtn:SetScript("OnClick", function()
+			if gData.bountyId or gData.category == "Bounty" then
+				StaticPopup_Show("GSF_CONFIRM_UNCLAIM_BOUNTY", nil, nil, { index = gIdx, bountyId = gData.bountyId, itemName = gData.name })
+			else
+				GSF.GoalsHUD:RemoveGoal(gIdx)
+			end
+		end)
+
 		local curCount = self:CountItemInBags(goal.name)
 		local target = goal.target or 1
 		local pct = math.min(math.floor((curCount / target) * 100), 100)
 
-		row.label:SetText(string.format("|cffffffff%s|r", goal.name))
+		local isBounty = (goal.bountyId or goal.category == "Bounty")
+		local tag = isBounty and ("|cffffd100" .. (GSF.L["BOUNTY_TAG"] or "[Bounty]") .. " |r") or ""
+		row.label:SetText(string.format("%s|cffffffff%s|r", tag, goal.name))
 		row.bar:SetMinMaxValues(0, target)
 		row.bar:SetValue(math.min(curCount, target))
 
@@ -282,3 +306,22 @@ function GSF.GoalsHUD:NotifyStateChange()
 		GSF.TabSettings.goalsHUDCheck:SetChecked(self:IsShown())
 	end
 end
+
+StaticPopupDialogs["GSF_CONFIRM_UNCLAIM_BOUNTY"] = {
+	text = GSF.L["CONFIRM_UNCLAIM_BOUNTY"] or "Are you sure you want to unclaim this guild bounty?",
+	button1 = GSF.L["YES"] or "Yes",
+	button2 = GSF.L["NO"] or "No",
+	OnAccept = function(self, data)
+		if data then
+			if data.bountyId and GSF.SupplyBounties then
+				GSF.SupplyBounties:UnclaimBounty(data.bountyId)
+			elseif data.index then
+				GSF.GoalsHUD:RemoveGoal(data.index)
+			end
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}

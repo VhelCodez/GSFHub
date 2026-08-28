@@ -9,7 +9,7 @@ This document outlines the version roadmap and upcoming milestones for **GSFHub 
 ```mermaid
 graph LR
     v10["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
-    v11 --> v12["v1.2.2<br/><b>Gathering, Atlas & Settings</b><br/>(Released)"]
+    v11 --> v12["v1.2.3<br/><b>Gathering, Atlas & Polish</b><br/>(Released)"]
     v12 --> v13["v1.3.0<br/><b>Phase 3: Navigation & QoL</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Specializations & CDs</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: TBC Guild Vault</b><br/>(Planned)"]
@@ -19,6 +19,15 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.2.3 - Test Phase 2 Polish & Input Enhancements *(Released)*
+- [x] **Escape Key Close (`UISpecialFrames`):** Pressing `ESC` closes the window cleanly.
+- [x] **Dynamic Header Subtitles:** Replaces static version display with live tab title subtitles.
+- [x] **Universal Shift-Click Bag Item Paste:** Seamless bag link parsing into active GSF edit boxes without stack-splitting.
+- [x] **Drag-and-Drop `ItemSlot` Preview:** Reusable Blizzard slot with 250ms debounced live icon resolution.
+- [x] **Bounty Lifecycle Management:** Own bounty cancellation, gatherer unclaiming, completed bounty dismissal, and hide completed filter.
+- [x] **Option B Material Request Modal:** Item preview slot, quantity input, and custom notes.
+- [x] **Surplus & Atlas Polish:** Soulbound filtering, bag row selection highlight, German zone/yield localization, and layout collision fixes.
 
 ### ✅ v1.2.2 - Settings View & Quality-of-Life Polish *(Released)*
 - [x] **Dedicated Settings View (`TabSettings.lua`):** Modular card layout for Language, Minimap, Goals HUD, Audio, and Diagnostics.

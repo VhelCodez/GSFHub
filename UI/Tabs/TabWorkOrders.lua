@@ -19,8 +19,9 @@ function Tab:Create(parent)
 		Tab:Refresh()
 	end)
 
-	local newOrderBtn = GSF.UI:CreateButton(frame, "+ " .. GSF.L["CREATE_WORK_ORDER"], 150, 24)
+	local newOrderBtn = GSF.UI:CreateButton(frame, "+ " .. GSF.L["CREATE_WORK_ORDER"], 170, 24)
 	newOrderBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -20, -12)
+	self.newOrderBtn = newOrderBtn
 	newOrderBtn:SetScript("OnClick", function()
 		Tab:OpenCreateModal()
 	end)
@@ -60,18 +61,24 @@ function Tab:BuildCreateModal(parent)
 	title:SetPoint("TOP", modal, "TOP", 0, -15)
 	title:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, GSF.L["POST_WORK_ORDER_MODAL"] or "Post Work Order"))
 
-	-- Item Name
+	-- Item Name & Slot
 	local itemLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	itemLabel:SetPoint("TOPLEFT", modal, "TOPLEFT", 25, -45)
 	itemLabel:SetText(GSF.L["ITEM_OR_ENCHANT"] or "Item or Enchant Name:")
 
-	local itemBox = GSF.UI:CreateEditBox(modal, 320, 22)
-	itemBox:SetPoint("TOPLEFT", itemLabel, "BOTTOMLEFT", 0, -4)
+	local itemSlot = GSF.UI:CreateItemSlot(modal, 28)
+	itemSlot:SetPoint("TOPLEFT", itemLabel, "BOTTOMLEFT", 0, -4)
+	self.modalItemSlot = itemSlot
+
+	local itemBox = GSF.UI:CreateEditBox(modal, 286, 22)
+	itemBox:SetPoint("LEFT", itemSlot, "RIGHT", 6, 0)
 	self.modalItemBox = itemBox
+
+	GSF.UI:AttachItemPreview(itemBox, itemSlot)
 
 	-- Quantity & Profession
 	local qtyLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	qtyLabel:SetPoint("TOPLEFT", itemBox, "BOTTOMLEFT", 0, -10)
+	qtyLabel:SetPoint("TOPLEFT", itemSlot, "BOTTOMLEFT", 0, -10)
 	qtyLabel:SetText(GSF.L["QUANTITY"] or "Quantity:")
 
 	local qtyBox = GSF.UI:CreateEditBox(modal, 60, 22)
@@ -178,6 +185,16 @@ function Tab:OpenCreateModal(prefillItem, prefillProf, prefillQty, prefillNotes,
 	self.modalNotesBox:SetText(prefillNotes or "")
 	self.modalMatsCheck:SetChecked(prefillMats ~= false)
 
+	if self.modalItemSlot then
+		self.modalItemSlot:Clear()
+		if prefillItem and prefillItem ~= "" then
+			local _, _, _, _, _, _, _, _, _, texture = GetItemInfo(prefillItem)
+			if texture then
+				self.modalItemSlot:SetItem(prefillItem, texture)
+			end
+		end
+	end
+
 	local prof = prefillProf or "Any"
 	self.selectedProf = prof
 	UIDropDownMenu_SetSelectedValue(self.modalProfDropdown, prof)
@@ -236,12 +253,12 @@ function Tab:Refresh()
 			statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
 			card.statusText = statusText
 
-			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_ORDER"], 80, 20)
+			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_ORDER"], 95, 22)
 			actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
 			card.actionBtn = actionBtn
 
-			local whisperBtn = GSF.UI:CreateButton(card, GSF.L["WHISPER"] or "Whisper", 70, 20)
-			whisperBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
+			local whisperBtn = GSF.UI:CreateButton(card, GSF.L["WHISPER"] or "Whisper", 95, 22)
+			whisperBtn:SetPoint("RIGHT", actionBtn, "LEFT", -8, 0)
 			card.whisperBtn = whisperBtn
 
 			table.insert(self.orderCards, card)

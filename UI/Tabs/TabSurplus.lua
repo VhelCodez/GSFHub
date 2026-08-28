@@ -73,20 +73,24 @@ function Tab:BuildOfferModal(parent)
 
 	local selectedBagItem = nil
 
+	local itemSlot = GSF.UI:CreateItemSlot(modal, 28)
+	itemSlot:SetPoint("TOPLEFT", bagScroll, "BOTTOMLEFT", 0, -12)
+	self.modalItemSlot = itemSlot
+
 	local qtyLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	qtyLabel:SetPoint("TOPLEFT", bagScroll, "BOTTOMLEFT", 0, -12)
+	qtyLabel:SetPoint("LEFT", itemSlot, "RIGHT", 10, 8)
 	qtyLabel:SetText(GSF.L["QUANTITY"] or "Quantity:")
 
-	local qtyBox = GSF.UI:CreateEditBox(modal, 60, 22)
+	local qtyBox = GSF.UI:CreateEditBox(modal, 55, 22)
 	qtyBox:SetPoint("TOPLEFT", qtyLabel, "BOTTOMLEFT", 0, -4)
 	qtyBox:SetText("1")
 	self.modalQtyBox = qtyBox
 
 	local notesLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	notesLabel:SetPoint("LEFT", qtyLabel, "RIGHT", 40, 0)
+	notesLabel:SetPoint("LEFT", qtyLabel, "RIGHT", 35, 0)
 	notesLabel:SetText(GSF.L["NOTES"] or "Notes:")
 
-	local notesBox = GSF.UI:CreateEditBox(modal, 240, 22)
+	local notesBox = GSF.UI:CreateEditBox(modal, 215, 22)
 	notesBox:SetPoint("TOPLEFT", notesLabel, "BOTTOMLEFT", 0, -4)
 	self.modalNotesBox = notesBox
 
@@ -106,8 +110,18 @@ function Tab:BuildOfferModal(parent)
 	cancelBtn:SetPoint("LEFT", postBtn, "RIGHT", 20, 0)
 	cancelBtn:SetScript("OnClick", function() modal:Hide() end)
 
-	self.selectBagItem = function(item)
+	self.selectBagItem = function(item, clickedBtn)
 		selectedBagItem = item
+		for _, b in ipairs(self.bagItemButtons) do
+			b:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
+			b:SetBackdropColor(0.12, 0.12, 0.16, 0.6)
+		end
+		if clickedBtn then
+			clickedBtn:SetBackdropBorderColor(1.0, 0.82, 0.0, 1.0)
+			clickedBtn:SetBackdropColor(0.25, 0.22, 0.10, 0.9)
+		end
+		local _, _, _, _, _, _, _, _, _, texture = GetItemInfo(item.link)
+		itemSlot:SetItem(item.link, texture, item.link)
 		qtyBox:SetText(tostring(item.count or 1))
 	end
 end
@@ -152,9 +166,11 @@ function Tab:OpenOfferModal()
 		btn.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 		btn.name:SetText(item.link)
 		btn.count:SetText("x" .. (item.count or 1))
+		btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
+		btn:SetBackdropColor(0.12, 0.12, 0.16, 0.6)
 
 		btn:SetScript("OnClick", function()
-			Tab.selectBagItem(item)
+			Tab.selectBagItem(item, btn)
 		end)
 
 		btn:Show()
@@ -163,6 +179,7 @@ function Tab:OpenOfferModal()
 
 	self.bagContent:SetHeight(math.max(yOffset, 160))
 	self.modalNotesBox:SetText("")
+	if self.modalItemSlot then self.modalItemSlot:Clear() end
 	self.modal:Show()
 end
 
@@ -198,20 +215,33 @@ function Tab:Refresh()
 			GSF.UI:CreateBackdrop(card, false)
 			card:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
 
-			local icon = card:CreateTexture(nil, "ARTWORK")
-			icon:SetSize(36, 36)
-			icon:SetPoint("LEFT", card, "LEFT", 8, 0)
+			local iconBtn = CreateFrame("Button", nil, card)
+			iconBtn:SetSize(36, 36)
+			iconBtn:SetPoint("LEFT", card, "LEFT", 8, 0)
+			card.iconBtn = iconBtn
+
+			local icon = iconBtn:CreateTexture(nil, "ARTWORK")
+			icon:SetAllPoints()
 			card.icon = icon
 
+			iconBtn:SetScript("OnEnter", function(self)
+				if card.itemLink then
+					GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+					GameTooltip:SetHyperlink(card.itemLink)
+					GameTooltip:Show()
+				end
+			end)
+			iconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 			local name = card:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-			name:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -2)
+			name:SetPoint("TOPLEFT", iconBtn, "TOPRIGHT", 10, -2)
 			card.name = name
 
 			local details = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 			details:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -4)
 			card.details = details
 
-			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_SURPLUS"], 80, 20)
+			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_SURPLUS"], 90, 20)
 			actionBtn:SetPoint("RIGHT", card, "RIGHT", -12, 0)
 			card.actionBtn = actionBtn
 
@@ -223,6 +253,7 @@ function Tab:Refresh()
 		end
 
 		card:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -yOffset)
+		card.itemLink = item.link or item.name
 		
 		card.icon:SetTexture(item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 		card.name:SetText(string.format("%s x%d", item.link or item.name, item.count or 1))

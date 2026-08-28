@@ -14,9 +14,11 @@ function Tab:Create(parent)
 	local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	searchLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -10)
 	searchLabel:SetText(GSF.L["SEARCH_RECIPES"])
+	self.searchLabel = searchLabel
 
 	local searchBox = GSF.UI:CreateEditBox(frame, 220, 22)
 	searchBox:SetPoint("TOPLEFT", searchLabel, "BOTTOMLEFT", 0, -4)
+	searchBox.isGSFInput = true
 	self.searchBox = searchBox
 
 	searchBox:SetScript("OnTextChanged", function(eb)
@@ -129,9 +131,9 @@ function Tab:Create(parent)
 	craftersLabel:SetText(GSF.L["CRAFTERS_KNOWN"])
 	self.craftersLabel = craftersLabel
 
-	local craftersScroll, craftersContent = GSF.UI:CreateScrollList(rightPane, 320, 160)
+	local craftersScroll, craftersContent = GSF.UI:CreateScrollList(rightPane, 310, 160)
 	craftersScroll:SetPoint("TOPLEFT", craftersLabel, "BOTTOMLEFT", 0, -6)
-	craftersScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -10, 50)
+	craftersScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -28, 48)
 	self.craftersScroll = craftersScroll
 	self.craftersContent = craftersContent
 	self.crafterRows = {}
@@ -271,6 +273,11 @@ function Tab:Refresh()
 
 	if selectedRecipe then
 		self:DisplayRecipeDetails(selectedRecipe)
+	else
+		if self.craftersScroll then
+			local scrollBar = _G[self.craftersScroll:GetName() .. "ScrollBar"] or self.craftersScroll.ScrollBar
+			if scrollBar then scrollBar:Hide() end
+		end
 	end
 end
 
@@ -329,9 +336,9 @@ function Tab:DisplayRecipeDetails(recipe)
 
 		row:SetPoint("TOPLEFT", self.craftersContent, "TOPLEFT", 0, -yOffset)
 		
-		local statusDot = crafter.online and "|cff00ff00●|r" or "|cff777777●|r"
+		local statusIcon = crafter.online and "|TInterface\\FriendsFrame\\StatusIcon-Online:12:12:0:0|t" or "|TInterface\\FriendsFrame\\StatusIcon-Offline:12:12:0:0|t"
 		local formattedName = GSF.Alts:GetFormattedName(crafter.name)
-		row.nameText:SetText(string.format("%s %s", statusDot, formattedName))
+		row.nameText:SetText(string.format("%s %s", statusIcon, formattedName))
 		row.skillText:SetText(string.format("[%d/%d]", crafter.skill or 0, crafter.maxSkill or 375))
 
 		if crafter.name == myName then
@@ -348,4 +355,14 @@ function Tab:DisplayRecipeDetails(recipe)
 	end
 
 	self.craftersContent:SetHeight(math.max(yOffset, 160))
+
+	-- Auto-hide scrollbar if list does not overflow
+	local scrollBar = _G[self.craftersScroll:GetName() .. "ScrollBar"] or self.craftersScroll.ScrollBar
+	if scrollBar then
+		if not recipe.crafters or #recipe.crafters == 0 or yOffset <= 160 then
+			scrollBar:Hide()
+		else
+			scrollBar:Show()
+		end
+	end
 end

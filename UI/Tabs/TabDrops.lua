@@ -13,7 +13,7 @@ function Tab:Create(parent)
 	dropTitle:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -12)
 	dropTitle:SetText(GSF.L["RECIPE_DROPS_TITLE"])
 
-	local dropScroll, dropContent = GSF.UI:CreateScrollList(frame, 350, 370)
+	local dropScroll, dropContent = GSF.UI:CreateScrollList(frame, 330, 370)
 	dropScroll:SetPoint("TOPLEFT", dropTitle, "BOTTOMLEFT", -5, -8)
 	self.dropContent = dropContent
 	self.dropRows = {}
@@ -40,12 +40,16 @@ function Tab:Create(parent)
 	emptyWishText:SetPoint("CENTER", wishContent, "CENTER", 0, 0)
 	emptyWishText:SetWidth(280)
 	emptyWishText:SetJustifyH("CENTER")
-	emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"] or "Your wishlist is empty.")
+	emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"])
 	self.emptyWishText = emptyWishText
 
-	-- Wishlist input bottom right
-	local addBox = GSF.UI:CreateEditBox(frame, 200, 22)
-	addBox:SetPoint("TOPLEFT", wishScroll, "BOTTOMLEFT", 5, -10)
+	-- Wishlist input bottom right with ItemSlot preview
+	local itemSlot = GSF.UI:CreateItemSlot(frame, 26)
+	itemSlot:SetPoint("TOPLEFT", wishScroll, "BOTTOMLEFT", 0, -10)
+	self.wishItemSlot = itemSlot
+
+	local addBox = GSF.UI:CreateEditBox(frame, 195, 22)
+	addBox:SetPoint("LEFT", itemSlot, "RIGHT", 6, 0)
 	addBox:SetScript("OnEnter", function(eb)
 		GameTooltip:SetOwner(eb, "ANCHOR_TOP")
 		GameTooltip:SetText(GSF.L["SHIFT_CLICK_HINT"] or "Shift-Click item or enter name", 1, 1, 1)
@@ -54,8 +58,10 @@ function Tab:Create(parent)
 	addBox:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	self.addBox = addBox
 
-	local addBtn = GSF.UI:CreateButton(frame, GSF.L["ADD_TO_WISHLIST"], 90, 22)
-	addBtn:SetPoint("LEFT", addBox, "RIGHT", 10, 0)
+	GSF.UI:AttachItemPreview(addBox, itemSlot)
+
+	local addBtn = GSF.UI:CreateButton(frame, GSF.L["ADD_LINK_BTN"] or "+ Add", 90, 22)
+	addBtn:SetPoint("LEFT", addBox, "RIGHT", 8, 0)
 	self.addBtn = addBtn
 	self.dropTitle = dropTitle
 	self.wishTitle = wishTitle
@@ -65,6 +71,7 @@ function Tab:Create(parent)
 		if text and text:trim() ~= "" then
 			GSF.RecipeDrops:AddToWishlist(text:trim())
 			addBox:SetText("")
+			itemSlot:Clear()
 			Tab:Refresh()
 		end
 	end)
@@ -76,9 +83,9 @@ function Tab:UpdateTexts()
 	if not self.frame then return end
 	if self.dropTitle then self.dropTitle:SetText(GSF.L["RECIPE_DROPS_TITLE"]) end
 	if self.wishTitle then self.wishTitle:SetText(GSF.L["WISHLIST_TITLE"]) end
-	if self.addBtn then self.addBtn:SetText(GSF.L["ADD_TO_WISHLIST"]) end
+	if self.addBtn then self.addBtn:SetText(GSF.L["ADD_LINK_BTN"] or "+ Add") end
 	if self.emptyDropsText then self.emptyDropsText:SetText(GSF.L["NO_RECIPES_FOUND"] or "No recipe drops recorded yet.") end
-	if self.emptyWishText then self.emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"] or "Your wishlist is empty.") end
+	if self.emptyWishText then self.emptyWishText:SetText(GSF.L["WISHLIST_EMPTY_PROMPT"]) end
 	self:Refresh()
 end
 

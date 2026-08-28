@@ -10,12 +10,12 @@ function Tab:Create(parent)
 
 	-- Main/Alt Section
 	local mainLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-	mainLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -15)
+	mainLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -12)
 	mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
 	self.mainLabel = mainLabel
 
 	local mainPrompt = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	mainPrompt:SetPoint("TOPLEFT", mainLabel, "BOTTOMLEFT", 0, -6)
+	mainPrompt:SetPoint("TOPLEFT", mainLabel, "BOTTOMLEFT", 0, -8)
 	mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
 	self.mainPrompt = mainPrompt
 
@@ -29,15 +29,19 @@ function Tab:Create(parent)
 	self.saveMainBtn = saveMainBtn
 
 	saveMainBtn:SetScript("OnClick", function()
-		local text = mainBox:GetText()
-		GSF.Alts:SetMyMain(text)
-		GSF.Addon:Printf("Main character updated to '%s'.", text)
-		Tab:Refresh()
+		local text = mainBox:GetText():match("^%s*(.-)%s*$")
+		if text and string.len(text) >= 2 then
+			GSF.Alts:SetMyMain(text)
+			GSF.Addon:Printf(GSF.L["MAIN_SAVED_NOTICE"] or "Main character updated to '%s'.", text)
+			Tab:Refresh()
+		else
+			GSF.Addon:Printf(GSF.L["MAIN_INVALID_NOTICE"] or "Invalid main character name. Minimum 2 characters required.")
+		end
 	end)
 
-	-- Sync Action Button
+	-- Sync Action Button (anchored with clear vertical space)
 	local syncBtn = GSF.UI:CreateButton(frame, GSF.L["FORCE_SYNC"], 150, 22)
-	syncBtn:SetPoint("TOPLEFT", mainPrompt, "BOTTOMLEFT", 0, -12)
+	syncBtn:SetPoint("TOPLEFT", mainPrompt, "BOTTOMLEFT", 0, -10)
 	self.syncBtn = syncBtn
 
 	syncBtn:SetScript("OnClick", function()
@@ -55,10 +59,10 @@ function Tab:Create(parent)
 	statText:SetPoint("LEFT", syncBtn, "RIGHT", 12, 0)
 	self.statText = statText
 
-	-- Roster Table Header (moved up with settings separated)
+	-- Roster Table Header (placed at Y = -96 with 8px margin below syncBtn)
 	local headerBar = CreateFrame("Frame", nil, frame)
 	headerBar:SetSize(700, 20)
-	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -68)
+	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -96)
 	if BackdropTemplateMixin then Mixin(headerBar, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(headerBar, false)
 	headerBar:SetBackdropColor(0.15, 0.15, 0.20, 0.9)
@@ -69,12 +73,12 @@ function Tab:Create(parent)
 	self.h1 = h1
 
 	local h2 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	h2:SetPoint("LEFT", headerBar, "LEFT", 140, 0)
+	h2:SetPoint("LEFT", headerBar, "LEFT", 150, 0)
 	h2:SetText(GSF.L["TABLE_MAIN"])
 	self.h2 = h2
 
 	local h3 = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	h3:SetPoint("LEFT", headerBar, "LEFT", 260, 0)
+	h3:SetPoint("LEFT", headerBar, "LEFT", 280, 0)
 	h3:SetText(GSF.L["TABLE_PROFESSIONS"])
 	self.h3 = h3
 
@@ -83,8 +87,8 @@ function Tab:Create(parent)
 	h4:SetText(GSF.L["TABLE_LAST_SEEN"])
 	self.h4 = h4
 
-	-- Roster Table Scroll (expanded to 340 height)
-	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 340)
+	-- Roster Table Scroll
+	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 310)
 	scrollFrame:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -4)
 	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 15)
 	self.content = content
@@ -130,9 +134,16 @@ function Tab:Refresh()
 	end
 
 	if not IsInGuild() then
+		self.syncBtn:Disable()
 		self.statText:SetText(string.format("|cff888888%s|r", GSF.L["SOLO_MODE"] or "Offline Mode (No Guild)"))
 	else
+		self.syncBtn:Enable()
 		self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
+	end
+
+	if self.mainBox then
+		local currentMain = (GSF.Alts and GSF.Alts:GetMyMain()) or (GSF.db and GSF.db.mainCharacter) or GSF.DB:GetPlayerName()
+		self.mainBox:SetText(currentMain or "")
 	end
 
 	table.sort(memberList, function(a, b)
@@ -146,7 +157,7 @@ function Tab:Refresh()
 		local row = self.memberRows[i]
 		if not row then
 			row = CreateFrame("Frame", nil, self.content)
-			row:SetSize(670, 24)
+			row:SetSize(690, 24)
 			if BackdropTemplateMixin then Mixin(row, BackdropTemplateMixin) end
 			GSF.UI:CreateBackdrop(row, false)
 			row:SetBackdropColor(0.08, 0.08, 0.12, 0.6)
@@ -156,11 +167,11 @@ function Tab:Refresh()
 			row.name = name
 
 			local main = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			main:SetPoint("LEFT", row, "LEFT", 140, 0)
+			main:SetPoint("LEFT", row, "LEFT", 150, 0)
 			row.main = main
 
 			local profs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			profs:SetPoint("LEFT", row, "LEFT", 260, 0)
+			profs:SetPoint("LEFT", row, "LEFT", 280, 0)
 			profs:SetPoint("RIGHT", row, "RIGHT", -120, 0)
 			profs:SetJustifyH("LEFT")
 			row.profs = profs
@@ -174,11 +185,12 @@ function Tab:Refresh()
 
 		row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -yOffset)
 		
-		local isOnline = (time() - (member.lastSeen or 0)) < 900
-		local statusDot = isOnline and "|cff00ff00●|r" or "|cff777777●|r"
+		local isMe = (member.name == GSF.DB:GetPlayerName())
+		local isOnline = isMe or ((time() - (member.lastSeen or 0)) < 900)
+		local statusIcon = isOnline and "|TInterface\\FriendsFrame\\StatusIcon-Online:12:12:0:0|t" or "|TInterface\\FriendsFrame\\StatusIcon-Offline:12:12:0:0|t"
 
 		local roleBadges = GSF.Roles and GSF.Roles:GetRoleBadgesString(member.name) or ""
-		local nameStr = roleBadges ~= "" and string.format("%s %s %s", statusDot, member.name or "Unknown", roleBadges) or string.format("%s %s", statusDot, member.name or "Unknown")
+		local nameStr = roleBadges ~= "" and string.format("%s %s %s", statusIcon, member.name or "Unknown", roleBadges) or string.format("%s %s", statusIcon, member.name or "Unknown")
 		row.name:SetText(nameStr)
 		row.main:SetText(member.main or member.name or "")
 
@@ -192,10 +204,10 @@ function Tab:Refresh()
 		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or (GSF.L["NONE"] or "None"))
 
 		local mins = math.floor((time() - (member.lastSeen or time())) / 60)
-		if isOnline then
+		if isMe or isOnline then
 			row.lastSeen:SetText("|cff00ff00Online|r")
 		elseif mins < 60 then
-			row.lastSeen:SetText(string.format(GSF.L["MINS_AGO"], mins))
+			row.lastSeen:SetText(string.format(GSF.L["MINS_AGO"] or "%dm ago", mins))
 		elseif mins < 1440 then
 			row.lastSeen:SetText(math.floor(mins / 60) .. "h")
 		else

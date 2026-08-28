@@ -95,22 +95,29 @@ function GSF.Surplus:GetBagItems()
 		for slot = 1, numSlots do
 			local link = getItemLink and getItemLink(bag, slot)
 			if link then
+				local isBound = false
 				local count = 1
 				if getItemInfo then
 					local info = getItemInfo(bag, slot)
 					if type(info) == "table" then
 						count = info.stackCount or info.count or 1
+						isBound = info.isBound or false
 					else
 						count = select(2, getItemInfo(bag, slot)) or 1
 					end
 				end
 
-				table.insert(bagItems, {
-					bag = bag,
-					slot = slot,
-					link = link,
-					count = count,
-				})
+				-- Check bindType and quest item class
+				local _, _, _, _, _, _, _, _, _, _, _, classID, _, bindType = GetItemInfo(link)
+				-- bindType == 1 (BoP / Bind on Pickup), classID == 12 (Quest item)
+				if not isBound and bindType ~= 1 and classID ~= 12 then
+					table.insert(bagItems, {
+						bag = bag,
+						slot = slot,
+						link = link,
+						count = count,
+					})
+				end
 			end
 		end
 	end

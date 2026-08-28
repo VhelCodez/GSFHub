@@ -57,9 +57,19 @@ function GSF.VersionCheck:CheckPeerVersion(peerVersion, sender)
 end
 
 function GSF.VersionCheck:OpenUpdateDialog()
-	if GSF.URLDialog then
+	if not GSF.URLDialog then return end
+
+	if self:CompareVersions(GSF.latestKnownVersion, GSF.VERSION) > 0 then
 		local title = GSF.L["UPDATE_MODAL_TITLE"]
 		local msg = string.format(GSF.L["UPDATE_MODAL_MSG"], GSF.latestKnownVersion)
 		GSF.URLDialog:ShowDialog(title, msg, GSF.DOWNLOAD_URL)
+	else
+		local upToDateMsg = string.format(GSF.L["UP_TO_DATE_NOTICE"] or "GSFHub is up to date (v%s).", GSF.VERSION)
+		if GSF.Toast then
+			GSF.Toast:ShowToast(upToDateMsg, "Interface\\Icons\\Spell_Holy_SealOfSacrifice")
+		end
+		if GSF.Addon then
+			GSF.Addon:Printf(upToDateMsg)
+		end
 	end
 end

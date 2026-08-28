@@ -11,10 +11,27 @@ local activeTab = 1
 local lastActiveTab = 1
 local inSettings = false
 
+local function GetTabSubtitle(id)
+	if inSettings then return GSF.L["SUBTITLE_SETTINGS"] or "Settings" end
+	if id == 1 then return GSF.L["SUBTITLE_PROFESSIONS"] or "Professions"
+	elseif id == 2 then return GSF.L["SUBTITLE_WORK_ORDERS"] or "Work Orders"
+	elseif id == 3 then return GSF.L["SUBTITLE_SURPLUS"] or "Surplus Pool"
+	elseif id == 4 then return GSF.L["SUBTITLE_DROPS"] or "Drops & Wishlist"
+	elseif id == 5 then return GSF.L["SUBTITLE_ATLAS"] or "Resource Atlas & Bounties"
+	elseif id == 6 then return GSF.L["SUBTITLE_ROSTER"] or "Guild & Sync"
+	end
+	return ""
+end
+
+function MainFrame:UpdateTitle()
+	if not self.title then return end
+	local sub = GetTabSubtitle(activeTab)
+	self.title:SetText(string.format("|cff%s%s|r  —  |cffffffff%s|r", GSF.COLORS.PRIMARY, GSF.L["ADDON_TITLE"], sub))
+end
+
 function MainFrame:Initialize()
 	self:SetSize(760, 480)
-	self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-	self:SetFrameStrata("HIGH")
+	self:SetPoint("CENTER", UIParent, "CENTER", 0, 40)
 	self:SetMovable(true)
 	self:EnableMouse(true)
 	self:RegisterForDrag("LeftButton")
@@ -22,16 +39,19 @@ function MainFrame:Initialize()
 	self:SetScript("OnDragStop", self.StopMovingOrSizing)
 	self:SetClampedToScreen(true)
 
+	-- Close on Escape key press
+	tinsert(UISpecialFrames, "GSFHubMainFrame")
+
 	if BackdropTemplateMixin then Mixin(self, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(self, false)
 	self:SetBackdropColor(0.05, 0.05, 0.07, 0.96)
 	self:SetBackdropBorderColor(0.2, 0.8, 0.4, 0.8)
 
-	-- Header Title
+	-- Header Title (Sleek dynamic title without cluttered version number)
 	local title = self:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
 	title:SetPoint("TOPLEFT", self, "TOPLEFT", 16, -14)
-	title:SetText(string.format("|cff%s%s|r  |cffffffff%s|r", GSF.COLORS.PRIMARY, GSF.L["ADDON_TITLE"], GSF.VERSION))
 	self.title = title
+	self:UpdateTitle()
 
 	-- Update Badge (Hidden by default, shown when newer version is detected)
 	local updateBtn = CreateFrame("Button", "GSFHubUpdateBadge", self, "UIPanelButtonTemplate")
@@ -162,6 +182,7 @@ function MainFrame:UpdateLocalizedTexts()
 	if GSF.TabAtlas and GSF.TabAtlas.UpdateTexts then GSF.TabAtlas:UpdateTexts() end
 	if GSF.TabRoster and GSF.TabRoster.UpdateTexts then GSF.TabRoster:UpdateTexts() end
 	if GSF.TabSettings and GSF.TabSettings.UpdateTexts then GSF.TabSettings:UpdateTexts() end
+	self:UpdateTitle()
 end
 
 function MainFrame:ShowUpdateBadge(remoteVersion)
@@ -172,6 +193,7 @@ end
 
 function MainFrame:OpenSettings()
 	inSettings = true
+	self:UpdateTitle()
 	for i = 1, NUM_TABS do
 		tabContents[i]:Hide()
 		PanelTemplates_DeselectTab(tabs[i])
@@ -207,6 +229,7 @@ function MainFrame:SelectTab(id)
 	end
 	activeTab = id
 	lastActiveTab = id
+	self:UpdateTitle()
 	for i = 1, NUM_TABS do
 		if i == id then
 			tabContents[i]:Show()

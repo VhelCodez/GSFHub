@@ -143,7 +143,10 @@ function GSFHub:HandleSlashCommand(input)
 		end
 	elseif cmd == "main" and args[2] then
 		GSF.Alts:SetMyMain(args[2])
-		self:Printf("Main character set to '%s'.", args[2])
+		self:Printf(GSF.L["MAIN_SAVED_NOTICE"] or "Main character updated to '%s'.", args[2])
+		if GSF.TabRoster and GSF.TabRoster.frame and GSF.TabRoster.frame:IsShown() then
+			GSF.TabRoster:Refresh()
+		end
 	elseif cmd == "bug" or cmd == "report" or cmd == "issue" then
 		if GSF.FeedbackDialog then
 			GSF.FeedbackDialog:Show()

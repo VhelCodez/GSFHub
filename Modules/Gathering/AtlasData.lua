@@ -944,6 +944,123 @@ local LOCALIZED_NODES_DE = {
 	["Nethercite Deposit"] = "Netherzitvorkommen",
 }
 
+local LOCALIZED_ZONES_DE = {
+	["Elwynn Forest"] = "Wald von Elwynn",
+	["Durotar"] = "Durotar",
+	["Dun Morogh"] = "Dun Morogh",
+	["Tirisfal Glades"] = "Tirisfal",
+	["Mulgore"] = "Mulgore",
+	["Darkshore"] = "Dunkelküste",
+	["Westfall"] = "Westfall",
+	["Loch Modan"] = "Loch Modan",
+	["Silverpine Forest"] = "Silberwald",
+	["Redridge Mountains"] = "Rotkammgebirge",
+	["Hillsbrad Foothills"] = "Vorgebirge des Hügellands",
+	["Wetlands"] = "Sumpfland",
+	["Duskwood"] = "Dämmerwald",
+	["Ashenvale"] = "Eschenwald",
+	["Arathi Highlands"] = "Arathihochland",
+	["Thousand Needles"] = "Tausend Nadeln",
+	["Badlands"] = "Ödland",
+	["Desolace"] = "Desolace",
+	["Stranglethorn Vale"] = "Schlingendorntal",
+	["Tanaris"] = "Tanaris",
+	["Searing Gorge"] = "Sengende Schlucht",
+	["The Hinterlands"] = "Hinterland",
+	["Felwood"] = "Teufelswald",
+	["Western Plaguelands"] = "Westliche Pestländer",
+	["Eastern Plaguelands"] = "Östliche Pestländer",
+	["Winterspring"] = "Winterquell",
+	["Burning Steppes"] = "Brennende Steppe",
+	["Blasted Lands"] = "Verwüstete Lande",
+	["Un'Goro Crater"] = "Krater von Un'Goro",
+	["Silithus"] = "Silithus",
+	["Hellfire Peninsula"] = "Höllenfeuerhalbinsel",
+	["Zangarmarsh"] = "Zangarmarschen",
+	["Terokkar Forest"] = "Wälder von Terokkar",
+	["Nagrand"] = "Nagrand",
+	["Blade's Edge Mountains"] = "Schergrat",
+	["Netherstorm"] = "Nethersturm",
+	["Shadowmoon Valley"] = "Schattenmondtal",
+	["Barrens"] = "Brachland",
+	["The Barrens"] = "Brachland",
+	["Feralas"] = "Feralas",
+	["Swamp of Sorrows"] = "Sümpfe des Elends",
+	["Dustwallow Marsh"] = "Düstermarschen",
+	["Stonetalon Mountains"] = "Steinkrallengebirge",
+	["Ghostlands"] = "Geisterlande",
+	["Eversong Woods"] = "Immersangwald",
+	["Bloodmyst Isle"] = "Blutmythosinsel",
+	["Azuremyst Isle"] = "Azurmythosinsel",
+	["Isle of Quel'Danas"] = "Insel von Quel'Danas",
+}
+
+local LOCALIZED_YIELDS_DE = {
+	["Copper Ore"] = "Kupfererz", ["Rough Stone"] = "Rauer Stein", ["Malachite"] = "Malachit", ["Tigerseye"] = "Tigerauge",
+	["Tin Ore"] = "Zinnerz", ["Coarse Stone"] = "Grober Stein", ["Lesser Moonstone"] = "Geringer Mondstein", ["Shadowgem"] = "Schattengemme",
+	["Silver Ore"] = "Silbererz", ["Iron Ore"] = "Eisenerz", ["Heavy Stone"] = "Schwerer Stein", ["Jade"] = "Jade",
+	["Gold Ore"] = "Golderz", ["Citrine"] = "Citrin", ["Mithril Ore"] = "Mithrilerz", ["Solid Stone"] = "Fester Stein",
+	["Aquamarine"] = "Aquamarin", ["Star Ruby"] = "Sternrubin", ["Truesilver Ore"] = "Echtsilbererz", ["Dark Iron Ore"] = "Dunkeleisenerz",
+	["Blood of the Mountain"] = "Blut des Berges", ["Black Vitriol"] = "Schwarzes Vitriol", ["Thorium Ore"] = "Thoriumerz",
+	["Dense Stone"] = "Verdichteter Stein", ["Blue Sapphire"] = "Blauer Saphir", ["Large Opal"] = "Großer Opal",
+	["Huge Emerald"] = "Riesiger Smaragd", ["Azerothian Diamond"] = "Azeroth-Diamant", ["Arcane Crystal"] = "Arkankristall",
+	["Fel Iron Ore"] = "Teufelseisenerz", ["Mote of Earth"] = "Erdpartikel", ["Mote of Fire"] = "Feuerpartikel",
+	["Adamantite Ore"] = "Adamantiterz", ["Adamantite Powder"] = "Adamantitpulver", ["Khorium Ore"] = "Khoriumerz",
+	["Nethercite Ore"] = "Netherziterz", ["Peacebloom"] = "Friedensblume", ["Silverleaf"] = "Silberblatt",
+	["Earthroot"] = "Erdwurzel", ["Mageroyal"] = "Maguskönigskraut", ["Briarthorn"] = "Wilddornrose",
+	["Stranglekelp"] = "Würgetang", ["Bruiseweed"] = "Beulengras", ["Wild Steelbloom"] = "Wilder Stahlstern",
+	["Grave Moss"] = "Grabmoos", ["Kingsblood"] = "Königsblut", ["Liferoot"] = "Lebenswurz",
+	["Fadeleaf"] = "Blassblatt", ["Goldthorn"] = "Golddorn", ["Khadgar's Whisker"] = "Khadgars Schnurrbart",
+	["Wintersbite"] = "Winterbiss", ["Firebloom"] = "Feuerblüte", ["Purple Lotus"] = "Lila Lotus",
+	["Arthas' Tears"] = "Arthas' Tränen", ["Sungrass"] = "Sonnengras", ["Blindweed"] = "Blindkraut",
+	["Ghost Mushroom"] = "Geisterpilz", ["Gromsblood"] = "Gromsblut", ["Golden Sansam"] = "Goldener Sansam",
+	["Dreamfoil"] = "Traumblatt", ["Mountain Silversage"] = "Bergsilbersalbei", ["Plaguebloom"] = "Pestblüte",
+	["Icecap"] = "Eiskappe", ["Black Lotus"] = "Schwarzer Lotus", ["Felweed"] = "Teufelsgras",
+	["Dreaming Glory"] = "Traumwinde", ["Ragveil"] = "Zottelkappe", ["Terocone"] = "Terofrucht",
+	["Ancient Lichen"] = "Urzeitliche Flechte", ["Netherbloom"] = "Netherblüte", ["Nightmare Vine"] = "Alptraumranke",
+	["Mana Thistle"] = "Manadistel", ["Ruined Leather Scraps"] = "Verdorbene Lederfetzen", ["Light Leather"] = "Leichtes Leder",
+	["Light Hide"] = "Leichter Balg", ["Medium Leather"] = "Mittleres Leder", ["Medium Hide"] = "Mittlerer Balg",
+	["Heavy Leather"] = "Schweres Leder", ["Heavy Hide"] = "Schwerer Balg", ["Thick Leather"] = "Dickes Leder",
+	["Thick Hide"] = "Dicker Balg", ["Rugged Leather"] = "Unverwüstliches Leder", ["Rugged Hide"] = "Unverwüstlicher Balg",
+	["Knothide Leather"] = "Knotenhautleder", ["Fel Scales"] = "Teufelsschuppen", ["Cobra Scales"] = "Kobraschuppen",
+	["Nether Dragonscales"] = "Netherdrachenschuppen",
+}
+
+function GSF.Atlas:GetZoneDisplayName(zoneName)
+	if not zoneName then return "" end
+	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
+	if lang == "deDE" and LOCALIZED_ZONES_DE[zoneName] then
+		return LOCALIZED_ZONES_DE[zoneName]
+	end
+	return zoneName
+end
+
+function GSF.Atlas:GetYieldsDisplayName(yieldsStr)
+	if not yieldsStr then return "" end
+	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
+	if lang ~= "deDE" then return yieldsStr end
+	local result = yieldsStr
+	for en, de in pairs(LOCALIZED_YIELDS_DE) do
+		result = result:gsub(en, de)
+	end
+	return result
+end
+
+function GSF.Atlas:GetTipsDisplayName(tipsStr)
+	if not tipsStr then return "" end
+	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
+	if lang ~= "deDE" then return tipsStr end
+	-- Localize common tip phrases
+	local t = tipsStr
+	t = t:gsub("Common in all starting zones along foothills and cave entrances%.", "Häufig in allen Startgebieten entlang von Berghängen und Höhleneingängen.")
+	t = t:gsub("Abundant around gnoll and murloc camps in level 15%-25 zones%.", "Reichlich um Gnoll- und Murloclager in Stufe 15-25 Gebieten vorhanden.")
+	t = t:gsub("Rare spawn replacing Tin Veins%.", "Seltener Spawn, der Zinnvorkommen ersetzt.")
+	t = t:gsub("Rare spawn replacing Iron Deposits%.", "Seltener Spawn, der Eisenvorkommen ersetzt.")
+	t = t:gsub("perimeter and Badlands valley are the most efficient loops%.", "und das Tal im Ödland bieten die effizientesten Farm-Routen.")
+	t = t:gsub("outer canyon and Tanaris desert perimeter have highest density%.", "äußerer Canyon und die Tanaris-Wüstenränder haben die höchste Dichte.")
+	return t
+end
+
 function GSF.Atlas:GetDisplayName(entry)
 	if not entry then return "" end
 	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()

@@ -100,6 +100,7 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 - **v1.2.0 (Released):** Gathering Suite & Guild Supply Chain (1–375 Resource Atlas, Bounties with in-transit mail tracking & 3-Factor Handshake, Role hierarchy badges, and draggable Goals HUD).
 - **v1.2.1 (Released):** Critical container API fixes, UI layout collision adjustments, and localization parity.
 - **v1.2.2 (Released):** Dedicated Settings view via header cog, Goals HUD two-way state sync, decoupled audio alerts, localized node names, German drop detection, and live translations.
+- **v1.2.3 (Released):** Test Phase 2 live test polish: universal Shift-click paste & drag-and-drop `ItemSlot` preview, Escape key close, bounty lifecycle & Option B request modal, surplus soulbound filter, Atlas German localization, and layout collision fixes.
 - **v1.3.0 (Next Up):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
 - **v1.4.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
 - **v1.5.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).

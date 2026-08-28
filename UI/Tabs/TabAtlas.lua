@@ -59,6 +59,15 @@ function Tab:Create(parent)
 	bountyViewBtn:SetPoint("LEFT", atlasViewBtn, "RIGHT", 6, 0)
 	self.bountyViewBtn = bountyViewBtn
 
+	local hideCompletedCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	hideCompletedCheck:SetPoint("LEFT", bountyViewBtn, "RIGHT", 15, 0)
+	hideCompletedCheck.text:SetText(GSF.L["HIDE_COMPLETED"] or "Hide Completed")
+	hideCompletedCheck.text:SetFontObject("GameFontHighlightSmall")
+	hideCompletedCheck:SetChecked(true)
+	hideCompletedCheck:Hide()
+	hideCompletedCheck:SetScript("OnClick", function() Tab:Refresh() end)
+	self.hideCompletedCheck = hideCompletedCheck
+
 	atlasViewBtn:SetScript("OnClick", function()
 		activeView = "ATLAS"
 		Tab:Refresh()
@@ -69,9 +78,9 @@ function Tab:Create(parent)
 		Tab:Refresh()
 	end)
 
-	-- Container for Atlas View
+	-- Container for Atlas View (with 8px gap below top controls)
 	local atlasContainer = CreateFrame("Frame", nil, frame)
-	atlasContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -42)
+	atlasContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -52)
 	atlasContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
 	self.atlasContainer = atlasContainer
 
@@ -82,9 +91,9 @@ function Tab:Create(parent)
 	self.leftContent = leftContent
 	self.resourceRows = {}
 
-	-- Atlas Right Details Pane
+	-- Atlas Right Details Pane (with 26px gutter to avoid scrollbar collision)
 	local rightPane = CreateFrame("Frame", nil, atlasContainer)
-	rightPane:SetPoint("TOPLEFT", leftScroll, "TOPRIGHT", 15, 0)
+	rightPane:SetPoint("TOPLEFT", leftScroll, "TOPRIGHT", 26, 0)
 	rightPane:SetPoint("BOTTOMRIGHT", atlasContainer, "BOTTOMRIGHT", -5, 10)
 	if BackdropTemplateMixin then Mixin(rightPane, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(rightPane, false)
@@ -147,7 +156,7 @@ function Tab:Create(parent)
 	pinBtn:SetScript("OnClick", function()
 		if selectedResource and GSF.GoalsHUD then
 			local resName = GSF.Atlas:GetDisplayName(selectedResource)
-			GSF.GoalsHUD:AddGoal(resName, 20, selectedResource.category)
+			StaticPopup_Show("GSF_PIN_QUANTITY", resName, nil, { resName = resName, category = selectedResource.category })
 		end
 	end)
 
@@ -157,29 +166,132 @@ function Tab:Create(parent)
 	self.bountyBtn = bountyBtn
 
 	bountyBtn:SetScript("OnClick", function()
-		if selectedResource and GSF.SupplyBounties then
-			local resName = GSF.Atlas:GetDisplayName(selectedResource)
-			GSF.SupplyBounties:CreateBounty(resName, 20, selectedResource.category, "Needed for crafting")
-			activeView = "BOUNTIES"
-			Tab:Refresh()
+		if selectedResource then
+			Tab:OpenBountyModal(selectedResource)
 		end
 	end)
 
-	-- Container for Bounties View
+	-- Container for Bounties View (with 8px gap below top controls)
 	local bountiesContainer = CreateFrame("Frame", nil, frame)
-	bountiesContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -42)
+	bountiesContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -52)
 	bountiesContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
 	bountiesContainer:Hide()
 	self.bountiesContainer = bountiesContainer
 
 	self.bountyCards = {}
-	local bountyScroll, bountyContent = GSF.UI:CreateScrollList(bountiesContainer, 700, 360)
+	local bountyScroll, bountyContent = GSF.UI:CreateScrollList(bountiesContainer, 690, 360)
 	bountyScroll:SetPoint("TOPLEFT", bountiesContainer, "TOPLEFT", 5, -5)
-	bountyScroll:SetPoint("BOTTOMRIGHT", bountiesContainer, "BOTTOMRIGHT", -5, 5)
+	bountyScroll:SetPoint("BOTTOMRIGHT", bountiesContainer, "BOTTOMRIGHT", -25, 5)
 	self.bountyScroll = bountyScroll
 	self.bountyContent = bountyContent
 
+	-- Build Option B Bounty Creation Modal
+	self:BuildBountyModal(frame)
+
 	return frame
+end
+
+StaticPopupDialogs["GSF_PIN_QUANTITY"] = {
+	text = "%s:\n" .. (GSF.L["PIN_HOW_MANY"] or "How many do you want to gather?"),
+	button1 = GSF.L["YES"] or "OK",
+	button2 = GSF.L["CANCEL"] or "Cancel",
+	hasEditBox = true,
+	OnShow = function(self)
+		self.editBox:SetText("20")
+		self.editBox:HighlightText()
+		self.editBox:SetFocus()
+	end,
+	OnAccept = function(self, data)
+		local qty = tonumber(self.editBox:GetText()) or 20
+		if data and data.resName and GSF.GoalsHUD then
+			GSF.GoalsHUD:AddGoal(data.resName, qty, data.category)
+		end
+	end,
+	EditBoxOnEnterPressed = function(self, data)
+		local parent = self:GetParent()
+		local qty = tonumber(self:GetText()) or 20
+		if data and data.resName and GSF.GoalsHUD then
+			GSF.GoalsHUD:AddGoal(data.resName, qty, data.category)
+		end
+		parent:Hide()
+	end,
+	EditBoxOnEscapePressed = function(self)
+		self:GetParent():Hide()
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+function Tab:BuildBountyModal(parent)
+	local modal = CreateFrame("Frame", "GSFAtlasBountyModal", parent)
+	modal:SetSize(380, 240)
+	modal:SetPoint("CENTER", parent, "CENTER", 0, 0)
+	modal:SetFrameStrata("DIALOG")
+	GSF.UI:CreateBackdrop(modal, false)
+	modal:SetBackdropColor(0.06, 0.06, 0.08, 0.98)
+	modal:Hide()
+	self.bountyModal = modal
+
+	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	title:SetPoint("TOP", modal, "TOP", 0, -15)
+	title:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, GSF.L["BOUNTY_REQUEST_TITLE"] or "Request Material"))
+
+	local slot = GSF.UI:CreateItemSlot(modal, 32)
+	slot:SetPoint("TOPLEFT", modal, "TOPLEFT", 30, -50)
+	modal.slot = slot
+
+	local nameLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
+	nameLabel:SetPoint("LEFT", slot, "RIGHT", 10, 0)
+	modal.nameLabel = nameLabel
+
+	local qtyLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	qtyLabel:SetPoint("TOPLEFT", slot, "BOTTOMLEFT", 0, -16)
+	qtyLabel:SetText(GSF.L["QUANTITY"] or "Quantity:")
+
+	local qtyBox = GSF.UI:CreateEditBox(modal, 70, 22)
+	qtyBox:SetPoint("LEFT", qtyLabel, "RIGHT", 10, 0)
+	qtyBox:SetText("20")
+	modal.qtyBox = qtyBox
+
+	local noteLabel = modal:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	noteLabel:SetPoint("TOPLEFT", qtyLabel, "BOTTOMLEFT", 0, -16)
+	noteLabel:SetText(GSF.L["NOTE"] or "Note:")
+
+	local noteBox = GSF.UI:CreateEditBox(modal, 250, 22)
+	noteBox:SetPoint("LEFT", noteLabel, "RIGHT", 10, 0)
+	modal.noteBox = noteBox
+
+	local submitBtn = GSF.UI:CreateButton(modal, GSF.L["SUBMIT_ORDER"] or "Submit", 110, 24)
+	submitBtn:SetPoint("BOTTOMLEFT", modal, "BOTTOMLEFT", 60, 16)
+	submitBtn:SetScript("OnClick", function()
+		if modal.resource and GSF.SupplyBounties then
+			local res = modal.resource
+			local resName = GSF.Atlas:GetDisplayName(res)
+			local count = tonumber(qtyBox:GetText()) or 20
+			local notes = noteBox:GetText():trim()
+			GSF.SupplyBounties:CreateBounty(resName, count, res.category, notes)
+			modal:Hide()
+			activeView = "BOUNTIES"
+			Tab:Refresh()
+		end
+	end)
+
+	local cancelBtn = GSF.UI:CreateButton(modal, GSF.L["CANCEL"] or "Cancel", 90, 24)
+	cancelBtn:SetPoint("LEFT", submitBtn, "RIGHT", 20, 0)
+	cancelBtn:SetScript("OnClick", function() modal:Hide() end)
+end
+
+function Tab:OpenBountyModal(resource)
+	if not self.bountyModal then return end
+	self.bountyModal.resource = resource
+	local dispName = GSF.Atlas:GetDisplayName(resource)
+	self.bountyModal.nameLabel:SetText(dispName)
+	self.bountyModal.slot:SetItem(dispName, resource.icon, nil, resource.itemID)
+	self.bountyModal.qtyBox:SetText("20")
+	self.bountyModal.noteBox:SetText("")
+	self.bountyModal:Show()
 end
 
 function Tab:SelectResource(res)
@@ -197,11 +309,12 @@ function Tab:SelectResource(res)
 
 	local zoneLines = {}
 	for _, z in ipairs(res.zones or {}) do
-		table.insert(zoneLines, "• " .. z)
+		local zLoc = GSF.Atlas:GetZoneDisplayName(z)
+		table.insert(zoneLines, "• " .. zLoc)
 	end
 	self.zonesText:SetText(#zoneLines > 0 and table.concat(zoneLines, "\n") or "None")
-	self.yieldsText:SetText(res.yields or "None")
-	self.tipsText:SetText(res.tips or "No specific notes.")
+	self.yieldsText:SetText(GSF.Atlas:GetYieldsDisplayName(res.yields) or "None")
+	self.tipsText:SetText(GSF.Atlas:GetTipsDisplayName(res.tips) or "No specific notes.")
 end
 
 function Tab:UpdateTexts()
@@ -213,6 +326,7 @@ function Tab:UpdateTexts()
 	end
 	if self.atlasViewBtn then self.atlasViewBtn:SetText(GSF.L["VIEW_ATLAS"]) end
 	if self.bountyViewBtn then self.bountyViewBtn:SetText(GSF.L["VIEW_BOUNTIES"]) end
+	if self.hideCompletedCheck then self.hideCompletedCheck.text:SetText(GSF.L["HIDE_COMPLETED"] or "Hide Completed") end
 	if self.zonesLabel then self.zonesLabel:SetText(GSF.L["BEST_FARMING_ZONES"]) end
 	if self.yieldsLabel then self.yieldsLabel:SetText(GSF.L["RESOURCE_YIELDS"]) end
 	if self.tipsLabel then self.tipsLabel:SetText(GSF.L["FARMING_TIPS"]) end
@@ -227,10 +341,16 @@ function Tab:Refresh()
 	if activeView == "ATLAS" then
 		self.atlasContainer:Show()
 		self.bountiesContainer:Hide()
+		if self.hideCompletedCheck then self.hideCompletedCheck:Hide() end
+		if self.atlasViewBtn then self.atlasViewBtn:SetText("|cffffd100" .. (GSF.L["VIEW_ATLAS"] or "Resource Atlas") .. "|r") end
+		if self.bountyViewBtn then self.bountyViewBtn:SetText("|cffaaaaaa" .. (GSF.L["VIEW_BOUNTIES"] or "Guild Bounties") .. "|r") end
 		self:RefreshAtlas()
 	else
 		self.atlasContainer:Hide()
 		self.bountiesContainer:Show()
+		if self.hideCompletedCheck then self.hideCompletedCheck:Show() end
+		if self.atlasViewBtn then self.atlasViewBtn:SetText("|cffaaaaaa" .. (GSF.L["VIEW_ATLAS"] or "Resource Atlas") .. "|r") end
+		if self.bountyViewBtn then self.bountyViewBtn:SetText("|cffffd100" .. (GSF.L["VIEW_BOUNTIES"] or "Guild Bounties") .. "|r") end
 		self:RefreshBounties()
 	end
 end
@@ -292,101 +412,147 @@ end
 function Tab:RefreshBounties()
 	local myName = GSF.DB:GetPlayerName()
 	local bounties = GSF.SupplyBounties:GetActiveBounties(activeCategory)
+	local hideCompleted = self.hideCompletedCheck and self.hideCompletedCheck:GetChecked()
 
 	for _, card in ipairs(self.bountyCards) do card:Hide() end
 
 	local yOffset = 0
-	for i, b in ipairs(bounties) do
-		local card = self.bountyCards[i]
-		if not card then
-			card = CreateFrame("Frame", nil, self.bountyContent)
-			card:SetSize(700, 56)
-			if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
-			GSF.UI:CreateBackdrop(card, false)
-			card:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
+	local visibleIndex = 0
+	for _, b in ipairs(bounties) do
+		if not (hideCompleted and b.status == GSF.ORDER_STATUS.COMPLETED) then
+			visibleIndex = visibleIndex + 1
+			local card = self.bountyCards[visibleIndex]
+			if not card then
+				card = CreateFrame("Frame", nil, self.bountyContent)
+				card:SetSize(660, 56)
+				if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
+				GSF.UI:CreateBackdrop(card, false)
+				card:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
 
-			local itemText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-			itemText:SetPoint("TOPLEFT", card, "TOPLEFT", 12, -8)
-			card.itemText = itemText
+				local itemText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
+				itemText:SetPoint("TOPLEFT", card, "TOPLEFT", 12, -8)
+				card.itemText = itemText
 
-			local details = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			details:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -4)
-			card.details = details
+				local details = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				details:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -4)
+				card.details = details
 
-			local statusText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
-			card.statusText = statusText
+				local statusText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
+				card.statusText = statusText
 
-			local actionBtn = GSF.UI:CreateButton(card, "Claim", 90, 20)
-			actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
-			card.actionBtn = actionBtn
+				local actionBtn = GSF.UI:CreateButton(card, "Claim", 95, 20)
+				actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
+				card.actionBtn = actionBtn
 
-			local mailBtn = GSF.UI:CreateButton(card, "📬 Mail", 70, 20)
-			mailBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
-			card.mailBtn = mailBtn
+				local mailBtn = GSF.UI:CreateButton(card, GSF.L["MAIL"] or "Mail", 65, 20)
+				mailBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
+				card.mailBtn = mailBtn
 
-			table.insert(self.bountyCards, card)
-		end
+				local unclaimBtn = GSF.UI:CreateButton(card, GSF.L["BOUNTY_UNCLAIM"] or "Unclaim", 75, 20)
+				unclaimBtn:SetPoint("RIGHT", mailBtn, "LEFT", -6, 0)
+				card.unclaimBtn = unclaimBtn
 
-		card:SetPoint("TOPLEFT", self.bountyContent, "TOPLEFT", 0, -yOffset)
-
-		local reqFormatted = GSF.Alts:GetFormattedName(b.requester)
-		card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, b.item, b.count or 1, b.category or "General"))
-		card.details:SetText(string.format("Requested by: %s  •  Note: %s", reqFormatted, b.notes ~= "" and b.notes or "None"))
-
-		if b.status == GSF.ORDER_STATUS.OPEN then
-			card.statusText:SetText("|cff00ff00" .. (GSF.L["STATUS_OPEN"] or "OPEN") .. "|r")
-			card.actionBtn:SetText(GSF.L["CLAIM_BOUNTY"] or "Claim")
-			card.actionBtn:SetScript("OnClick", function()
-				GSF.SupplyBounties:ClaimBounty(b.id)
-				Tab:Refresh()
-			end)
-			card.mailBtn:Hide()
-
-		elseif b.status == GSF.ORDER_STATUS.CLAIMED then
-			local claimerFormatted = GSF.Alts:GetFormattedName(b.claimer)
-			card.statusText:SetText(string.format("|cffffd100" .. (GSF.L["STATUS_CLAIMED"] or "CLAIMED") .. "|r (%s)", claimerFormatted))
-
-			if b.claimer == myName then
-				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
-				card.actionBtn:SetScript("OnClick", function()
-					GSF.SupplyBounties:FulfillBounty(b.id)
-					Tab:Refresh()
-				end)
-				card.mailBtn:Show()
-				card.mailBtn:SetScript("OnClick", function()
-					if GSF.MailHelper then
-						GSF.MailHelper:PrepareBountyMail(b.requester, b.id, b.item, b.count)
-					end
-				end)
-			else
-				card.actionBtn:SetText(GSF.L["STATUS_CLAIMED"] or "In Progress")
-				card.mailBtn:Hide()
+				table.insert(self.bountyCards, card)
 			end
 
-		elseif b.status == GSF.ORDER_STATUS.IN_TRANSIT then
-			local mins = math.floor((time() - (b.mailedAt or time())) / 60)
-			card.statusText:SetText(string.format("|cff00ccff📬 %s (%dm ago)|r", GSF.L["STATUS_IN_TRANSIT"] or "IN TRANSIT", mins))
+			card:SetPoint("TOPLEFT", self.bountyContent, "TOPLEFT", 0, -yOffset)
 
-			if b.requester == myName or b.claimer == myName then
-				card.actionBtn:SetText(GSF.L["CONFIRM_RECEIVED"] or "Confirm Received")
-				card.actionBtn:SetScript("OnClick", function()
-					GSF.SupplyBounties:FulfillBounty(b.id)
-					Tab:Refresh()
-				end)
+			local isMine = (b.requester == myName)
+			local isClaimer = (b.claimer == myName)
+			local reqFormatted = GSF.Alts:GetFormattedName(b.requester)
+			local catLoc = GSF.L["CAT_" .. (b.category or "GENERAL"):upper()] or b.category or "General"
+			card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, b.item, b.count or 1, catLoc))
+			
+			local noteStr = (b.notes and b.notes ~= "") and b.notes or (GSF.L["NONE"] or "None")
+			local reqPrefix = GSF.L["REQUESTED_BY_LABEL"] and string.format(GSF.L["REQUESTED_BY_LABEL"], reqFormatted) or ("Requested by: " .. reqFormatted)
+			local notePrefix = GSF.L["NOTE_LABEL"] and string.format(GSF.L["NOTE_LABEL"], noteStr) or ("Note: " .. noteStr)
+			card.details:SetText(string.format("%s  •  %s", reqPrefix, notePrefix))
+
+			card.unclaimBtn:Hide()
+			card.mailBtn:Hide()
+
+			if b.status == GSF.ORDER_STATUS.OPEN then
+				card.statusText:SetText("|cff00ff00" .. (GSF.L["STATUS_OPEN"] or "OPEN") .. "|r")
+				if isMine then
+					card.actionBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:CancelBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
+				else
+					card.actionBtn:SetText(GSF.L["CLAIM_BOUNTY"] or "Claim")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:ClaimBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
+				end
+
+			elseif b.status == GSF.ORDER_STATUS.CLAIMED then
+				local claimerFormatted = GSF.Alts:GetFormattedName(b.claimer)
+				card.statusText:SetText(string.format("|cffffd100" .. (GSF.L["STATUS_CLAIMED"] or "CLAIMED") .. "|r (%s)", claimerFormatted))
+
+				if isClaimer then
+					card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:FulfillBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
+
+					card.mailBtn:SetText(GSF.L["MAIL"] or "Mail")
+					card.mailBtn:Show()
+					card.mailBtn:SetScript("OnClick", function()
+						if GSF.MailHelper then
+							GSF.MailHelper:PrepareBountyMail(b.requester, b.id, b.item, b.count)
+						end
+					end)
+
+					card.unclaimBtn:Show()
+					card.unclaimBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:UnclaimBounty(b.id)
+						Tab:Refresh()
+					end)
+				else
+					card.actionBtn:Hide()
+				end
+
+			elseif b.status == GSF.ORDER_STATUS.IN_TRANSIT then
+				local mins = math.floor((time() - (b.mailedAt or time())) / 60)
+				card.statusText:SetText(string.format("|cff00ccff[Mail] %s (%dm)|r", GSF.L["STATUS_IN_TRANSIT"] or "IN TRANSIT", mins))
+
+				if isMine then
+					card.actionBtn:SetText(GSF.L["CONFIRM_RECEIVED"] or "Confirm Received")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:FulfillBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
+				else
+					card.actionBtn:Hide()
+				end
+
+			elseif b.status == GSF.ORDER_STATUS.COMPLETED then
+				card.statusText:SetText("|cff00ff00" .. (GSF.L["STATUS_COMPLETED"] or "COMPLETED") .. "|r")
+				if isMine then
+					card.actionBtn:SetText(GSF.L["DISMISS_BOUNTY"] or "Dismiss")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:DismissBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
+				else
+					card.actionBtn:Hide()
+				end
 			else
-				card.actionBtn:SetText(GSF.L["STATUS_IN_TRANSIT"] or "In Transit")
+				card.actionBtn:Hide()
 			end
-			card.mailBtn:Hide()
 
-		elseif b.status == GSF.ORDER_STATUS.COMPLETED then
-			card.statusText:SetText("|cff00ff00✅ " .. (GSF.L["STATUS_COMPLETED"] or "COMPLETED") .. "|r")
-			card.actionBtn:SetText(GSF.L["STATUS_COMPLETED"] or "Done")
-			card.mailBtn:Hide()
+			card:Show()
+			yOffset = yOffset + 60
 		end
-
-		card:Show()
-		yOffset = yOffset + 60
 	end
 
 	self.bountyContent:SetHeight(math.max(yOffset, 370))

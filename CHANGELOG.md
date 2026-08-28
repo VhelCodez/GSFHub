@@ -17,6 +17,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.3] - 2026-08-29
+
+### Added
+- **Escape Key Window Close (`UISpecialFrames`):** Registered `"GSFHubMainFrame"` in `UISpecialFrames` so pressing `ESC` smoothly closes the window.
+- **Dynamic Header Subtitles:** Header dynamically displays `GSFHub — <Tab Name>` (`Berufe`, `Arbeitsaufträge`, `Material-Überschuss`, `Beute & Wunschliste`, `Ressourcen-Atlas & Aufträge`, `Gilde & Synchronisation`, `Einstellungen`), updating instantly on tab switch and language change. Relocated static version display into Settings.
+- **Universal Shift-Click Bag Item Paste:** Hooked `ChatEdit_InsertLink` so Shift-clicking items in bags directly inserts clean item names into any active GSF input box without opening bag stack-split dialogs.
+- **Reusable Drag-and-Drop `ItemSlot` Preview:** Added Blizzard-style item icon slot supporting item drops directly from bags, native `GameTooltip`, and 250ms debounced live icon resolution.
+- **Surplus Bag Selection Visual Highlight:** Added gold border highlight and active background styling to selected bag item rows in the surplus offer modal.
+- **Universal Item Tooltips:** Added native `GameTooltip` support across all item icon buttons on surplus cards, work order cards, and modals.
+- **Atlas Farming Localization:** Localized zone names (*Wald von Elwynn, Dun Morogh, Tirisfal, etc.*), harvest yields, and farming tips into authentic German for `deDE` clients.
+- **Configurable Pin Quantity:** Added a quantity prompt dialog when clicking *"An HUD anheften"* in the Atlas (defaulting to 20).
+- **Dedicated Material Request Modal (Option B):** Clicking *"Material anfordern"* opens a creation modal with item slot preview, custom quantity input (default 20), and optional notes edit box.
+- **Goals HUD Bounty Distinction & Safety Prompt:** Prefixes bounty goals with `[Auftrag]`, enlarged remove `[x]` button to 16x16 pixels, and added a confirmation dialog before unclaiming an accepted bounty.
+- **Bounty Lifecycle & Permission Management:**
+  - Requesters can cancel (`[Abbrechen]`) their own open bounties.
+  - Claimers can unclaim (`[Aufgeben]`), prepare mail (`[Mail]`), or complete (`[Abschließen]`) bounties.
+  - Added `[x] Abgeschlossene ausblenden` (Hide completed) filter checkbox (checked by default).
+  - Requesters can permanently purge completed bounties using the `[Entfernen]` (Dismiss) button.
+- **Main Character Validation & Live Sync:** Validates minimum 2 characters on main character saves with localized notices, and dynamically refreshes the Roster input when `/gsf main <Name>` is executed.
+
+### Fixed
+- **Settings "GitHub Issues" Lua Error:** Fixed method call to `GSF.URLDialog:ShowDialog` and aliased `URLDialog.Open` for defensive API compatibility.
+- **Settings Update Check False Alarm:** Updated update check logic to only open the update dialog if `latestKnownVersion > GSF.VERSION`, otherwise displaying an up-to-date confirmation toast.
+- **Missing Font Glyphs (`[][]` Box Characters):** Stripped unsupported unicode bullets (`●`) and symbols (`📬`, `✅`) across roster rows, atlas bounties, and status indicators, replacing them with native Blizzard status textures.
+- **UI Collisions & Padding:**
+  - Fixed vertical spacing in Tab 6 (Roster), eliminating overlap between the `[Vollständiger Sync]` button and table header bar.
+  - Added 8px top margin between search controls and lists in Tab 5 (Atlas), and a 26px gutter between left list and right details pane.
+  - Narrowed Tab 4 (Drops & Wishlist) left scroll frame to 330px to clear right input controls.
+  - Shortened wishlist button text to `"+ Hinzufügen"` / `"+ Add"` (90px).
+  - Adjusted Settings language dropdown vertical anchor from `Y = +2` to `Y = -8` below label.
+- **Non-Tradable Surplus Filtering:** Filtered out Soulbound items (`info.isBound`, `bindType == 1`) and quest items (`classID == 12`) from the surplus candidates scan.
+- **Online Status for Local Player:** Local player in Roster tab is now guaranteed to display `Online` rather than a stale offline timestamp.
+- **Unguilded Sync Button State:** Disabled the sync button with tooltip notice when not in a guild.
+- **Missing Localization Key:** Defined and bound `WISHLIST_EMPTY_PROMPT` in both English and German dictionaries.
+
+---
+
 ## [1.2.2] - 2026-08-28
 
 ### Added
@@ -105,7 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decentralized P2P Networking Mesh:** Peer-to-peer sync with `LibDeflate` compression over the hidden `GUILD` channel.
 - **Presentation Layer:** 5-tab parchment/slate main frame with draggable Minimap icon and toast popup alerts.
 
-[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/VhelCodez/GSFHub/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/VhelCodez/GSFHub/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/VhelCodez/GSFHub/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/VhelCodez/GSFHub/compare/v1.1.1...v1.2.0

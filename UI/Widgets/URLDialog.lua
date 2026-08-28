@@ -49,3 +49,5 @@ function GSF.URLDialog:ShowDialog(titleText, msgText, urlText)
 	dialogFrame.editBox:HighlightText()
 	dialogFrame.editBox:SetFocus()
 end
+
+GSF.URLDialog.Open = GSF.URLDialog.ShowDialog

@@ -131,6 +131,32 @@ function GSF.SupplyBounties:CancelBounty(bountyId)
 	if GSF.TabAtlas then GSF.TabAtlas:Refresh() end
 end
 
+function GSF.SupplyBounties:UnclaimBounty(bountyId)
+	if not bountyId or not GSF.cache.bounties or not GSF.cache.bounties[bountyId] then return end
+	local b = GSF.cache.bounties[bountyId]
+
+	b.claimer = nil
+	b.claimerMain = nil
+	b.status = GSF.ORDER_STATUS.OPEN
+
+	if GSF.Sync then
+		GSF.Sync:BroadcastBountyNew(b)
+	end
+
+	-- Remove from local GoalsHUD if present
+	if GSF.GoalsHUD then
+		GSF.GoalsHUD:RemoveGoal(b.item)
+	end
+
+	if GSF.TabAtlas then GSF.TabAtlas:Refresh() end
+end
+
+function GSF.SupplyBounties:DismissBounty(bountyId)
+	if not bountyId or not GSF.cache.bounties then return end
+	GSF.cache.bounties[bountyId] = nil
+	if GSF.TabAtlas then GSF.TabAtlas:Refresh() end
+end
+
 -- 3-Factor Verification Mail Scanner
 function GSF.SupplyBounties:ScanMailboxForBounties()
 	if not GSF.cache or not GSF.cache.bounties then return end
