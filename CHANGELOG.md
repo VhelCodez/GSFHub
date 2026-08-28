@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Decoupled Sound Alerts:** Audio alerts now play independently of visual toast frame rendering.
+- **Automated Release Workflow:** Made GitHub Actions release creation idempotent, handling tag re-runs and release updates without conflicts.
 
 ---
 

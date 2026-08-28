@@ -9,7 +9,7 @@ This document outlines the version roadmap and upcoming milestones for **GSFHub 
 ```mermaid
 graph LR
     v10["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
-    v11 --> v12["v1.2.0<br/><b>Gathering & Atlas</b><br/>(Released)"]
+    v11 --> v12["v1.2.2<br/><b>Gathering, Atlas & Settings</b><br/>(Released)"]
     v12 --> v13["v1.3.0<br/><b>Phase 3: Navigation & QoL</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Specializations & CDs</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: TBC Guild Vault</b><br/>(Planned)"]
