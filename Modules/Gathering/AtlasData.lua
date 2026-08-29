@@ -29,7 +29,7 @@ local ATLAS_DB = {
 		itemID = 2775, -- Silver Ore
 		category = "Mining",
 		minSkill = 75,
-		icon = "Interface\\Icons\\INV_Ore_Silver_01",
+		icon = "Interface\\Icons\\INV_Ore_TrueSilver_01",
 		zones = { "Redridge Mountains", "Wetlands", "Duskwood", "Ashenvale", "Hillsbrad Foothills" },
 		yields = "Silver Ore, Lesser Moonstone, Shadowgem",
 		tips = "Rare spawn replacing Tin Veins."
@@ -1078,6 +1078,32 @@ function GSF.Atlas:GetDisplayName(entry)
 	end
 	return entry.name
 end
+
+function GSF.Atlas:GetItemDisplayName(entry)
+	if not entry then return "" end
+	if entry.itemID then
+		local itemName = GetItemInfo and GetItemInfo(entry.itemID)
+		if itemName and itemName ~= "" then
+			return itemName
+		end
+	end
+	if entry.yields then
+		local primary = entry.yields:match("^([^,]+)")
+		if primary and primary:trim() ~= "" then
+			local getYields = self.GetYieldsDisplayName or self.GetLocalizedYields
+			if getYields then
+				local primaryLoc = getYields(self, primary:trim()):match("^([^,]+)")
+				if primaryLoc and primaryLoc:trim() ~= "" then
+					return primaryLoc:trim()
+				end
+			end
+			return primary:trim()
+		end
+	end
+	return self:GetDisplayName(entry)
+end
+
+GSF.Atlas.GetLocalizedYields = GSF.Atlas.GetYieldsDisplayName
 
 function GSF.Atlas:GetAll()
 	return ATLAS_DB

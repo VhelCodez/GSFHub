@@ -33,13 +33,19 @@ end
 
 function GSF.Alts:SetMyMain(mainName)
 	local myName = GSF.DB:GetPlayerName()
-	mainName = (mainName and mainName:trim() ~= "") and mainName:trim() or myName
-	GSF.db.mainCharacter = mainName
-	self:SetMain(myName, mainName)
-	
-	-- Broadcast to guild
-	if GSF.Sync then
-		GSF.Sync:BroadcastAlt(myName, mainName)
+	mainName = (mainName and mainName:trim() ~= "") and mainName:trim() or ""
+	if mainName == "" or mainName:lower() == myName:lower() then
+		GSF.db.mainCharacter = ""
+		self:SetMain(myName, myName)
+		if GSF.Sync then
+			GSF.Sync:BroadcastAlt(myName, myName)
+		end
+	else
+		GSF.db.mainCharacter = mainName
+		self:SetMain(myName, mainName)
+		if GSF.Sync then
+			GSF.Sync:BroadcastAlt(myName, mainName)
+		end
 	end
 end
 

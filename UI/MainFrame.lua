@@ -1,6 +1,7 @@
 local ADDON_NAME, GSF = ...
 
 local MainFrame = CreateFrame("Frame", "GSFHubMainFrame", UIParent)
+MainFrame:Hide()
 GSF.MainFrame = MainFrame
 
 local NUM_TABS = 6
@@ -38,6 +39,8 @@ function MainFrame:Initialize()
 	self:SetScript("OnDragStart", self.StartMoving)
 	self:SetScript("OnDragStop", self.StopMovingOrSizing)
 	self:SetClampedToScreen(true)
+	self:SetFrameStrata("HIGH")
+	self:SetToplevel(true)
 
 	-- Close on Escape key press
 	tinsert(UISpecialFrames, "GSFHubMainFrame")
@@ -50,6 +53,7 @@ function MainFrame:Initialize()
 	-- Header Title (Sleek dynamic title without cluttered version number)
 	local title = self:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
 	title:SetPoint("TOPLEFT", self, "TOPLEFT", 16, -14)
+	title:SetJustifyH("LEFT")
 	self.title = title
 	self:UpdateTitle()
 
@@ -155,7 +159,7 @@ end
 
 function MainFrame:UpdateLocalizedTexts()
 	if not self.initialized then return end
-	self.title:SetText(string.format("|cff%s%s|r  |cffffffff%s|r", GSF.COLORS.PRIMARY, GSF.L["ADDON_TITLE"], GSF.VERSION))
+	self:UpdateTitle()
 	
 	local tabTitles = {
 		GSF.L["TAB_PROFESSIONS"],
@@ -182,6 +186,7 @@ function MainFrame:UpdateLocalizedTexts()
 	if GSF.TabAtlas and GSF.TabAtlas.UpdateTexts then GSF.TabAtlas:UpdateTexts() end
 	if GSF.TabRoster and GSF.TabRoster.UpdateTexts then GSF.TabRoster:UpdateTexts() end
 	if GSF.TabSettings and GSF.TabSettings.UpdateTexts then GSF.TabSettings:UpdateTexts() end
+	if GSF.GoalsHUD and GSF.GoalsHUD.Refresh then GSF.GoalsHUD:Refresh() end
 	self:UpdateTitle()
 end
 

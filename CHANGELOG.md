@@ -17,6 +17,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.4] - 2026-08-29
+
+### Added
+- **Atlas Empty State Notifications:** Added centered empty state messages for View 1 Resources (`NO_RESOURCES_FOUND` / *"Keine passenden Ressourcen gefunden."*) and View 2 Bounties (`NO_BOUNTIES_FOUND` / *"Keine passenden Aufträge vorhanden."*), with automatic details pane reset on zero matches.
+- **Dynamic Modal Localization:** Added `UpdateModalTexts()` across `TabWorkOrders` and `TabAtlas` so all modal dialog titles, field labels, checkboxes, and buttons refresh dynamically on language change without restarting or reopening the client.
+- **Goals HUD Language Synchronization:** Hooked `GoalsHUD:Refresh()` directly into addon-wide language change events to keep HUD titles in sync with client localization.
+- **Universal Input Enter/Escape Handling:** Pressing Enter or Escape now cleanly clears focus across all edit boxes throughout the addon.
+
+### Changed
+- **Professions Tab Action Bar Redesign:** Streamlined the right pane to the two primary crafting actions (`[Herstellung anfragen]` and `[Material anfordern]`), sizing both to a spacious `170px` with a `15px` central gap and `10px` side margins for zero border clipping.
+- **Beute & Wunsch (Tab 4) Dual-Column Architecture:** Rebuilt layout into two symmetrical columns (Recipe Drops on the left, Personal Wishlist on the right) with a unified top search bar, `+ Zur Wunschliste` action, centered empty states, and a dedicated item slot preview modal.
+- **Atlas View Navigation Buttons:** Right-aligned and standardized view toggle buttons (`[Ressourcen]`, `[Aufträge]`, `[Ziele]`) to uniform `90x24px` buttons with generous buffer margins.
+- **Gilde & Sync (Tab 6) Layout Polish:** Streamlined top bar alignment, expanded the member scroll table to maximize visible roster entries, and relocated Main/Alt character linking cleanly into the bottom-left bar.
+- **Goal HUD Note Icon Placement:** Dynamically measures title text width so the parchment note icon (`INV_Misc_Note_01`) tightly hugs the goal label (`Kupfererz 📜`) rather than floating at a fixed distance.
+- **Goal HUD Header Button Parity:** Cropped Blizzard's transparent padding on `UI-Panel-MinimizeButton-Up` via texture coordinates (`SetTexCoord(0.15625, 0.84375, 0.15625, 0.84375)`) and standardized both Close and Settings Gear buttons to an identical `14x14px` frame size with perfectly level alignment.
+- **FrameStrata Layering Hierarchy:** Configured `MainFrame` to `"HIGH"` strata with `SetToplevel(true)` and `GoalsHUD` to `"MEDIUM"` strata, preventing z-fighting and ensuring the main window cleanly layers over desktop HUD widgets.
+- **Goal HUD Progress Theming:** Updated progress bar color to GSF signature teal/mint (`0.2, 0.9, 0.6`) during progress, transitioning to success green (`0.0, 1.0, 0.3`) at 100%.
+
+### Fixed
+- **Subpixel Checkbox Label Calibration:** Standardized checkbox label anchors across `Berufe`, `Aufträge`, and `Atlas` (`ClearAllPoints()` and pixel-matched offset) to produce an identical 12-pixel gap between the checkbox border and the first letter across all tabs.
+- **Work Orders Layout Overlaps:** Converted category filter from a heavyweight Blizzard menu to a lightweight Frame dropdown, eliminating button collisions and dropdown clipping.
+- **Surplus Tab Top Bar Alignment:** Aligned search box to standard `y = -12` and `15px` left margin matching all other tabs.
+- **Item Preview Clearing on Empty Input:** Updated `AttachItemPreview` to immediately clear the preview icon slot and reset item metadata whenever the input becomes empty (supporting keyboard backspacing, right-click clears, and clear button `×` clicks).
+- **Atlas View 3 (Goals) Empty State Misalignment:** Re-anchored empty notice to `goalScroll` so it sits dead-centered in the scroll area rather than clinging to the top edge.
+- **Localization Parity:** Reached 100% dictionary match across 231 keys between `Locales/enUS.lua` and `Locales/deDE.lua`.
+
+---
+
 ## [1.2.3] - 2026-08-29
 
 ### Added
@@ -142,7 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decentralized P2P Networking Mesh:** Peer-to-peer sync with `LibDeflate` compression over the hidden `GUILD` channel.
 - **Presentation Layer:** 5-tab parchment/slate main frame with draggable Minimap icon and toast popup alerts.
 
-[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.2.4...HEAD
+[1.2.4]: https://github.com/VhelCodez/GSFHub/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/VhelCodez/GSFHub/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/VhelCodez/GSFHub/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/VhelCodez/GSFHub/compare/v1.2.0...v1.2.1

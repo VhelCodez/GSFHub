@@ -7,22 +7,108 @@ AceEvent:Embed(GSF.RecipeDrops)
 function GSF.RecipeDrops:Initialize()
 	self:RegisterEvent("CHAT_MSG_LOOT", "OnLootMessage")
 	self:RegisterEvent("LOOT_OPENED", "OnLootOpened")
+	self:CleanupWishlistDuplicates()
+end
+
+function GSF.RecipeDrops:CleanupWishlistDuplicates()
+	if not GSF.db or not GSF.db.myWishlist then return end
+	local seenIds = {}
+	local seenNames = {}
+	local toRemove = {}
+
+	for key, item in pairs(GSF.db.myWishlist) do
+		local id = tonumber(key) or (item.link and tonumber(item.link:match("item:(%d+)"))) or item.id
+		local rawName = (item.name or key):lower():gsub("|c%x+|h", ""):gsub("|h|r", ""):gsub("%[", ""):gsub("%]", ""):trim()
+
+		if id and id > 0 then
+			if seenIds[id] then
+				table.insert(toRemove, key)
+			else
+				seenIds[id] = key
+				if rawName ~= "" then seenNames[rawName] = key end
+			end
+		elseif rawName ~= "" then
+			if seenNames[rawName] then
+				table.insert(toRemove, key)
+			else
+				seenNames[rawName] = key
+			end
+		end
+	end
+
+	for _, k in ipairs(toRemove) do
+		GSF.db.myWishlist[k] = nil
+	end
+end
+
+function GSF.RecipeDrops:IsRecipeItem(input)
+	if not input or input == "" then return false end
+
+	local itemId = tonumber(tostring(input):match("item:(%d+)")) or (type(input) == "number" and input) or (tostring(input):match("^%d+$") and tonumber(input))
+	if itemId and itemId > 0 then
+		if C_Item and C_Item.GetItemInfoInstant then
+			local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemId)
+			if classID then
+				return classID == 9 or classID == (LE_ITEM_CLASS_RECIPE or 9)
+			end
+		end
+	end
+
+	local itemName, itemLink, _, _, _, itemType, _, _, _, _, _, classID = GetItemInfo(input)
+	if classID then
+		return classID == 9 or classID == (LE_ITEM_CLASS_RECIPE or 9)
+	end
+
+	if itemType == "Recipe" or itemType == "Rezept" then
+		return true
+	end
+
+	local str = tostring(itemName or input)
+	if str:find("^(Pattern|Plans|Schematic|Recipe|Formula|Manual|Design|Book):") or
+	   str:find("^(Muster|Pläne|Bauplan|Rezept|Formel|Handbuch|Vorlage|Buch):") or
+	   str:find("%f[%a]Pattern%f[%A]") or str:find("%f[%a]Plans%f[%A]") or str:find("%f[%a]Schematic%f[%A]") or
+	   str:find("%f[%a]Recipe%f[%A]") or str:find("%f[%a]Formula%f[%A]") or str:find("%f[%a]Manual%f[%A]") or
+	   str:find("%f[%a]Muster%f[%A]") or str:find("%f[%a]Pläne%f[%A]") or str:find("%f[%a]Bauplan%f[%A]") or
+	   str:find("%f[%a]Rezept%f[%A]") or str:find("%f[%a]Formel%f[%A]") or str:find("%f[%a]Handbuch%f[%A]") then
+		return true
+	end
+
+	-- Also accept if it matches a known craft recipe name in GSF's recipe index
+	if GSF.RecipeBook and GSF.RecipeBook.Search then
+		local results = GSF.RecipeBook:Search(str, "ALL", false)
+		if results and #results > 0 then
+			for _, r in ipairs(results) do
+				if r.name and (r.name:lower() == str:lower() or str:lower():find(r.name:lower(), 1, true)) then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
 end
 
 function GSF.RecipeDrops:AddToWishlist(input)
-	if not input or input:trim() == "" then return end
+	if not input or input:trim() == "" then return false end
 	local trimmed = input:trim()
 
-	local itemName, itemLink = GetItemInfo(trimmed)
-	local itemId = tonumber(trimmed:match("item:(%d+)") or 0)
+	if not self:IsRecipeItem(trimmed) then
+		if GSF.Addon then
+			GSF.Addon:Print(GSF.L["WISHLIST_RECIPES_ONLY"] or "Only recipes, schematics, patterns, and formulas can be added to the recipe wishlist.")
+		end
+		return false
+	end
 
-	-- If plain text input that isn't a known item and doesn't look like a real name
+	local itemId = tonumber(trimmed:match("item:(%d+)") or (trimmed:match("^%d+$") and trimmed) or 0)
+	local query = (itemId and itemId > 0) and itemId or trimmed
+	local itemName, itemLink = GetItemInfo(query)
+
 	if not itemName and itemId == 0 then
 		if #trimmed < 3 or trimmed:lower() == "lorem ipsum" or trimmed:lower() == "d" then
 			if GSF.Addon then
 				GSF.Addon:Print(GSF.L["WISHLIST_INVALID_INPUT"] or "Please provide a valid item link (Shift-Click) or recipe name.")
 			end
-			return
+			return false
 		end
 		itemName = trimmed
 		itemLink = trimmed
@@ -31,7 +117,33 @@ function GSF.RecipeDrops:AddToWishlist(input)
 		itemLink = itemLink or trimmed
 	end
 
-	local key = itemId > 0 and tostring(itemId) or itemName
+	-- Robust Deduplication: Check BOTH numeric ID and normalized item name
+	GSF.db.myWishlist = GSF.db.myWishlist or {}
+	local targetLowerName = itemName:lower():gsub("|c%x+|h", ""):gsub("|h|r", ""):gsub("%[", ""):gsub("%]", ""):trim()
+
+	for existingKey, existingItem in pairs(GSF.db.myWishlist) do
+		local existingId = tonumber(existingKey) or (existingItem.link and tonumber(existingItem.link:match("item:(%d+)"))) or existingItem.id
+		local existingName = (existingItem.name or existingKey):lower():gsub("|c%x+|h", ""):gsub("|h|r", ""):gsub("%[", ""):gsub("%]", ""):trim()
+
+		local idMatch = (itemId and itemId > 0 and existingId and existingId == itemId)
+		local nameMatch = (targetLowerName ~= "" and (existingName == targetLowerName or existingName:find(targetLowerName, 1, true) or targetLowerName:find(existingName, 1, true)))
+
+		if idMatch or nameMatch then
+			-- Already on wishlist! Upgrade existing entry if new one has better link/ID
+			if itemId and itemId > 0 and not existingItem.id then
+				existingItem.id = itemId
+			end
+			if itemLink and itemLink:find("item:") and not (existingItem.link and existingItem.link:find("item:")) then
+				existingItem.link = itemLink
+			end
+			if GSF.Addon then
+				GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", itemLink or itemName)
+			end
+			return false
+		end
+	end
+
+	local key = (itemId and itemId > 0) and tostring(itemId) or itemName
 
 	GSF.db.myWishlist = GSF.db.myWishlist or {}
 	if GSF.db.myWishlist[key] then

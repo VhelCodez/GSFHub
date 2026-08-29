@@ -45,6 +45,29 @@ function GSFHub:OnEnable()
 		GSF.RecipeDrops:Initialize()
 	end
 
+	-- Lightweight chat link listener to resolve any item whispered, looted, or linked in chat
+	GSF.ChatLinks = GSF.ChatLinks or {}
+	local function SniffChatMessage(_, msg)
+		if not msg then return end
+		for link in msg:gmatch("|c%x+|Hitem:%d+.-|h%[.-%]|h|r") do
+			local name = link:match("%[(.-)%]")
+			local id = tonumber(link:match("item:(%d+)"))
+			if name and id then
+				GSF.ChatLinks[name:lower()] = { id = id, link = link }
+			end
+		end
+	end
+
+	self:RegisterEvent("CHAT_MSG_WHISPER", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_WHISPER_INFORM", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_GUILD", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_PARTY", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_PARTY_LEADER", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_RAID", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_RAID_LEADER", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_SAY", SniffChatMessage)
+	self:RegisterEvent("CHAT_MSG_LOOT", SniffChatMessage)
+
 	if GSF.TradeSkillHook then
 		GSF.TradeSkillHook:Initialize()
 	end
@@ -189,4 +212,81 @@ function GSFHub:HandleSlashCommand(input)
 			GSF.MainFrame:Toggle()
 		end
 	end
+end
+
+-- Automatically detect the associated profession for an item, enchant, or recipe
+function GSF:DetectProfessionForItem(input)
+	if not input or input == "" then return nil end
+
+	local itemId = tonumber(tostring(input):match("item:(%d+)")) or (type(input) == "number" and input) or (tostring(input):match("^%d+$") and tonumber(input))
+	local itemName, itemLink, _, _, _, itemType, itemSubType, _, _, _, _, classID, subclassID = GetItemInfo(input)
+
+	-- 1. Recipe class (classID == 9)
+	if classID == 9 or (C_Item and itemId and select(6, C_Item.GetItemInfoInstant(itemId)) == 9) then
+		local sub = subclassID or (C_Item and itemId and select(7, C_Item.GetItemInfoInstant(itemId)))
+		if sub == 1 then return "Leatherworking"
+		elseif sub == 2 then return "Tailoring"
+		elseif sub == 3 then return "Engineering"
+		elseif sub == 4 then return "Blacksmithing"
+		elseif sub == 5 then return "Cooking"
+		elseif sub == 6 then return "Alchemy"
+		elseif sub == 7 then return "First Aid"
+		elseif sub == 8 then return "Enchanting"
+		elseif sub == 10 then return "Jewelcrafting"
+		end
+	end
+
+	-- 2. Enchanting detection (keywords and enchants)
+	local str = tostring(itemName or input)
+	if str:find("Enchant%s") or str:find("Verzaubern") or str:find("Formel:") or str:find("Formula:") or str:find("Brillant") or str:find("Glänzend") or str:find("Hervorragend") then
+		return "Enchanting"
+	end
+
+	-- 3. Check GSF Recipe Index (scanned guild recipes & defaults)
+	if GSF.RecipeBook and GSF.RecipeBook.Search then
+		local clean = str:gsub("^%[", ""):gsub("%]$", ""):match("^(.-)%s*%(%d+%)") or str:gsub("^%[", ""):gsub("%]$", "")
+		local results = GSF.RecipeBook:Search(clean, "ALL", false)
+		if results and #results > 0 then
+			for _, r in ipairs(results) do
+				if r.profession and r.profession ~= "ALL" then
+					return r.profession
+				end
+			end
+		end
+	end
+
+	-- 4. Check Subtypes (Potions, Gems, Armor)
+	if itemType == "Consumable" or itemType == "Verbrauchbar" then
+		if itemSubType == "Potion" or itemSubType == "Elixir" or itemSubType == "Flask" or
+		   itemSubType == "Trank" or itemSubType == "Elixier" or itemSubType == "Fläschchen" then
+			return "Alchemy"
+		elseif itemSubType == "Food & Drink" or itemSubType == "Essen & Trinken" then
+			return "Cooking"
+		elseif itemSubType == "Bandage" or itemSubType == "Verband" then
+			return "First Aid"
+		end
+	elseif itemType == "Gem" or itemType == "Edelstein" then
+		return "Jewelcrafting"
+	elseif itemType == "Armor" or itemType == "Rüstung" then
+		if itemSubType == "Cloth" or itemSubType == "Stoff" then
+			return "Tailoring"
+		elseif itemSubType == "Leather" or itemSubType == "Leder" then
+			return "Leatherworking"
+		elseif itemSubType == "Plate" or itemSubType == "Platte" or itemSubType == "Mail" or itemSubType == "Schwere Rüstung" then
+			return "Blacksmithing"
+		end
+	end
+
+	-- 5. Name heuristics
+	if str:find("Muster:") or str:find("Pattern:") then
+		return (str:find("Leder") or str:find("Leather") or str:find("Kürschner")) and "Leatherworking" or "Tailoring"
+	elseif str:find("Pläne:") or str:find("Plans:") then
+		return "Blacksmithing"
+	elseif str:find("Bauplan:") or str:find("Schematic:") then
+		return "Engineering"
+	elseif str:find("Rezept:") or str:find("Recipe:") then
+		return (str:find("Trank") or str:find("Elixier") or str:find("Öl") or str:find("Transmut")) and "Alchemy" or "Cooking"
+	end
+
+	return nil
 end

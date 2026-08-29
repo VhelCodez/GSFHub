@@ -188,5 +188,5 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 ---
 
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`).
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`).
 - GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

@@ -64,6 +64,23 @@ function GSF.SupplyBounties:CreateBounty(item, count, category, notes, targetCra
 	return bounty
 end
 
+function GSF.SupplyBounties:UpdateBounty(bountyId, newItem, newCount, newCategory, newNotes)
+	if not bountyId or not GSF.cache.bounties or not GSF.cache.bounties[bountyId] then return end
+	local b = GSF.cache.bounties[bountyId]
+	if b.status ~= GSF.ORDER_STATUS.OPEN then return end
+	if newItem and newItem ~= "" then b.item = newItem end
+	if newCount then b.count = tonumber(newCount) or b.count end
+	if newCategory then b.category = newCategory end
+	b.notes = newNotes or ""
+	b.updatedAt = time()
+
+	if GSF.Sync then
+		GSF.Sync:BroadcastBountyNew(b)
+	end
+	if GSF.TabAtlas then GSF.TabAtlas:Refresh() end
+	return b
+end
+
 function GSF.SupplyBounties:ClaimBounty(bountyId)
 	if not bountyId or not GSF.cache.bounties or not GSF.cache.bounties[bountyId] then return end
 	local b = GSF.cache.bounties[bountyId]

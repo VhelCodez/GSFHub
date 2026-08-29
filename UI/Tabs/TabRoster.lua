@@ -8,40 +8,23 @@ function Tab:Create(parent)
 	frame:SetAllPoints()
 	self.frame = frame
 
-	-- Main/Alt Section
-	local mainLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-	mainLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -12)
-	mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
-	self.mainLabel = mainLabel
+	-- Search Input (Top-Left aligned identically to other tabs)
+	local searchBox = GSF.UI:CreateEditBox(frame, 150, 22)
+	searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -12)
+	self.searchBox = searchBox
 
-	local mainPrompt = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	mainPrompt:SetPoint("TOPLEFT", mainLabel, "BOTTOMLEFT", 0, -8)
-	mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
-	self.mainPrompt = mainPrompt
-
-	local mainBox = GSF.UI:CreateEditBox(frame, 140, 22)
-	mainBox:SetPoint("LEFT", mainPrompt, "RIGHT", 10, 0)
-	mainBox:SetText(GSF.db and GSF.db.mainCharacter or GSF.DB:GetPlayerName())
-	self.mainBox = mainBox
-
-	local saveMainBtn = GSF.UI:CreateButton(frame, GSF.L["SAVE_MAIN"], 80, 22)
-	saveMainBtn:SetPoint("LEFT", mainBox, "RIGHT", 8, 0)
-	self.saveMainBtn = saveMainBtn
-
-	saveMainBtn:SetScript("OnClick", function()
-		local text = mainBox:GetText():match("^%s*(.-)%s*$")
-		if text and string.len(text) >= 2 then
-			GSF.Alts:SetMyMain(text)
-			GSF.Addon:Printf(GSF.L["MAIN_SAVED_NOTICE"] or "Main character updated to '%s'.", text)
-			Tab:Refresh()
-		else
-			GSF.Addon:Printf(GSF.L["MAIN_INVALID_NOTICE"] or "Invalid main character name. Minimum 2 characters required.")
-		end
+	local searchHint = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	searchHint:SetPoint("LEFT", searchBox, "LEFT", 5, 0)
+	searchHint:SetText(GSF.L["SEARCH_MEMBERS"] or "Search members...")
+	searchBox.searchHint = searchHint
+	searchBox:HookScript("OnTextChanged", function(eb)
+		if eb:GetText() ~= "" then searchHint:Hide() else searchHint:Show() end
+		Tab:Refresh()
 	end)
 
-	-- Sync Action Button (anchored with clear vertical space)
-	local syncBtn = GSF.UI:CreateButton(frame, GSF.L["FORCE_SYNC"], 150, 22)
-	syncBtn:SetPoint("TOPLEFT", mainPrompt, "BOTTOMLEFT", 0, -10)
+	-- Sync Action Button (Top-Right aligned identically to action buttons)
+	local syncBtn = GSF.UI:CreateButton(frame, GSF.L["FORCE_SYNC"], 150, 24)
+	syncBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -20, -12)
 	self.syncBtn = syncBtn
 
 	syncBtn:SetScript("OnClick", function()
@@ -56,13 +39,13 @@ function Tab:Create(parent)
 	end)
 
 	local statText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	statText:SetPoint("LEFT", syncBtn, "RIGHT", 12, 0)
+	statText:SetPoint("RIGHT", syncBtn, "LEFT", -12, 0)
 	self.statText = statText
 
-	-- Roster Table Header (placed at Y = -96 with 8px margin below syncBtn)
+	-- Roster Table Header (placed at Y = -45 directly matching list baseline)
 	local headerBar = CreateFrame("Frame", nil, frame)
 	headerBar:SetSize(700, 20)
-	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -96)
+	headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)
 	if BackdropTemplateMixin then Mixin(headerBar, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(headerBar, false)
 	headerBar:SetBackdropColor(0.15, 0.15, 0.20, 0.9)
@@ -87,12 +70,82 @@ function Tab:Create(parent)
 	h4:SetText(GSF.L["TABLE_LAST_SEEN"])
 	self.h4 = h4
 
-	-- Roster Table Scroll
+	-- Roster Table Scroll (fills middle area down to bottom section)
 	local scrollFrame, content = GSF.UI:CreateScrollList(frame, 700, 310)
 	scrollFrame:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -4)
-	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 15)
+	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 52)
+	self.scrollFrame = scrollFrame
 	self.content = content
 	self.memberRows = {}
+
+	-- Main/Alt Section (Bottom Bar)
+	local mainLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	mainLabel:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, 34)
+	mainLabel:SetText(GSF.L["MAIN_ALT_TITLE"])
+	self.mainLabel = mainLabel
+
+	local mainPrompt = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	mainPrompt:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, 14)
+	mainPrompt:SetText(GSF.L["SET_MAIN_CHARACTER"])
+	self.mainPrompt = mainPrompt
+
+	local myName = GSF.DB:GetPlayerName()
+	local mainBox = GSF.UI:CreateEditBox(frame, 140, 22)
+	mainBox:SetPoint("LEFT", mainPrompt, "RIGHT", 8, 0)
+	self.mainBox = mainBox
+
+	local mainHint = mainBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	mainHint:SetPoint("LEFT", mainBox, "LEFT", 5, 0)
+	mainHint:SetText(myName)
+	mainBox.mainHint = mainHint
+
+	local curMain = GSF.db and GSF.db.mainCharacter and GSF.db.mainCharacter:match("^%s*(.-)%s*$") or ""
+	if curMain ~= "" and curMain:lower() ~= myName:lower() then
+		mainBox:SetText(curMain)
+		mainHint:Hide()
+	else
+		mainBox:SetText("")
+		mainHint:Show()
+	end
+
+	mainBox:HookScript("OnTextChanged", function(eb)
+		if eb:GetText() ~= "" then
+			mainHint:Hide()
+		else
+			mainHint:Show()
+		end
+	end)
+
+	local saveMainBtn = GSF.UI:CreateButton(frame, GSF.L["SAVE_MAIN"], 80, 22)
+	saveMainBtn:SetPoint("LEFT", mainBox, "RIGHT", 8, 0)
+	self.saveMainBtn = saveMainBtn
+
+	local function SaveMain()
+		local pName = GSF.DB:GetPlayerName()
+		local text = mainBox:GetText():match("^%s*(.-)%s*$")
+		if not text or text == "" or text:lower() == pName:lower() then
+			GSF.Alts:SetMyMain("")
+			mainBox:SetText("")
+			mainHint:SetText(pName)
+			mainHint:Show()
+			GSF.Addon:Printf(GSF.L["MAIN_RESET_SELF_NOTICE"] or "Main character reset: You (%s) are your own main.", pName)
+			Tab:Refresh()
+		elseif string.len(text) >= 2 then
+			GSF.Alts:SetMyMain(text)
+			mainBox:SetText(text)
+			mainHint:Hide()
+			GSF.Addon:Printf(GSF.L["MAIN_SAVED_NOTICE"] or "Main character updated to '%s'.", text)
+			Tab:Refresh()
+		else
+			GSF.Addon:Printf(GSF.L["MAIN_INVALID_NOTICE"] or "Invalid main character name. Minimum 2 characters required.")
+		end
+	end
+
+	saveMainBtn:SetScript("OnClick", SaveMain)
+	mainBox:SetScript("OnEnterPressed", function(eb)
+		SaveMain()
+		eb:ClearFocus()
+	end)
 
 	return frame
 end
@@ -107,6 +160,9 @@ function Tab:UpdateTexts()
 	if self.h2 then self.h2:SetText(GSF.L["TABLE_MAIN"]) end
 	if self.h3 then self.h3:SetText(GSF.L["TABLE_PROFESSIONS"]) end
 	if self.h4 then self.h4:SetText(GSF.L["TABLE_LAST_SEEN"]) end
+	if self.searchBox and self.searchBox.searchHint then
+		self.searchBox.searchHint:SetText(GSF.L["SEARCH_MEMBERS"] or "Search members...")
+	end
 	self:Refresh()
 end
 
@@ -141,14 +197,47 @@ function Tab:Refresh()
 		self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
 	end
 
-	if self.mainBox then
-		local currentMain = (GSF.Alts and GSF.Alts:GetMyMain()) or (GSF.db and GSF.db.mainCharacter) or GSF.DB:GetPlayerName()
-		self.mainBox:SetText(currentMain or "")
+	if self.mainBox and not self.mainBox:HasFocus() then
+		local pName = GSF.DB:GetPlayerName()
+		local curMain = GSF.db and GSF.db.mainCharacter and GSF.db.mainCharacter:match("^%s*(.-)%s*$") or ""
+		if curMain ~= "" and curMain:lower() ~= pName:lower() then
+			self.mainBox:SetText(curMain)
+			if self.mainBox.mainHint then self.mainBox.mainHint:Hide() end
+		else
+			self.mainBox:SetText("")
+			if self.mainBox.mainHint then
+				self.mainBox.mainHint:SetText(pName)
+				self.mainBox.mainHint:Show()
+			end
+		end
 	end
 
 	table.sort(memberList, function(a, b)
 		return (a.lastSeen or 0) > (b.lastSeen or 0)
 	end)
+
+	local query = self.searchBox and self.searchBox:GetText():lower():trim() or ""
+	if query ~= "" then
+		local filtered = {}
+		for _, member in ipairs(memberList) do
+			local nameMatch = member.name and member.name:lower():find(query, 1, true)
+			local mainMatch = member.main and member.main:lower():find(query, 1, true)
+			local profMatch = false
+			if member.professions then
+				for pName, _ in pairs(member.professions) do
+					local locProf = GSF.L["PROF_" .. pName:upper()] or pName
+					if pName:lower():find(query, 1, true) or locProf:lower():find(query, 1, true) then
+						profMatch = true
+						break
+					end
+				end
+			end
+			if nameMatch or mainMatch or profMatch then
+				table.insert(filtered, member)
+			end
+		end
+		memberList = filtered
+	end
 
 	for _, row in ipairs(self.memberRows) do row:Hide() end
 
@@ -218,5 +307,8 @@ function Tab:Refresh()
 		yOffset = yOffset + 26
 	end
 
-	self.content:SetHeight(math.max(yOffset, 250))
+	self.content:SetHeight(math.max(yOffset, 1))
+	if self.scrollFrame and self.scrollFrame.UpdateScrollBar then
+		self.scrollFrame:UpdateScrollBar()
+	end
 end

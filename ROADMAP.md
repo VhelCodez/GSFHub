@@ -9,8 +9,9 @@ This document outlines the version roadmap and upcoming milestones for **GSFHub 
 ```mermaid
 graph LR
     v10["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
-    v11 --> v12["v1.2.3<br/><b>Gathering, Atlas & Polish</b><br/>(Released)"]
-    v12 --> v13["v1.3.0<br/><b>Phase 3: Navigation & QoL</b><br/>(Next Up)"]
+    v11 --> v12["v1.2.3<br/><b>Gathering & Atlas</b><br/>(Released)"]
+    v12 --> v124["v1.2.4<br/><b>UI Harmonization</b><br/>(Released)"]
+    v124 --> v13["v1.3.0<br/><b>Phase 3: Navigation & QoL</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Specializations & CDs</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: TBC Guild Vault</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: Guild Intelligence</b><br/>(Planned)"]
@@ -19,6 +20,17 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.2.4 - UI Harmonization & Alignment Suite *(Released)*
+- [x] **Subpixel Checkbox Label Calibration:** Exactly 12px measured gap between checkbox border and text across `Berufe`, `Aufträge`, and `Atlas`.
+- [x] **Beute & Wunsch Dual-Column Architecture:** Symmetrical two-column view (Recipe Drops left, Wishlist right) with unified search and centered modal dialog.
+- [x] **Professions Action Bar Streamlining:** Symmetrical 2-button crafting layout (`[Herstellung anfragen]` and `[Material anfordern]`) with zero clipping.
+- [x] **Atlas Navigation & Empty States:** Right-aligned 90px view buttons, empty list notifications across all 3 views, and centered empty notices.
+- [x] **Gilde & Sync Redesign:** Streamlined top bar, expanded roster table down to bottom bar, and bottom-left Main/Alt management.
+- [x] **Goal HUD Visual Polish:** Note icon hugs title text (`Kupfererz 📜`), 14x14px level header buttons with cropped texture padding, subtle delete buttons, and GSF mint progress bars.
+- [x] **FrameStrata Hierarchy Layering:** `MainFrame` in `"HIGH"` strata with `SetToplevel(true)` and `GoalsHUD` in `"MEDIUM"` strata, preventing z-fighting.
+- [x] **Reliable Item Preview Clear:** Instant slot reset on empty editbox input across backspaces, right-clicks, and `×` button clicks.
+- [x] **Dynamic Modal Localization:** Live language updates across all dialog titles, labels, checkboxes, and buttons.
 
 ### ✅ v1.2.3 - Test Phase 2 Polish & Input Enhancements *(Released)*
 - [x] **Escape Key Close (`UISpecialFrames`):** Pressing `ESC` closes the window cleanly.

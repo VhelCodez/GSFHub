@@ -10,31 +10,25 @@ function Tab:Create(parent)
 	frame:SetAllPoints()
 	self.frame = frame
 
-	-- Search Input
-	local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	searchLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -10)
-	searchLabel:SetText(GSF.L["SEARCH_RECIPES"])
-	self.searchLabel = searchLabel
-
-	local searchBox = GSF.UI:CreateEditBox(frame, 220, 22)
-	searchBox:SetPoint("TOPLEFT", searchLabel, "BOTTOMLEFT", 0, -4)
+	-- Search Input with inline hint placeholder
+	local searchBox = GSF.UI:CreateEditBox(frame, 150, 22)
+	searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -12)
 	searchBox.isGSFInput = true
 	self.searchBox = searchBox
 
-	searchBox:SetScript("OnTextChanged", function(eb)
+	local searchHint = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	searchHint:SetPoint("LEFT", searchBox, "LEFT", 5, 0)
+	searchHint:SetText(GSF.L["SEARCH_RECIPES"] or "Search recipes, items, or reagents...")
+	searchBox.searchHint = searchHint
+	searchBox:HookScript("OnTextChanged", function(eb)
+		if eb:GetText() ~= "" then searchHint:Hide() else searchHint:Show() end
 		Tab:Refresh()
 	end)
 
-	-- Profession Dropdown / Filter
-	local filterLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	filterLabel:SetPoint("LEFT", searchLabel, "RIGHT", 160, 0)
-	filterLabel:SetText(GSF.L["PROFESSION"] or "Profession:")
-	self.filterLabel = filterLabel
-
 	local currentProfFilter = "ALL"
 	local filterBtn = CreateFrame("Button", "GSFProfFilterDropdown", frame, "UIDropDownMenuTemplate")
-	filterBtn:SetPoint("LEFT", searchBox, "RIGHT", 10, -2)
-	UIDropDownMenu_SetWidth(filterBtn, 140)
+	filterBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, -2)
+	UIDropDownMenu_SetWidth(filterBtn, 125)
 	UIDropDownMenu_SetText(filterBtn, GSF.L["FILTER_ALL_PROFESSIONS"])
 	self.filterBtn = filterBtn
 
@@ -76,9 +70,11 @@ function Tab:Create(parent)
 
 	-- Online Only Checkbox
 	local onlineCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	onlineCheck:SetPoint("LEFT", filterBtn, "RIGHT", 140, 2)
+	onlineCheck:SetPoint("LEFT", filterBtn, "RIGHT", -10, 2)
 	onlineCheck.text:SetText(GSF.L["FILTER_ONLINE_ONLY"])
 	onlineCheck.text:SetFontObject("GameFontHighlightSmall")
+	onlineCheck.text:ClearAllPoints()
+	onlineCheck.text:SetPoint("LEFT", onlineCheck, "RIGHT", 2, 1)
 	self.onlineCheck = onlineCheck
 
 	onlineCheck:SetScript("OnClick", function()
@@ -86,8 +82,8 @@ function Tab:Create(parent)
 	end)
 
 	-- Left List (Recipe items)
-	local leftScroll, leftContent = GSF.UI:CreateScrollList(frame, 320, 360)
-	leftScroll:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -65)
+	local leftScroll, leftContent = GSF.UI:CreateScrollList(frame, 320, 380)
+	leftScroll:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)
 	self.leftScroll = leftScroll
 	self.leftContent = leftContent
 	self.recipeButtons = {}
@@ -101,8 +97,8 @@ function Tab:Create(parent)
 
 	-- Right Pane (Recipe Details & Crafters)
 	local rightPane = CreateFrame("Frame", nil, frame)
-	rightPane:SetPoint("TOPLEFT", leftScroll, "TOPRIGHT", 25, 0)
-	rightPane:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 20)
+	rightPane:SetPoint("TOPLEFT", leftScroll, "TOPRIGHT", 15, 0)
+	rightPane:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -15, 15)
 	GSF.UI:CreateBackdrop(rightPane, false)
 	rightPane:SetBackdropColor(0.04, 0.04, 0.06, 0.7)
 	self.rightPane = rightPane
@@ -121,7 +117,7 @@ function Tab:Create(parent)
 
 	local reagentsText = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	reagentsText:SetPoint("TOPLEFT", reagentsLabel, "BOTTOMLEFT", 0, -6)
-	reagentsText:SetWidth(320)
+	reagentsText:SetWidth(330)
 	reagentsText:SetJustifyH("LEFT")
 	reagentsText:SetText(GSF.L["NO_EXTRA_REAGENTS"])
 	self.reagentsText = reagentsText
@@ -131,16 +127,16 @@ function Tab:Create(parent)
 	craftersLabel:SetText(GSF.L["CRAFTERS_KNOWN"])
 	self.craftersLabel = craftersLabel
 
-	local craftersScroll, craftersContent = GSF.UI:CreateScrollList(rightPane, 310, 160)
+	local craftersScroll, craftersContent = GSF.UI:CreateScrollList(rightPane, 325, 160)
 	craftersScroll:SetPoint("TOPLEFT", craftersLabel, "BOTTOMLEFT", 0, -6)
-	craftersScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -28, 48)
+	craftersScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -26, 48)
 	self.craftersScroll = craftersScroll
 	self.craftersContent = craftersContent
 	self.crafterRows = {}
 
-	-- Action buttons bottom right
-	local orderBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_CRAFT"], 130, 24)
-	orderBtn:SetPoint("BOTTOMLEFT", rightPane, "BOTTOMLEFT", 15, 12)
+	-- Action buttons bottom right (streamlined to 2 prominent, balanced buttons)
+	local orderBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_CRAFT"], 170, 24)
+	orderBtn:SetPoint("BOTTOMLEFT", rightPane, "BOTTOMLEFT", 10, 12)
 	orderBtn:Disable()
 	self.orderBtn = orderBtn
 
@@ -151,19 +147,8 @@ function Tab:Create(parent)
 		end
 	end)
 
-	local wishlistBtn = GSF.UI:CreateButton(rightPane, GSF.L["WISHLIST_BTN"], 80, 24)
-	wishlistBtn:SetPoint("LEFT", orderBtn, "RIGHT", 6, 0)
-	wishlistBtn:Disable()
-	self.wishlistBtn = wishlistBtn
-
-	wishlistBtn:SetScript("OnClick", function()
-		if selectedRecipe and GSF.RecipeDrops then
-			GSF.RecipeDrops:AddToWishlist(selectedRecipe.itemLink or selectedRecipe.name)
-		end
-	end)
-
-	local reqMatsBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_MATS_BTN"] or "Request Mats", 110, 24)
-	reqMatsBtn:SetPoint("LEFT", wishlistBtn, "RIGHT", 6, 0)
+	local reqMatsBtn = GSF.UI:CreateButton(rightPane, GSF.L["REQUEST_MATS_BTN"] or "Request Mats", 170, 24)
+	reqMatsBtn:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -10, 12)
 	reqMatsBtn:Disable()
 	self.reqMatsBtn = reqMatsBtn
 
@@ -187,8 +172,9 @@ end
 
 function Tab:UpdateTexts()
 	if not self.frame then return end
-	if self.searchLabel then self.searchLabel:SetText(GSF.L["SEARCH_RECIPES"]) end
-	if self.filterLabel then self.filterLabel:SetText(GSF.L["PROFESSION"] or "Profession:") end
+	if self.searchBox and self.searchBox.searchHint then
+		self.searchBox.searchHint:SetText(GSF.L["SEARCH_RECIPES"] or "Search recipes, items, or reagents...")
+	end
 	if self.filterBtn and self.getProfFilter then
 		local cur = self.getProfFilter()
 		local locText = (cur == "ALL") and GSF.L["FILTER_ALL_PROFESSIONS"] or GSF:GetLocalizedProfession(cur)
@@ -199,10 +185,12 @@ function Tab:UpdateTexts()
 	if self.reagentsLabel then self.reagentsLabel:SetText(GSF.L["REAGENTS_REQUIRED"]) end
 	if self.craftersLabel then self.craftersLabel:SetText(GSF.L["CRAFTERS_KNOWN"]) end
 	if self.orderBtn then self.orderBtn:SetText(GSF.L["REQUEST_CRAFT"]) end
-	if self.wishlistBtn then self.wishlistBtn:SetText(GSF.L["WISHLIST_BTN"]) end
 	if self.reqMatsBtn then self.reqMatsBtn:SetText(GSF.L["REQUEST_MATS_BTN"] or "Request Mats") end
-	if not selectedRecipe and self.detailTitle then
-		self.detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"])
+	if not selectedRecipe then
+		if self.detailTitle then self.detailTitle:SetText(GSF.L["SELECT_RECIPE_PROMPT"]) end
+		if self.reagentsText then self.reagentsText:SetText(GSF.L["NO_EXTRA_REAGENTS"]) end
+	else
+		self:DisplayRecipeDetails(selectedRecipe)
 	end
 	self:Refresh()
 end
@@ -263,7 +251,17 @@ function Tab:Refresh()
 		yOffset = yOffset + 30
 	end
 
-	self.leftContent:SetHeight(math.max(yOffset, 360))
+	self.leftContent:SetHeight(math.max(yOffset, 1))
+
+	-- Auto-hide left scrollbar if content does not overflow or when empty
+	local leftScrollBar = self.leftScroll and (self.leftScroll.ScrollBar or (self.leftScroll:GetName() and _G[self.leftScroll:GetName() .. "ScrollBar"]))
+	if leftScrollBar then
+		if #results == 0 or yOffset <= 360 then
+			leftScrollBar:Hide()
+		else
+			leftScrollBar:Show()
+		end
+	end
 
 	if #results == 0 then
 		if self.emptyText then self.emptyText:Show() end
@@ -275,8 +273,7 @@ function Tab:Refresh()
 		self:DisplayRecipeDetails(selectedRecipe)
 	else
 		if self.craftersScroll then
-			local scrollBar = _G[self.craftersScroll:GetName() .. "ScrollBar"] or self.craftersScroll.ScrollBar
-			if scrollBar then scrollBar:Hide() end
+			self.craftersScroll:Hide()
 		end
 	end
 end
@@ -284,13 +281,16 @@ end
 function Tab:SelectRecipe(recipe)
 	selectedRecipe = recipe
 	if self.orderBtn then self.orderBtn:Enable() end
-	if self.wishlistBtn then self.wishlistBtn:Enable() end
 	if self.reqMatsBtn then self.reqMatsBtn:Enable() end
 	self:DisplayRecipeDetails(recipe)
 end
 
 function Tab:DisplayRecipeDetails(recipe)
 	if not recipe then return end
+
+	if self.craftersScroll then
+		self.craftersScroll:Show()
+	end
 
 	local profInfo = GSF.PROFESSIONS[recipe.profession]
 	local headerText = string.format("|cff%s%s|r (|cffffd100%s|r)", GSF.COLORS.PRIMARY, recipe.name, recipe.profession)
@@ -354,10 +354,10 @@ function Tab:DisplayRecipeDetails(recipe)
 		yOffset = yOffset + 26
 	end
 
-	self.craftersContent:SetHeight(math.max(yOffset, 160))
+	self.craftersContent:SetHeight(math.max(yOffset, 1))
 
 	-- Auto-hide scrollbar if list does not overflow
-	local scrollBar = _G[self.craftersScroll:GetName() .. "ScrollBar"] or self.craftersScroll.ScrollBar
+	local scrollBar = self.craftersScroll.ScrollBar or (self.craftersScroll:GetName() and _G[self.craftersScroll:GetName() .. "ScrollBar"])
 	if scrollBar then
 		if not recipe.crafters or #recipe.crafters == 0 or yOffset <= 160 then
 			scrollBar:Hide()

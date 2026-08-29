@@ -2,7 +2,7 @@ local ADDON_NAME, GSF = ...
 
 GSF.Surplus = {}
 
-function GSF.Surplus:PostItem(itemLink, count, notes)
+function GSF.Surplus:PostItem(itemLink, count, notes, existingEntryId)
 	if not itemLink then return false, "No item provided" end
 	local itemName, _, itemQuality, _, _, itemType, itemSubType, _, _, itemTexture = GetItemInfo(itemLink)
 	itemName = itemName or itemLink
@@ -13,8 +13,11 @@ function GSF.Surplus:PostItem(itemLink, count, notes)
 	local member = GSF.DB:EnsureMemberRecord(myName)
 	member.surplus = member.surplus or {}
 
+	local entryId = existingEntryId or string.format("%s-%d-%d", myName, time(), math.random(100, 999))
+
 	local entry = {
-		id = tostring(itemId),
+		id = tostring(entryId),
+		itemId = itemId,
 		name = itemName,
 		count = tonumber(count) or 1,
 		link = itemLink,
@@ -115,6 +118,7 @@ function GSF.Surplus:GetBagItems()
 						bag = bag,
 						slot = slot,
 						link = link,
+						id = tonumber(link:match("item:(%d+)")),
 						count = count,
 					})
 				end
