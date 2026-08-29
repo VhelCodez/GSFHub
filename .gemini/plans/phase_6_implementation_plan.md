@@ -1,37 +1,41 @@
-# Phase 6 Implementation Plan: Guild Intelligence, Economy & Social Suite (v1.6.0)
+# Phase 6 Implementation Plan: TBC Guild Bank & Vault Automation Suite (v1.6.0)
 
 > **Persistent Repository Copy**: Stored in `.gemini/plans/phase_6_implementation_plan.md` to guarantee persistence across all sessions, conversations, and restarts.
 
-Phase 6 focuses on **Macro Guild Analytics, Recipe Gap Analysis & Social Honor Recognition**, providing guild leaders and members with rich insights into self-sufficiency and celebrating community contributors.
+Phase 6 focuses on **TBC Guild Bank Integration, Remote Vault Browsing & Restock Logistics**, bridging real-time player bags with long-term centralized guild storage.
 
 ---
 
 ## 🎯 Phase 6 Deliverables (Problem & Solution Breakdown)
 
-### 1. 📊 Macro Economy Analytics & Intelligent Advisory (`EconomyStats.lua`)
-* **The Problem:** Guild leaders lack a high-level view of guild self-sufficiency, and new members don't know which profession would help the guild most.
+### 1. 🏛️ Automated Guild Vault Scanner & Remote Mirror (`GuildBankScanner.lua`)
+* **The Problem:** Players must travel to a major city bank in Shattrath or Ironforge to see what is inside the Guild Bank.
 * **The Solution:**
-  - Macro metrics: Crafter vs. Gatherer ratios, profession counts, and specialization distributions.
-  - **Intelligent Advisory Engine ("Guild Needs"):** Analyzes under-represented professions and missing specializations to recommend optimal professions for leveling characters and alts (*"⭐ High Demand: Spellfire Tailor, Potion Master, Skinner"*).
+  - Whenever any guild member opens the Guild Bank (`GUILDBANKFRAME_OPENED`), GSFHub silently snapshots all accessible tabs and items.
+  - Uses **Revision Digest Hashing** to ensure compressed updates are only sent when items actually change (< 1 KB data, zero network lag).
+  - Every guild member can browse the full Guild Bank remotely from anywhere in the world!
 
-### 2. 📦 Streamlined Stockpile & Shortage Watcher (`StockpileWatcher.lua`)
-* **The Problem:** Heavy raid checklists are clunky and over-engineered.
+### 2. 🏷️ Smart Tab Tagging & Automatic Surplus Integration (`VaultSurplus.lua`)
+* **The Problem:** Guild banks become messy dumping grounds, and items placed in the vault don't automatically appear in surplus searches.
 * **The Solution:**
-  - Fast, zero-clutter watchlist tracking pinned materials:
-    `[ Item ] • [ Target ] • [ In Vault ] • [ In Surplus ] • [ Deficit / Status ] • [ 1-Click Request ]`
-  - Instantly reveals guild shortages at a glance with 1-click bounty requests.
+  - Officers assign Smart Roles to tabs (e.g. *Tab 1: Surplus Herbs*, *Tab 2: Surplus Ores*).
+  - Items in tagged tabs are automatically listed in the Surplus Stockpile as `[🏛️ Guild Vault]`.
+  - When players go on holiday, they simply deposit their extra materials into the vault, and the guild can see and request them anytime!
 
-### 3. 📜 Guild Recipe Knowledge Matrix & Gap Analysis (`KnowledgeMatrix.lua`)
-* **The Problem:** Officers don't know which crucial raid/dungeon recipes the guild is completely missing, leading to uncoordinated farming.
+### 3. 📦 Direct-to-Vault Bounties & 1-Click Deposit Helper
+* **The Problem:** Gathering materials for the general guild stockpile causes mail clutter when mailed to individual officers.
 * **The Solution:**
-  - Tracks premier endgame patterns, formulas, and plans (*Mongoose, Spellstrike, Belt of the Black Eagle, Greater Fire Protection*).
-  - Shows 🟢 **Covered** (with crafter names) vs. 🔴 **Guild Gap** (with drop location, mob name, and drop rate).
+  - Bounties can be targeted to **"Guild Bank (Tab X)"**.
+  - When the gatherer visits any Guild Vault, GSFHub displays a **"1-Click Deposit Bounty Mats"** button that moves the farmed stacks directly into the designated bank tab and completes the bounty automatically.
 
-### 4. 📈 Guild Activity Ledger & Honor Roll Leaderboard (`ActivityLedger.lua`)
-* **The Problem:** Guild leaders want a live audit trail of economic activity, and dedicated crafters and gatherers deserve recognition.
+### 4. 📉 Minimum Reserve Thresholds & Auto-Restock Alerts (`ReserveThresholds.lua`)
+* **The Problem:** The guild unexpectedly runs out of critical reagents (*Primal Fire*, *Terocone*, *Adamantite Bars*) without anyone noticing until the bank is empty.
 * **The Solution:**
-  - **Live Activity Feed:** Decentralized timeline in the overview (*“Theron crafted Lionheart Helm for Elara (15m ago)”*).
-  - **Honor Roll Leaderboard:** Weekly and monthly recognition for top crafters, top gatherers, and top surplus donors.
+  - Officers define minimum stock targets (e.g. *Always keep 40x Primal Fire in Vault*).
+  - Displays low-stock alerts and provides a 1-click **"Post Restock Bounty"** button to replenish supplies.
 
-### 5. 🌐 100% German & English Localization
+### 5. 🔍 Remote Guild Bank Browser Tab (`TabGuildBank.lua`)
+* Dedicated UI tab to search and browse all guild bank tabs with item counts, quality borders, and tooltip hovers.
+
+### 6. 🌐 100% German & English Localization
 * Complete translations across `Locales/enUS.lua` and `Locales/deDE.lua` with 100% key parity and fallback safety.

@@ -175,8 +175,8 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 - 1-click recipe breakdown turning missing crafting reagents into bounties.
 - **3-Factor Handshake:** Verifies claimer name, unique `[GSF-BT:XYZ]` mail token, and stack count upon `MAIL_SHOW` and `BAG_UPDATE`.
 
-### 4. 1–375 Resource Farming Atlas (`Modules/Gathering/AtlasData.lua`)
-- Encyclopedic database covering 1–300 Vanilla and 300–375 TBC resources with native `itemID`s for automatic locale translation.
+### 4. 1–375 Resource Farming Atlas (`Modules/Gathering/AtlasData.lua` & `AtlasEngine.lua`)
+- Pure ID-driven relational database covering 1–300 Vanilla and 300–375 TBC resources with native `itemID`s for automatic locale translation, 13 polymorphic source types, and pre-flight cache priming.
 
 ### 5. Draggable Goals HUD (`UI/Widgets/GoalsHUD.lua`)
 - Onscreen overlay frame displaying visual progress bars and dynamic bag counting on `BAG_UPDATE`.

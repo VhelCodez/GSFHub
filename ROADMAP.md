@@ -11,10 +11,11 @@ graph LR
     v10["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
     v11 --> v12["v1.2.3<br/><b>Gathering & Atlas</b><br/>(Released)"]
     v12 --> v124["v1.2.4<br/><b>UI Harmonization</b><br/>(Released)"]
-    v124 --> v13["v1.3.0<br/><b>Phase 3: Navigation & QoL</b><br/>(Next Up)"]
-    v13 --> v14["v1.4.0<br/><b>Phase 4: Specializations & CDs</b><br/>(Planned)"]
-    v14 --> v15["v1.5.0<br/><b>Phase 5: TBC Guild Vault</b><br/>(Planned)"]
-    v15 --> v16["v1.6.0<br/><b>Phase 6: Guild Intelligence</b><br/>(Planned)"]
+    v124 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
+    v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Planned)"]
+    v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
+    v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
+    v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
 ```
 
 ---
@@ -84,8 +85,20 @@ graph LR
 
 ## 🔮 Upcoming Milestones
 
-### 🚀 Phase 3 (`v1.3.0`) - Navigation Overhaul & Personal QoL Suite *(Next Up)*
+### 🚀 Phase 3 (`v1.3.0`) - Universal Resource Atlas & Multi-Source Gathering Compendium *(Next Up)*
 *Detailed plan:* [`.gemini/plans/phase_3_implementation_plan.md`](.gemini/plans/phase_3_implementation_plan.md)
+- [ ] **Pure ID-Driven Relational Schema:** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
+- [ ] **13 Polymorphic Source Types (`src.type`):** Unified modeling of all acquisition vectors without bespoke logic (`GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `VENDOR`, `INSTANCE`, `CONTAINER`).
+- [ ] **Cross-Discipline Category Filtering (`MatchesCategory`):** Multi-source items appear across all relevant profession filters (e.g. `Partikel des Wassers` appears when filtering for Elemental, Fishing, and Engineering).
+- [ ] **Comprehensive Classic & TBC Catalog:** Complete verified dataset across Mining (Ores, Stones, Raw Gems, Smelted Bars), Herbalism (Herbs, Swiftthistle, Wildvine, Fel Lotus), Disenchanting (all Classic & TBC Dusts, Essences, Shards, Crystals), Engineering Gas Clouds, Farmed Meats, Primals, and Raid Catalysts.
+- [ ] **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs; eliminates manual German/English node name dictionaries.
+- [ ] **Pre-Flight Engine Cache & Reactive UI (`AtlasEngine.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
+- [ ] **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` (eliminating text-based bag counting) and `SupplyBounties.lua` (1-click bounty requests).
+
+---
+
+### 🧭 Phase 4 (`v1.4.0`) - Navigation Overhaul & Personal QoL Suite *(Planned)*
+*Detailed plan:* [`.gemini/plans/phase_4_implementation_plan.md`](.gemini/plans/phase_4_implementation_plan.md)
 - [ ] **Hybrid Pinned + Overflow Navigation (`[ ⋯ More ▼ ]`):** Customizable tab bar with overflow dropdown and active label display.
 - [ ] **Cross-Character Account Cooldown Alarms (`Cooldowns.lua`):** Onscreen toast & audio chime on your main when an alt's trade skill CD is ready.
 - [ ] **Active Gatherer Radar (`GathererRadar.lua`):** Field farming session broadcaster and live radar board.
@@ -93,16 +106,16 @@ graph LR
 
 ---
 
-### 🛠️ Phase 4 (`v1.4.0`) - Crafting Specializations & Shared Cooldowns
-*Detailed plan:* [`.gemini/plans/phase_4_implementation_plan.md`](.gemini/plans/phase_4_implementation_plan.md)
+### 🛠️ Phase 5 (`v1.5.0`) - Crafting Specializations & Shared Cooldowns *(Planned)*
+*Detailed plan:* [`.gemini/plans/phase_5_implementation_plan.md`](.gemini/plans/phase_5_implementation_plan.md)
 - [ ] **Profession Sub-Specializations (`Specializations.lua`):** Auto-detection & badges for Tailoring, Blacksmithing, Leatherworking, Alchemy, Engineering.
 - [ ] **Specialization Planning & In-Game Quest Roadmaps:** Aspirational `(Planned: ...)` tags with built-in quest walkthroughs and turn-in checklists.
 - [ ] **Shared Guild Cooldown Monitor:** Live cooldown availability tags displayed next to crafter names on recipes.
 
 ---
 
-### 🏛️ Phase 5 (`v1.5.0`) - TBC Guild Bank & Vault Automation Suite
-*Detailed plan:* [`.gemini/plans/phase_5_implementation_plan.md`](.gemini/plans/phase_5_implementation_plan.md)
+### 🏛️ Phase 6 (`v1.6.0`) - TBC Guild Bank & Vault Automation Suite *(Planned)*
+*Detailed plan:* [`.gemini/plans/phase_6_implementation_plan.md`](.gemini/plans/phase_6_implementation_plan.md)
 - [ ] **TBC Guild Vault Scanner & Remote Mirror (`GuildBankScanner.lua`):** Silent snapshot scanning with revision digests (< 1 KB) allowing remote vault browsing anywhere.
 - [ ] **Smart Bank Tab Tagging & Surplus Sync (`VaultSurplus.lua`):** Designate bank tabs as surplus stockpiles (`[🏛️ Guild Vault]`) for holiday absences.
 - [ ] **Direct-to-Vault Bounties & 1-Click Deposit Helper:** Restock bounties targeted for the bank vault with 1-click deposit.
@@ -111,8 +124,8 @@ graph LR
 
 ---
 
-### 📊 Phase 6 (`v1.6.0`) - Guild Intelligence, Economy & Social Suite
-*Detailed plan:* [`.gemini/plans/phase_6_implementation_plan.md`](.gemini/plans/phase_6_implementation_plan.md)
+### 📊 Phase 7 (`v1.7.0`) - Guild Intelligence, Economy & Social Suite *(Planned)*
+*Detailed plan:* [`.gemini/plans/phase_7_implementation_plan.md`](.gemini/plans/phase_7_implementation_plan.md)
 - [ ] **Macro Economy Analytics & Intelligent Advisory (`EconomyStats.lua`):** Crafter/gatherer ratios and "Guild Needs" recommendations.
 - [ ] **Streamlined Stockpile & Shortage Watcher (`StockpileWatcher.lua`):** Target vs. stock table with 1-click bounty requests.
 - [ ] **Guild Recipe Knowledge Matrix & Gap Analysis (`KnowledgeMatrix.lua`):** Covered raid patterns vs. unlearned gaps with drop info.

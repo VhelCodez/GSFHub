@@ -102,10 +102,11 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 - **v1.2.2 (Released):** Dedicated Settings view via header cog, Goals HUD two-way state sync, decoupled audio alerts, localized node names, German drop detection, and live translations.
 - **v1.2.3 (Released):** Test Phase 2 live test polish: universal Shift-click paste & drag-and-drop `ItemSlot` preview, Escape key close, bounty lifecycle & Option B request modal, surplus soulbound filter, Atlas German localization, and layout collision fixes.
 - **v1.2.4 (Released):** Comprehensive UI Harmonization: pixel-calibrated 12px checkbox gaps, Beute & Wunsch dual-column redesign, symmetrical Professions action bar, right-aligned Atlas navigation, empty state indicators across all views, dynamic modal localization, FrameStrata layering, and Goal HUD note/button parity.
-- **v1.3.0 (Next Up):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
-- **v1.4.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
-- **v1.5.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).
-- **v1.6.0 (Planned):** Guild Intelligence, Macro Economy Analytics, Streamlined Stockpile Shortage Watcher & Activity Honor Roll.
+- **v1.3.0 (Next Up):** Universal Resource Atlas & Multi-Source Gathering Compendium (Pure ID-driven relational schema, 13 polymorphic source types, cross-discipline filtering, and complete Classic & TBC gathering data).
+- **v1.4.0 (Planned):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
+- **v1.5.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
+- **v1.6.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).
+- **v1.7.0 (Planned):** Guild Intelligence, Macro Economy Analytics, Streamlined Stockpile Shortage Watcher & Activity Honor Roll.
 
 ---
 
