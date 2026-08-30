@@ -24,8 +24,8 @@
 ┌──────────────────────────────▼──────────────────────────────┐
 │                       Functional Modules                    │
 │   Professions (Scanner & RecipeBook) • WorkOrders           │
-│   SurplusExchange • RecipeDrops • AtlasData (1-375)         │
-│   SupplyBounties • TradeHelper • MailHelper                 │
+│   SurplusExchange • RecipeDrops • SupplyBounties            │
+│   TradeHelper • MailHelper                                  │
 └──────────────────────────────┬──────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────┐
