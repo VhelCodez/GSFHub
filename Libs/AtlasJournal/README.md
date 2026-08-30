@@ -1,14 +1,14 @@
-﻿# 📖 AtlasJournal (`LibAtlasJournal-1.0`)
+# 📖 AtlasJournal (`LibAtlasJournal-1.0`)
 
 **AtlasJournal** is a standalone, lightweight, and zero-string-localized gathering compendium and resource reference engine for World of Warcraft Classic (Vanilla 1–300) and The Burning Crusade (300–375).
 
 ## ✨ Features
-- **132 Verified Relational Material Entries:** Meticulously cataloged items keyed strictly by official Blizzard `itemID`.
-- **13 Polymorphic Acquisition Source Types:** Mined nodes, herbs, prospecting, disenchanting, gas extraction, transmutes, smelted bars, monster drops, fishing, byproducts, instances, vendors, and combines.
+- **236 Verified Relational Material Entries:** Meticulously cataloged items keyed strictly by official Blizzard `itemID` across 8 gathering & crafting disciplines.
+- **13 Polymorphic Acquisition Source Types:** Mined nodes, herbs, prospecting, disenchanting, gas extraction, transmutes, smelted bars, crafting conversions (`CRAFT`), monster drops, fishing, byproducts, instances, vendors, and combines.
 - **Zero-String Engine Localization:** Native client resolution via `GetItemInfo()`, `GetSpellInfo()`, and `C_Map.GetAreaInfo()`.
-- **Embedded Multilingual Support:** Built-in English and German tooltips, source labels, and 90+ curated strategic farming notes.
+- **Embedded Multilingual Support:** Built-in English and German tooltips, source labels, and 93 curated strategic farming notes.
 - **Asynchronous Cache Priming:** Recursively requests item data on `PLAYER_ENTERING_WORLD` with debounced `ON_DATA_READY` callback events.
-- **LibStub Compatible:** Registers as `LibAtlasJournal-1.0` if `LibStub` is present; falls back to global `AtlasJournal`.
+- **LibStub Compatible:** Registers as `LibAtlasJournal-1.1` if `LibStub` is present; falls back to global `AtlasJournal`.
 
 ## 🚀 Quick Start for Addon Developers
 

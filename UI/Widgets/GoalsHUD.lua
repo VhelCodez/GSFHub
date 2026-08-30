@@ -5,6 +5,14 @@ GSF.GoalsHUD = {}
 local hudFrame = nil
 local goalRows = {}
 
+local function IsPlaceholderIcon(icon)
+	if not icon then return true end
+	if type(icon) == "number" then
+		return icon == 134400 or icon == 0
+	end
+	return tostring(icon):find("INV_Misc_QuestionMark", 1, true) ~= nil
+end
+
 function GSF.GoalsHUD:Initialize()
 	if hudFrame then return end
 
@@ -777,12 +785,12 @@ function GSF.GoalsHUD:RefreshManagerDialog()
 
 		-- Dynamic Icon Resolution (falls back to item info or resource if missing)
 		local iconTex = goal.icon
-		if (not iconTex or iconTex:find("INV_Misc_QuestionMark")) and (goal.itemID or goal.material or goal.name) then
+		if IsPlaceholderIcon(iconTex) and (goal.itemID or goal.material or goal.name) then
 			if goal.itemID then
 				local _, _, _, _, _, _, _, _, _, t = GetItemInfo(goal.itemID)
 				if t then iconTex = t end
 			end
-			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
+			if IsPlaceholderIcon(iconTex) then
 				local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 				if res then
 					local d = AtlasJournal:GetItemDetails(res.id)

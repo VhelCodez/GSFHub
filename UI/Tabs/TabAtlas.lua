@@ -7,6 +7,14 @@ local selectedResource = nil
 local activeCategory = "ALL"
 local activeView = "ATLAS" -- "ATLAS" or "BOUNTIES"
 
+local function IsPlaceholderIcon(icon)
+	if not icon then return true end
+	if type(icon) == "number" then
+		return icon == 134400 or icon == 0
+	end
+	return tostring(icon):find("INV_Misc_QuestionMark", 1, true) ~= nil
+end
+
 function Tab:Create(parent)
 	local frame = CreateFrame("Frame", nil, parent)
 	frame:SetAllPoints()
@@ -36,6 +44,7 @@ function Tab:Create(parent)
 		local name = AtlasJournal and AtlasJournal:GetCategoryInfo(activeCategory)
 		UIDropDownMenu_SetText(catDropdown, name or activeCategory)
 	end
+	self.UpdateCatDropdownText = UpdateCatDropdownText
 	UpdateCatDropdownText()
 
 	UIDropDownMenu_Initialize(catDropdown, function(dropdown, level)
@@ -155,43 +164,66 @@ function Tab:Create(parent)
 	detailSub:SetPoint("TOPLEFT", detailTitle, "BOTTOMLEFT", 0, -4)
 	self.detailSub = detailSub
 
-	local rightScroll, rightContent = GSF.UI:CreateScrollList(rightPane, 420, 260)
+	local rightScroll, rightContent = GSF.UI:CreateScrollList(rightPane, 410, 260)
 	rightScroll:SetPoint("TOPLEFT", rightPane, "TOPLEFT", 15, -65)
-	rightScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -15, 45)
+	rightScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -32, 45)
+	if rightScroll.ScrollBar then
+		rightScroll.ScrollBar:ClearAllPoints()
+		rightScroll.ScrollBar:SetPoint("TOPRIGHT", rightPane, "TOPRIGHT", -8, -80)
+		rightScroll.ScrollBar:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -8, 55)
+	end
 	self.rightScroll = rightScroll
 	self.rightContent = rightContent
 
+	local contentW = 320
+	rightContent:SetWidth(contentW)
+
 	local zonesLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	zonesLabel:SetPoint("TOPLEFT", rightContent, "TOPLEFT", 0, 0)
+	zonesLabel:SetWidth(contentW)
+	zonesLabel:SetJustifyH("LEFT")
 	zonesLabel:SetText(GSF.L["SRC_SOURCES_HEADER"] or "Acquisition Sources:")
 	self.zonesLabel = zonesLabel
 
 	local zonesText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	zonesText:SetPoint("TOPLEFT", zonesLabel, "BOTTOMLEFT", 0, -5)
-	zonesText:SetWidth(410)
+	zonesText:SetWidth(contentW)
 	zonesText:SetJustifyH("LEFT")
+	zonesText:SetWordWrap(true)
 	self.zonesText = zonesText
 
+	local sourceContainer = CreateFrame("Frame", nil, rightContent)
+	sourceContainer:SetPoint("TOPLEFT", zonesText, "BOTTOMLEFT", 0, -5)
+	sourceContainer:SetSize(contentW, 20)
+	self.sourceContainer = sourceContainer
+	self.sourceButtons = {}
+	self.sourceHeaders = {}
+
 	local yieldsLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	yieldsLabel:SetPoint("TOPLEFT", zonesText, "BOTTOMLEFT", 0, -12)
+	yieldsLabel:SetPoint("TOPLEFT", sourceContainer, "BOTTOMLEFT", 0, -12)
+	yieldsLabel:SetWidth(contentW)
+	yieldsLabel:SetJustifyH("LEFT")
 	yieldsLabel:SetText(GSF.L["RESOURCE_YIELDS"] or "Harvest Yields & Byproducts:")
 	self.yieldsLabel = yieldsLabel
 
-	local yieldsText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	yieldsText:SetPoint("TOPLEFT", yieldsLabel, "BOTTOMLEFT", 0, -5)
-	yieldsText:SetWidth(410)
-	yieldsText:SetJustifyH("LEFT")
-	self.yieldsText = yieldsText
+	local yieldsContainer = CreateFrame("Frame", nil, rightContent)
+	yieldsContainer:SetPoint("TOPLEFT", yieldsLabel, "BOTTOMLEFT", 0, -5)
+	yieldsContainer:SetSize(contentW, 24)
+	self.yieldsContainer = yieldsContainer
+	self.yieldButtons = {}
 
 	local tipsLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	tipsLabel:SetPoint("TOPLEFT", yieldsText, "BOTTOMLEFT", 0, -12)
+	tipsLabel:SetPoint("TOPLEFT", yieldsContainer, "BOTTOMLEFT", 0, -12)
+	tipsLabel:SetWidth(contentW)
+	tipsLabel:SetJustifyH("LEFT")
 	tipsLabel:SetText(GSF.L["FARMING_TIPS"] or "Farming Route & Tips:")
 	self.tipsLabel = tipsLabel
 
 	local tipsText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	tipsText:SetPoint("TOPLEFT", tipsLabel, "BOTTOMLEFT", 0, -5)
-	tipsText:SetWidth(410)
+	tipsText:SetWidth(contentW)
 	tipsText:SetJustifyH("LEFT")
+	tipsText:SetWordWrap(true)
 	self.tipsText = tipsText
 
 	-- Action Buttons bottom right
@@ -402,7 +434,7 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 	if mode == "BOUNTY_EDIT" and target then
 		dispName = target.item or ""
 		local itemIcon = target.icon
-		if not itemIcon or itemIcon:find("INV_Misc_QuestionMark") then
+		if IsPlaceholderIcon(itemIcon) then
 			local res = AtlasJournal and AtlasJournal:FindResource(target.item)
 			if res then
 				local d = AtlasJournal:GetItemDetails(res.id)
@@ -487,9 +519,83 @@ function Tab:OpenBountyEditModal(bounty)
 	self:OpenSetupModal(bounty, "BOUNTY_EDIT", nil, bounty.id)
 end
 
+function Tab:UpdateRowSelection()
+	for _, row in ipairs(self.resourceRows or {}) do
+		if row:IsShown() and row.resource then
+			local isSelected = selectedResource and (row.resource.id == selectedResource.id)
+			if isSelected then
+				row:SetBackdropBorderColor(1.0, 0.82, 0.0, 1.0)
+				row:SetBackdropColor(0.20, 0.16, 0.04, 0.85)
+				if row.selBar then row.selBar:Show() end
+			else
+				row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.5)
+				row:SetBackdropColor(0.08, 0.08, 0.12, 0.6)
+				if row.selBar then row.selBar:Hide() end
+			end
+		end
+	end
+end
+
+function Tab:ScrollToResource(res)
+	if not res or not self.leftScroll then return end
+	for i, row in ipairs(self.resourceRows or {}) do
+		if row:IsShown() and row.resource and row.resource.id == res.id then
+			local rowTop = (i - 1) * 30
+			local scrollVal = self.leftScroll:GetVerticalScroll() or 0
+			local frameH = self.leftScroll:GetHeight() or 370
+			if rowTop < scrollVal or (rowTop + 30) > (scrollVal + frameH) then
+				local targetScroll = math.max(0, rowTop - 60)
+				self.leftScroll:SetVerticalScroll(targetScroll)
+				if self.leftScroll.ScrollBar then
+					self.leftScroll.ScrollBar:SetValue(targetScroll)
+				end
+			end
+			break
+		end
+	end
+end
+
 function Tab:SelectResource(res)
-	selectedResource = res
 	if not res then return end
+	selectedResource = res
+
+	-- Ensure we are on the Atlas view
+	if activeView ~= "ATLAS" and self.SwitchView then
+		self:SwitchView("ATLAS")
+	end
+
+	-- Check if the resource is present in the currently filtered list
+	local foundInList = false
+	for _, r in ipairs(self.currentResources or {}) do
+		if r.id == res.id then
+			foundInList = true
+			break
+		end
+	end
+
+	-- If filtered out by search query or category, adapt filters so it is shown and highlighted!
+	if not foundInList then
+		local filterChanged = false
+		if self.searchBox and self.searchBox:GetText() ~= "" then
+			self.searchBox:SetText("")
+			if self.searchBox.searchHint then self.searchBox.searchHint:Show() end
+			filterChanged = true
+		end
+		if activeCategory ~= "ALL" and activeCategory ~= res.category then
+			activeCategory = res.category or "ALL"
+			if self.UpdateCatDropdownText then
+				self:UpdateCatDropdownText()
+			end
+			filterChanged = true
+		end
+		if filterChanged then
+			self:RefreshAtlas()
+			return
+		end
+	end
+
+	self:UpdateRowSelection()
+	self:ScrollToResource(res)
 
 	if self.pinBtn then self.pinBtn:Enable() end
 	if self.bountyBtn then self.bountyBtn:Enable() end
@@ -511,14 +617,26 @@ function Tab:SelectResource(res)
 		self.detailIconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	end
 
-	self.detailTitle:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
+	local hex = color and color.hex or "|cffffffff"
+	if not hex:find("^|c") then hex = "|c" .. hex end
+	self.detailTitle:SetText(string.format("%s%s|r", hex, details.name))
 
 	local catName = AtlasJournal:GetCategoryInfo(res.category)
 	local minSkill = AtlasJournal:GetMinSkill(res)
-	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r  •  ID: |cffaaaaaa%d|r", catName, minSkill, res.id))
+	if minSkill then
+		self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r  •  ID: |cffaaaaaa%d|r", catName, minSkill, res.id))
+	else
+		self.detailSub:SetText(string.format("%s  •  ID: |cffaaaaaa%d|r", catName, res.id))
+	end
 
-	-- Format Polymorphic Sources
-	local sourceLines = {}
+	-- Reset interactive buttons and headers
+	for _, btn in ipairs(self.sourceButtons or {}) do btn:Hide() end
+	for _, hdr in ipairs(self.sourceHeaders or {}) do hdr:Hide() end
+	for _, btn in ipairs(self.yieldButtons or {}) do btn:Hide() end
+
+	-- 1. Format Polymorphic Sources
+	local textSources = {}
+	local itemSources = {}
 	if res.sources then
 		for _, src in ipairs(res.sources) do
 			if src.type == "GATHER" then
@@ -527,19 +645,7 @@ function Tab:SelectResource(res)
 					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d):\n   %s", AtlasJournal:GetLocaleText("SRC_GATHER") or "Gathering", src.skill or 1, zStr))
-			elseif src.type == "PROSPECT" then
-				local fromNames = {}
-				for _, fId in ipairs(src.fromItems or {}) do
-					local d = AtlasJournal:GetItemDetails(fId)
-					table.insert(fromNames, d.link or string.format("Item #%d", fId))
-				end
-				local spellName = GetSpellInfo(31252) or "Prospecting"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_PROSPECT") or "Prospecting", spellName, src.skill or 300, AtlasJournal:GetLocaleText("CRUSHED_FROM") or "Crushed from 5x", table.concat(fromNames, ", ")))
-			elseif src.type == "DISENCHANT" then
-				local spellName = GetSpellInfo(13262) or "Disenchant"
-				local qName = src.itemQuality == 4 and "|cffa335eeEpic|r" or (src.itemQuality == 3 and "|cff0070ddRare|r" or "|cff1eff00Uncommon|r")
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", AtlasJournal:GetLocaleText("SRC_DISENCHANT") or "Disenchanting", spellName, AtlasJournal:GetLocaleText("DISENCHANTED_FROM") or "Disenchanted from items", qName, src.itemLevels or "1+"))
+				table.insert(textSources, string.format("|cffffd100• %s|r (Skill %d):\n   %s", AtlasJournal:GetLocaleText("SRC_GATHER") or "Gathering", src.skill or 1, zStr))
 			elseif src.type == "EXTRACT" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
@@ -547,70 +653,296 @@ function Tab:SelectResource(res)
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "Outland"
 				local devDetails = AtlasJournal:GetItemDetails(src.device or 23821)
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Engi %d):\n   %s: %s\n   %s", AtlasJournal:GetLocaleText("SRC_EXTRACT") or "Gas Extraction", src.skill or 305, AtlasJournal:GetLocaleText("DEVICE_REQUIRED") or "Tool", devDetails.link or "Zapthrottle Mote Extractor", zStr))
-			elseif src.type == "TRANSMUTE" then
-				local fromNames = {}
-				for _, fId in ipairs(src.fromItems or {}) do
-					local d = AtlasJournal:GetItemDetails(fId)
-					table.insert(fromNames, d.link or string.format("Item #%d", fId))
-				end
-				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or "Transmute"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, %s Cooldown):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_TRANSMUTE") or "Transmutation", spellName, src.cooldown or "20h", AtlasJournal:GetLocaleText("REAGENTS") or "Reagents", table.concat(fromNames, ", ")))
-			elseif src.type == "SMELT" then
-				local fromNames = {}
-				for _, fId in ipairs(src.fromItems or {}) do
-					local d = AtlasJournal:GetItemDetails(fId)
-					table.insert(fromNames, d.link or string.format("Item #%d", fId))
-				end
-				local spellName = GetSpellInfo(2656) or "Smelt"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_SMELT") or "Smelting", spellName, src.skill or 1, AtlasJournal:GetLocaleText("REAGENTS") or "Reagents", table.concat(fromNames, ", ")))
-			elseif src.type == "COMBINE" then
-				local fromD = AtlasJournal:GetItemDetails(src.fromItem)
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %dx %s", AtlasJournal:GetLocaleText("SRC_COMBINE") or "Combine", src.count or 10, fromD.link or "Reagent"))
+				table.insert(textSources, string.format("|cffffd100• %s|r (Engi %d):\n   %s: %s\n   %s", AtlasJournal:GetLocaleText("SRC_EXTRACT") or "Gas Extraction", src.skill or 305, AtlasJournal:GetLocaleText("DEVICE_REQUIRED") or "Tool", devDetails.name or "Zapthrottle Mote Extractor", zStr))
 			elseif src.type == "MOB_DROP" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
 					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Lvl %s):\n   %s", AtlasJournal:GetLocaleText("SRC_MOB_DROP") or "Creature Drop", src.mobType or "Mobs", src.mobLevel or "Any", zStr))
+				table.insert(textSources, string.format("|cffffd100• %s|r (%s, Lvl %s):\n   %s", AtlasJournal:GetLocaleText("SRC_MOB_DROP") or "Creature Drop", src.mobType or "Mobs", src.mobLevel or "Any", zStr))
 			elseif src.type == "FISH" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
 					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "Waters"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", AtlasJournal:GetLocaleText("SRC_FISH") or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
-			elseif src.type == "BYPRODUCT" then
-				local fromNames = {}
-				for _, fId in ipairs(src.fromItems or {}) do
-					local d = AtlasJournal:GetItemDetails(fId)
-					table.insert(fromNames, d.link or string.format("Item #%d", fId))
-				end
-				table.insert(sourceLines, string.format("|cffffd100• %s|r:\n   %s", AtlasJournal:GetLocaleText("SRC_BYPRODUCT") or "Byproduct", table.concat(fromNames, ", ")))
+				table.insert(textSources, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", AtlasJournal:GetLocaleText("SRC_FISH") or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
+			elseif src.type == "DISENCHANT" then
+				local spellName = GetSpellInfo(13262) or "Disenchant"
+				local qName = src.itemQuality == 4 and "|cffa335eeEpic|r" or (src.itemQuality == 3 and "|cff0070ddRare|r" or "|cff1eff00Uncommon|r")
+				table.insert(textSources, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", AtlasJournal:GetLocaleText("SRC_DISENCHANT") or "Disenchanting", spellName, AtlasJournal:GetLocaleText("DISENCHANTED_FROM") or "Disenchanted from items", qName, src.itemLevels or "1+"))
 			elseif src.type == "INSTANCE" then
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s %s", AtlasJournal:GetLocaleText("SRC_INSTANCE") or "Instance Drop", src.dungeon or "", src.raid or ""))
+				table.insert(textSources, string.format("|cffffd100• %s|r: %s %s", AtlasJournal:GetLocaleText("SRC_INSTANCE") or "Instance Drop", src.dungeon or "", src.raid or ""))
 			elseif src.type == "VENDOR" then
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s", AtlasJournal:GetLocaleText("SRC_VENDOR") or "Vendor Purchase", src.cost or ""))
+				table.insert(textSources, string.format("|cffffd100• %s|r: %s", AtlasJournal:GetLocaleText("SRC_VENDOR") or "Vendor Purchase", src.cost or ""))
+			elseif src.type == "BYPRODUCT" then
+				table.insert(itemSources, {
+					title = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_BYPRODUCT") or "Byproduct"),
+					items = src.fromItems or {},
+				})
+			elseif src.type == "PROSPECT" then
+				local spellName = GetSpellInfo(31252) or "Prospecting"
+				table.insert(itemSources, {
+					title = string.format("|cffffd100• %s|r (%s, Skill %d, 5x):", AtlasJournal:GetLocaleText("SRC_PROSPECT") or "Prospecting", spellName, src.skill or 20),
+					items = src.fromItems or {},
+				})
+			elseif src.type == "SMELT" then
+				local spellName = GetSpellInfo(2656) or "Smelt"
+				table.insert(itemSources, {
+					title = string.format("|cffffd100• %s|r (%s, Skill %d):", AtlasJournal:GetLocaleText("SRC_SMELT") or "Smelting", spellName, src.skill or 1),
+					items = src.fromItems or {},
+				})
+			elseif src.type == "TRANSMUTE" then
+				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or "Transmute"
+				table.insert(itemSources, {
+					title = string.format("|cffffd100• %s|r (%s, %s CD):", AtlasJournal:GetLocaleText("SRC_TRANSMUTE") or "Transmutation", spellName, src.cooldown or "20h"),
+					items = src.fromItems or {},
+				})
+			elseif src.type == "COMBINE" then
+				local titleText
+				if src.yieldCount and src.yieldCount > 1 then
+					titleText = string.format("|cffffd100• %s|r (%dx -> %dx):", AtlasJournal:GetLocaleText("SRC_COMBINE") or "Combine", src.count or 10, src.yieldCount)
+				else
+					titleText = string.format("|cffffd100• %s|r (%dx):", AtlasJournal:GetLocaleText("SRC_COMBINE") or "Combine", src.count or 10)
+				end
+				table.insert(itemSources, {
+					title = titleText,
+					items = { src.fromItem },
+					itemCount = src.count,
+				})
+			elseif src.type == "CRAFT" then
+				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or src.profession or "Craft"
+				local titleText
+				local countPrefix = src.count and string.format("%dx ", src.count) or ""
+				local yieldSuffix = (src.yieldCount and src.yieldCount > 1) and string.format(" -> %dx", src.yieldCount) or ""
+				if src.skill then
+					titleText = string.format("|cffffd100• %s|r (%s%s%s, Skill %d):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, spellName, yieldSuffix, src.skill)
+				else
+					titleText = string.format("|cffffd100• %s|r (%s%s%s):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, spellName, yieldSuffix)
+				end
+				table.insert(itemSources, {
+					title = titleText,
+					items = src.fromItems or (src.fromItem and { src.fromItem }) or {},
+					itemCount = src.count,
+				})
 			end
 		end
 	end
-	self.zonesText:SetText(#sourceLines > 0 and table.concat(sourceLines, "\n\n") or (AtlasJournal:GetLocaleText("SRC_GATHER_DESC") or "Farmed in the world."))
 
-	-- Format Yields
-	if res.yields and #res.yields > 0 then
-		local yieldLinks = {}
-		for _, yId in ipairs(res.yields) do
-			local yd = AtlasJournal:GetItemDetails(yId)
-			table.insert(yieldLinks, yd.link or string.format("Item #%d", yId))
-		end
-		self.yieldsText:SetText(table.concat(yieldLinks, "  •  "))
-		self.yieldsLabel:Show()
-		self.yieldsText:Show()
+	-- Render text sources
+	if #textSources > 0 then
+		self.zonesText:SetText(table.concat(textSources, "\n\n"))
+		self.zonesText:Show()
 	else
-		self.yieldsText:SetText("")
+		self.zonesText:SetText("")
+		self.zonesText:Hide()
+	end
+
+	-- Render interactive source badges
+	local nextBadgeIdx = 1
+	local curSourceY = 0
+	local badgeW = 156
+	local badgeH = 20
+	local colSpacing = 8
+
+	if #itemSources > 0 then
+		self.sourceContainer:Show()
+		self.sourceContainer:ClearAllPoints()
+		if self.zonesText:IsShown() then
+			self.sourceContainer:SetPoint("TOPLEFT", self.zonesText, "BOTTOMLEFT", 0, -8)
+		else
+			self.sourceContainer:SetPoint("TOPLEFT", self.zonesLabel, "BOTTOMLEFT", 0, -5)
+		end
+
+		for gIdx, group in ipairs(itemSources) do
+			local hdr = self.sourceHeaders[gIdx]
+			if not hdr then
+				hdr = self.sourceContainer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				hdr:SetJustifyH("LEFT")
+				hdr:SetWidth(320)
+				table.insert(self.sourceHeaders, hdr)
+			end
+			hdr:ClearAllPoints()
+			hdr:SetPoint("TOPLEFT", self.sourceContainer, "TOPLEFT", 0, -curSourceY)
+			hdr:SetText(group.title)
+			hdr:Show()
+			curSourceY = curSourceY + hdr:GetStringHeight() + 4
+
+			for i, itemId in ipairs(group.items) do
+				local btn = self.sourceButtons[nextBadgeIdx]
+				if not btn then
+					btn = CreateFrame("Button", nil, self.sourceContainer)
+					btn:SetHeight(badgeH)
+					local icon = btn:CreateTexture(nil, "ARTWORK")
+					icon:SetSize(16, 16)
+					icon:SetPoint("LEFT", btn, "LEFT", 0, 0)
+					btn.icon = icon
+
+					local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+					text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
+					text:SetPoint("RIGHT", btn, "RIGHT", -2, 0)
+					text:SetJustifyH("LEFT")
+					text:SetWordWrap(false)
+					btn.text = text
+
+					btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+					btn:RegisterForClicks("LeftButtonUp")
+					table.insert(self.sourceButtons, btn)
+				end
+
+				local yd = AtlasJournal:GetItemDetails(itemId)
+				local q = yd.quality or 1
+				local color = ITEM_QUALITY_COLORS[q]
+				local hex = color and color.hex or "|cffffffff"
+				if not hex:find("^|c") then hex = "|c" .. hex end
+				local cleanName = yd.name or string.format("Item #%d", itemId)
+				local badgeLabel
+				if group.itemCount and #group.items == 1 and group.itemCount > 1 then
+					badgeLabel = string.format("%dx [%s%s|r]", group.itemCount, hex, cleanName)
+				else
+					badgeLabel = string.format("[%s%s|r]", hex, cleanName)
+				end
+
+				btn.icon:SetTexture(yd.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+				btn.text:SetText(badgeLabel)
+
+				local col = (i - 1) % 2
+				local row = math.floor((i - 1) / 2)
+				btn:ClearAllPoints()
+				btn:SetPoint("TOPLEFT", self.sourceContainer, "TOPLEFT", col * (badgeW + colSpacing), -(curSourceY + row * (badgeH + 4)))
+				btn:SetSize(badgeW, badgeH)
+				btn:Show()
+
+				btn:SetScript("OnEnter", function(b)
+					GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+					if yd.link then
+						GameTooltip:SetHyperlink(yd.link)
+					else
+						GameTooltip:SetItemByID(itemId)
+					end
+					GameTooltip:Show()
+				end)
+				btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+				btn:SetScript("OnClick", function(b)
+					if IsModifiedClick("CHATLINK") and yd.link then
+						ChatEdit_InsertLink(yd.link)
+					else
+						local targetRes = AtlasJournal:FindResource(itemId)
+						if targetRes then
+							Tab:SelectResource(targetRes)
+						end
+					end
+				end)
+
+				nextBadgeIdx = nextBadgeIdx + 1
+			end
+
+			local totalRows = math.ceil(#group.items / 2)
+			curSourceY = curSourceY + totalRows * (badgeH + 4) + 6
+		end
+		self.sourceContainer:SetHeight(curSourceY)
+	else
+		self.sourceContainer:Hide()
+		self.sourceContainer:SetHeight(0)
+	end
+
+	-- Format Yields (Strict 2-Column Grid: max 2 yields per row)
+	for _, btn in ipairs(self.yieldButtons or {}) do
+		btn:Hide()
+	end
+	if res.yields and #res.yields > 0 then
+		self.yieldsLabel:Show()
+		self.yieldsContainer:Show()
+		self.yieldsLabel:ClearAllPoints()
+		if self.sourceContainer:IsShown() then
+			self.yieldsLabel:SetPoint("TOPLEFT", self.sourceContainer, "BOTTOMLEFT", 0, -12)
+		elseif self.zonesText:IsShown() then
+			self.yieldsLabel:SetPoint("TOPLEFT", self.zonesText, "BOTTOMLEFT", 0, -12)
+		else
+			self.yieldsLabel:SetPoint("TOPLEFT", self.zonesLabel, "BOTTOMLEFT", 0, -12)
+		end
+
+		local colW = 156
+		local colSpacing = 8
+		local rowH = 24
+		for idx, yId in ipairs(res.yields) do
+			local btn = self.yieldButtons[idx]
+			if not btn then
+				btn = CreateFrame("Button", nil, self.yieldsContainer)
+				btn:SetHeight(20)
+				local icon = btn:CreateTexture(nil, "ARTWORK")
+				icon:SetSize(16, 16)
+				icon:SetPoint("LEFT", btn, "LEFT", 0, 0)
+				btn.icon = icon
+
+				local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
+				text:SetPoint("RIGHT", btn, "RIGHT", -2, 0)
+				text:SetJustifyH("LEFT")
+				text:SetWordWrap(false)
+				btn.text = text
+
+				btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+				btn:RegisterForClicks("LeftButtonUp")
+				table.insert(self.yieldButtons, btn)
+			end
+
+			local yd = AtlasJournal:GetItemDetails(yId)
+			local q = yd.quality or 1
+			local color = ITEM_QUALITY_COLORS[q]
+			local hex = color and color.hex or "|cffffffff"
+			if not hex:find("^|c") then hex = "|c" .. hex end
+			local cleanName = yd.name or string.format("Item #%d", yId)
+
+			btn.icon:SetTexture(yd.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+			btn.text:SetText(string.format("[%s%s|r]", hex, cleanName))
+
+			local col = (idx - 1) % 2
+			local rowIdx = math.floor((idx - 1) / 2)
+			btn:ClearAllPoints()
+			btn:SetPoint("TOPLEFT", self.yieldsContainer, "TOPLEFT", col * (colW + colSpacing), -rowIdx * rowH)
+			btn:SetSize(colW, 20)
+			btn:Show()
+
+			btn:SetScript("OnEnter", function(b)
+				GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+				if yd.link then
+					GameTooltip:SetHyperlink(yd.link)
+				else
+					GameTooltip:SetItemByID(yId)
+				end
+				GameTooltip:Show()
+			end)
+			btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			btn:SetScript("OnClick", function(b)
+				if IsModifiedClick("CHATLINK") and yd.link then
+					ChatEdit_InsertLink(yd.link)
+				else
+					local targetRes = AtlasJournal:FindResource(yId)
+					if targetRes then
+						Tab:SelectResource(targetRes)
+					end
+				end
+			end)
+		end
+		local totalRows = math.ceil(#res.yields / 2)
+		local containerHeight = totalRows * rowH
+		self.yieldsContainer:SetHeight(containerHeight)
+		self.tipsLabel:ClearAllPoints()
+		self.tipsLabel:SetPoint("TOPLEFT", self.yieldsContainer, "BOTTOMLEFT", 0, -12)
+	else
 		self.yieldsLabel:Hide()
-		self.yieldsText:Hide()
+		self.yieldsContainer:Hide()
+		self.yieldsContainer:SetHeight(0)
+		self.tipsLabel:ClearAllPoints()
+		if self.sourceContainer:IsShown() then
+			self.tipsLabel:SetPoint("TOPLEFT", self.sourceContainer, "BOTTOMLEFT", 0, -12)
+		elseif self.zonesText:IsShown() then
+			self.tipsLabel:SetPoint("TOPLEFT", self.zonesText, "BOTTOMLEFT", 0, -12)
+		else
+			self.tipsLabel:SetPoint("TOPLEFT", self.zonesLabel, "BOTTOMLEFT", 0, -12)
+		end
 	end
 
 	-- Format Farming Tips
@@ -618,14 +950,26 @@ function Tab:SelectResource(res)
 	self.tipsText:SetText(tip)
 
 	-- Update Content Height
-	local totalHeight = 20 + self.zonesText:GetStringHeight()
-	if res.yields and #res.yields > 0 then
-		totalHeight = totalHeight + 25 + self.yieldsText:GetStringHeight()
+	local totalHeight = 20
+	if self.zonesText:IsShown() then
+		totalHeight = totalHeight + self.zonesText:GetStringHeight() + 8
+	end
+	if self.sourceContainer:IsShown() then
+		totalHeight = totalHeight + self.sourceContainer:GetHeight() + 8
+	end
+	if self.yieldsContainer:IsShown() then
+		totalHeight = totalHeight + 25 + self.yieldsContainer:GetHeight() + 8
 	end
 	totalHeight = totalHeight + 25 + self.tipsText:GetStringHeight() + 30
-	self.rightContent:SetHeight(math.max(totalHeight, 260))
-	if self.rightScroll and self.rightScroll.UpdateScrollBar then
-		self.rightScroll:UpdateScrollBar()
+	self.rightContent:SetHeight(totalHeight)
+	if self.rightScroll then
+		self.rightScroll:SetVerticalScroll(0)
+		if self.rightScroll.ScrollBar then
+			self.rightScroll.ScrollBar:SetValue(0)
+		end
+		if self.rightScroll.UpdateScrollBar then
+			self.rightScroll:UpdateScrollBar()
+		end
 	end
 end
 
@@ -719,8 +1063,9 @@ function Tab:Refresh()
 end
 
 function Tab:RefreshAtlas()
-	local query = self.searchBox:GetText()
+	local query = self.searchBox and self.searchBox:GetText() or ""
 	local resources = AtlasJournal and AtlasJournal:Search(query, activeCategory) or {}
+	self.currentResources = resources
 
 	for _, row in ipairs(self.resourceRows) do row:Hide() end
 
@@ -734,9 +1079,18 @@ function Tab:RefreshAtlas()
 			GSF.UI:CreateBackdrop(row, false)
 			row:SetBackdropColor(0.08, 0.08, 0.12, 0.6)
 
+			local selBar = row:CreateTexture(nil, "OVERLAY")
+			selBar:SetWidth(3)
+			selBar:SetPoint("TOPLEFT", row, "TOPLEFT", 1, -1)
+			selBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 1, 1)
+			selBar:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+			selBar:SetVertexColor(1.0, 0.82, 0.0, 1.0)
+			selBar:Hide()
+			row.selBar = selBar
+
 			local icon = row:CreateTexture(nil, "ARTWORK")
 			icon:SetSize(20, 20)
-			icon:SetPoint("LEFT", row, "LEFT", 4, 0)
+			icon:SetPoint("LEFT", row, "LEFT", 6, 0)
 			row.icon = icon
 
 			local name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -752,16 +1106,34 @@ function Tab:RefreshAtlas()
 			table.insert(self.resourceRows, row)
 		end
 
+		row.resource = res
 		row:SetPoint("TOPLEFT", self.leftContent, "TOPLEFT", 0, -yOffset)
 		local details = AtlasJournal:GetItemDetails(res.id)
-		local color = ITEM_QUALITY_COLORS[details.quality] or { hex = "ffffffff" }
+		local color = ITEM_QUALITY_COLORS[details.quality]
+		local hex = color and color.hex or "|cffffffff"
+		if not hex:find("^|c") then hex = "|c" .. hex end
 
 		row.icon:SetTexture(details.icon)
-		row.name:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
+		row.name:SetText(string.format("%s%s|r", hex, details.name))
 		local minSkill = AtlasJournal:GetMinSkill(res)
-		row.skill:SetText(minSkill > 1 and string.format("|cffffd100%d|r", minSkill) or "")
+		row.skill:SetText(minSkill and string.format("|cffffd100%d|r", minSkill) or "")
+
+		local isSelected = selectedResource and (selectedResource.id == res.id)
+		if isSelected then
+			row:SetBackdropBorderColor(1.0, 0.82, 0.0, 1.0)
+			row:SetBackdropColor(0.20, 0.16, 0.04, 0.85)
+			if row.selBar then row.selBar:Show() end
+		else
+			row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.5)
+			row:SetBackdropColor(0.08, 0.08, 0.12, 0.6)
+			if row.selBar then row.selBar:Hide() end
+		end
 
 		row:SetScript("OnEnter", function(selfRow)
+			if not (selectedResource and selectedResource.id == res.id) then
+				selfRow:SetBackdropBorderColor(0.6, 0.6, 0.7, 0.8)
+				selfRow:SetBackdropColor(0.12, 0.12, 0.18, 0.7)
+			end
 			GameTooltip:SetOwner(selfRow, "ANCHOR_RIGHT")
 			if details.link then
 				GameTooltip:SetHyperlink(details.link)
@@ -770,7 +1142,13 @@ function Tab:RefreshAtlas()
 			end
 			GameTooltip:Show()
 		end)
-		row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		row:SetScript("OnLeave", function(selfRow)
+			if not (selectedResource and selectedResource.id == res.id) then
+				selfRow:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.5)
+				selfRow:SetBackdropColor(0.08, 0.08, 0.12, 0.6)
+			end
+			GameTooltip:Hide()
+		end)
 
 		row:SetScript("OnClick", function()
 			Tab:SelectResource(res)
@@ -1060,12 +1438,12 @@ function Tab:StartDraggingGoal(sourceIndex, goal)
 	ghost.text:SetText(string.format("|cffffd100%s|r (%d)", dispTitle, goal.target or 1))
 
 	local iconTex = goal.icon
-	if (not iconTex or iconTex:find("INV_Misc_QuestionMark")) and (goal.itemID or goal.material or goal.name) then
+	if IsPlaceholderIcon(iconTex) and (goal.itemID or goal.material or goal.name) then
 		if goal.itemID then
 			local _, _, _, _, _, _, _, _, _, t = GetItemInfo(goal.itemID)
 			if t then iconTex = t end
 		end
-		if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
+		if IsPlaceholderIcon(iconTex) then
 			local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 			if res then
 				local d = AtlasJournal:GetItemDetails(res.id)
@@ -1373,12 +1751,12 @@ function Tab:RefreshGoals()
 
 		-- Icon resolution
 		local iconTex = goal.icon
-		if (not iconTex or iconTex:find("INV_Misc_QuestionMark")) and (goal.itemID or goal.material or goal.name) then
+		if IsPlaceholderIcon(iconTex) and (goal.itemID or goal.material or goal.name) then
 			if goal.itemID then
 				local _, _, _, _, _, _, _, _, _, t = GetItemInfo(goal.itemID)
 				if t then iconTex = t end
 			end
-			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
+			if IsPlaceholderIcon(iconTex) then
 				local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 				if res then
 					local d = AtlasJournal:GetItemDetails(res.id)

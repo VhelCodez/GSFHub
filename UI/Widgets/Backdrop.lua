@@ -125,6 +125,7 @@ end
 function GSF.UI:CreateScrollList(parent, width, height, name)
 	local scrollFrame = CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
 	scrollFrame:SetSize(width, height)
+	scrollFrame.scrollBarHideable = 1
 
 	local content = CreateFrame("Frame", nil, scrollFrame)
 	content:SetSize(width - 24, height)
@@ -144,10 +145,12 @@ function GSF.UI:CreateScrollList(parent, width, height, name)
 	local function UpdateScrollBar()
 		if not scrollBar then return end
 		local _, maxVal = scrollBar:GetMinMaxValues()
-		local contentH = content:GetHeight()
-		local frameH = scrollFrame:GetHeight()
-		if (maxVal and maxVal > 1) or (contentH and frameH and contentH > (frameH + 1)) then
+		local contentH = content:GetHeight() or 0
+		local frameH = scrollFrame:GetHeight() or 0
+		local yrange = scrollFrame:GetVerticalScrollRange() or 0
+		if (yrange > 1) or (maxVal and maxVal > 1) or (contentH > frameH + 2) then
 			scrollBar:Show()
+			scrollBar:Enable()
 		else
 			scrollBar:Hide()
 		end

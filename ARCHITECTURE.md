@@ -202,8 +202,8 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 - **3-Factor Handshake:** Verifies claimer name, unique `[GSF-BT:XYZ]` mail token, and stack count upon `MAIL_SHOW` and `BAG_UPDATE`.
 
 ### 4. 1–375 Resource Farming Atlas & Standalone Library (`Libs/AtlasJournal/`)
-- Decoupled, headless `LibAtlasJournal-1.0` standalone library embedded in `Libs/AtlasJournal/`.
-- Pure ID-driven relational database covering 1–300 Vanilla and 300–375 TBC resources with native `itemID`s for automatic locale translation, 13 polymorphic source types, and pre-flight cache priming.
+- Decoupled, headless `LibAtlasJournal-1.1` standalone library embedded in `Libs/AtlasJournal/`.
+- Pure ID-driven relational database covering 1–300 Vanilla and 300–375 TBC resources with 236 verified `itemID` records across 8 categories, 13 polymorphic source types (including `CRAFT` with input/yield tracking), and pre-flight cache priming.
 - Event-driven reactive callback mechanism (`ON_DATA_READY`), self-contained embedded localization (`enUS` / `deDE`), and isolated verification suite (`Libs/AtlasJournal/verify.ps1`), ready for extraction into an independent repository at any time.
 
 ### 5. Draggable Goals HUD (`UI/Widgets/GoalsHUD.lua`)
@@ -216,5 +216,5 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 ---
 
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`, `v1.2.6`, `v1.2.7`, `v1.3.0`).
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`, `v1.2.6`, `v1.2.7`, `v1.3.0`, `v1.3.1`).
 - GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

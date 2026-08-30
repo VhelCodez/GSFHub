@@ -17,6 +17,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2026-08-30
+
+### Added
+- **AtlasJournal Master Catalog Expansion (236 Items):** Expanded the catalog from 147 to 236 strictly verified trade goods and reagents across all 8 gathering/crafting categories (Mining: 50, Herbalism: 40, Skinning: 29, Cloth: 11, Elemental: 31, Enchanting: 30, Cooking: 18, Fishing: 27).
+- **Dedicated `CRAFT` Source Architecture:** Added full support for primary profession conversions (`CRAFT`) alongside `COMBINE`, linking recipe spell IDs (e.g. Leatherworking spell `7126`, Enchanting shatter spell `42615`), required skill levels, and interactive ingredient badges with clear input (`count`) and output (`yieldCount`) quantity tracking.
+- **Standalone Library Upgrade (`LibAtlasJournal-1.1`):** Registered library under `LibAtlasJournal-1.1` (v1.1.0) with enhanced multi-yield modeling and complete 236-item relational data schema.
+- **Bilingual Farming & Lore Tips Parity:** Added 93 new strategic farming tips in English and German (`271` matching keys in `enUS` and `deDE`).
+
+### Fixed
+- **Item ID Corrections:**
+  - Corrected Nethercite Ore from placeholder `32468` (*Netherdust Pollen*) to official ID `32464` (*Netheriterz*).
+  - Separated Knothide Leather Scraps (`25649`) and Fel Hide (`25707`), correcting previous ID collision.
+  - Replaced TBC fishing placeholder items with authentic WoWHead IDs: Figlamp Fish (`27435`), Furious Crawdad (`27439`), Golden Darter (`27438`), Icefin Bluefish (`27437`), Spotted Feltail (`27425`), and Barbed Gill Trout (`27422`).
+  - Resolved tip key mismatches for Swiftthistle (`2452` -> `ATLAS_TIP_2452`) and Grave Moss (`3369` -> `ATLAS_TIP_3369`).
+- **Goals HUD & Icon Fallback Handling (`GoalsHUD.lua`):** Hardened placeholder icon detection (`IsPlaceholderIcon`) against numeric IDs (`134400`) and standard question-mark strings, ensuring reliable dynamic item icon resolution.
+- **ScrollList Hideable ScrollBar (`Backdrop.lua`):** Configured `scrollBarHideable = 1` and improved dynamic vertical scroll range calculations in `CreateScrollList`, preventing scrollbar clipping on short content lists.
+
+---
+
 ## [1.3.0] - 2026-08-30
 
 ### Added

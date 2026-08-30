@@ -15,7 +15,8 @@ graph LR
     v125 --> v126["v1.2.6<br/><b>Wishlist & Goals Scope</b><br/>(Released)"]
     v126 --> v127["v1.2.7<br/><b>Cache Suite</b><br/>(Released)"]
     v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Released)"]
-    v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
+    v13 --> v131["v1.3.1<br/><b>Master Expansion & CRAFT</b><br/>(Released)"]
+    v131 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -25,12 +26,19 @@ graph LR
 
 ## 🚀 Released Milestones
 
+### ✅ v1.3.1 - AtlasJournal Master Catalog Audit, Bugfix & CRAFT Architecture *(Released)*
+- [x] **Master Catalog Expansion (147 ➔ 236 Items):** Full coverage across Mining (50), Herbalism (40), Skinning (29), Cloth (11), Elemental (31), Enchanting (30), Cooking (18), and Fishing (27).
+- [x] **Authentic Bugfixes & Data Correction:** Corrected Nethercite Ore (`32464`), separated Knothide Leather Scraps (`25649`) from Fel Hide (`25707`), aligned all TBC fish with WoWHead database IDs, and synchronized Swiftthistle (`2452`) and Grave Moss (`3369`) tip keys.
+- [x] **First-Class `CRAFT` Source Architecture:** Integrated profession conversion recipes with spell IDs, required skill ranks, input reagent counts (`count`), and multi-item yield amounts (`yieldCount`).
+- [x] **Bilingual Strategic Farming & Lore Tips:** Added 93 new localized farming tips in `enUS` and `deDE` with 100% dictionary match across 271 keys.
+- [x] **UI & Goals HUD Polishing:** Hardened placeholder icon detection (`IsPlaceholderIcon`), improved `ScrollList` hideable scrollbar math, and added interactive ingredient count badges to the Atlas interface.
+
 ### ✅ v1.3.0 - Phase 3: Universal Resource Atlas & Standalone `AtlasJournal` Library *(Released)*
 - [x] **Standalone Decoupled Library (`Libs/AtlasJournal/`):** Refactored gathering engine into `AtlasJournal` (`LibAtlasJournal-1.0`), an independent, headless library with event-driven callback system (`ON_DATA_READY`), embedded locales (`enUS` / `deDE`), standalone TOC, and isolated verification test (`verify.ps1`).
 - [x] **Pure ID-Driven Relational Schema (`AtlasJournalData.lua`):** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
 - [x] **13 Polymorphic Source Types (`src.type`):** Unified modeling of all acquisition vectors without bespoke logic (`GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `VENDOR`, `INSTANCE`, `CONTAINER`).
 - [x] **Cross-Discipline Category Filtering (`MatchesCategory`):** Multi-source items appear across all relevant profession filters (e.g. `Partikel des Wassers` appears when filtering for Elemental, Fishing, and Engineering).
-- [x] **Comprehensive Classic & TBC Catalog:** Complete verified dataset of 132 unique items across Mining, Herbalism, Skinning, Disenchanting, Gas Extraction, Farmed Meats, Primals, and Raid Catalysts.
+- [x] **Comprehensive Classic & TBC Catalog:** Complete verified dataset across Mining, Herbalism, Skinning, Disenchanting, Gas Extraction, Farmed Meats, Primals, and Raid Catalysts.
 - [x] **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs (`GetItemInfo`, `C_Map.GetAreaInfo`, `GetSpellInfo`).
 - [x] **Pre-Flight Engine Cache & Reactive UI (`AtlasJournal.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
 - [x] **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` (strictly querying exact item count) and `SupplyBounties.lua` (1-click bounty requests).
