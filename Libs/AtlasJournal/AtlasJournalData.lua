@@ -1,4 +1,6 @@
-﻿AtlasJournal = AtlasJournal or {}
+local MAJOR = "LibAtlasJournal-1.0"
+local lib = (LibStub and LibStub:GetLibrary(MAJOR, true)) or AtlasJournal or {}
+AtlasJournal = lib
 
 -- ============================================================================
 -- Category Definitions (Classic & TBC Resource Classifications)

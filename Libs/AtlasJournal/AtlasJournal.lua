@@ -1,4 +1,4 @@
-﻿--[[--------------------------------------------------------------------------
+--[[--------------------------------------------------------------------------
   AtlasJournal
   Standalone Classic & TBC Resource & Gathering Compendium Library
   Version: 1.0.0
@@ -6,7 +6,20 @@
 local MAJOR, MINOR = "LibAtlasJournal-1.0", 1
 local lib = LibStub and LibStub:NewLibrary(MAJOR, MINOR)
 
-AtlasJournal = lib or AtlasJournal or {}
+-- If LibStub created a new table, preserve anything already attached to AtlasJournal (like Data or Categories)
+if lib then
+	if AtlasJournal then
+		for k, v in pairs(AtlasJournal) do
+			if lib[k] == nil then
+				lib[k] = v
+			end
+		end
+	end
+	AtlasJournal = lib
+else
+	AtlasJournal = AtlasJournal or {}
+end
+
 local Journal = AtlasJournal
 
 Journal.version = "1.0.0"

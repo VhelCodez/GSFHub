@@ -4,5 +4,5 @@
 ## Author: VhelCodez
 ## Version: 1.0.0
 
-AtlasJournalData.lua
 AtlasJournal.lua
+AtlasJournalData.lua

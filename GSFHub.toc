@@ -9,8 +9,8 @@
 
 # Embedded Libraries
 Libs\Libs.xml
-Libs\AtlasJournal\AtlasJournalData.lua
 Libs\AtlasJournal\AtlasJournal.lua
+Libs\AtlasJournal\AtlasJournalData.lua
 
 # Localization
 Locales\Localization.lua
