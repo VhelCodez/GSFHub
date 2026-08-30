@@ -62,8 +62,9 @@
   7. **`.gemini/plans/`**: Relevant persistent phase implementation plan.
 - **Zero Stale Documentation:** Guarantees that the codebase, developer architecture, public repository documentation, and web portal always remain 100% in sync with zero discrepancies.
 
-### 6. 🛡️ Non-Destructive Data Migration & Backward Compatibility Policy
-- When modifying `Database.lua` or core modules, NEVER delete or break existing SavedVariables keys (`myWishlist`, `characterProfessions`, `alts`, `myGoals`, `myWorkOrders`).
+### 6. 🛡️ Pure Per-Character Scope Isolation & Data Integrity Policy
+- SavedVariables data must strictly follow per-character partitioning (`wishlistByChar`, `goalsByChar`, `characterProfessionsByChar`) and per-scope partitioning (`scopes`).
+- Runtime alias mirrors (`GSF.db.myWishlist`, `GSF.db.myGoals`, `GSF.db.characterProfessions`) must dynamically bind in-memory without polluting the root SavedVariables table, ensuring zero cross-character bleed or session contamination.
 - Upgrading to a new release must always preserve existing player data with zero corruption.
 
 ### 7. 🧪 Automated 3-Step Pre-Flight Verification Policy

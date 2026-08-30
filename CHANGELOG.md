@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned (Phase 3 - v1.3.0)
-- **Hybrid Pinned + Overflow Navigation (`[ ⋯ More ▼ ]`):** Customizable tab bar with overflow dropdown and active label display.
-- **Cross-Character Account Cooldown Alarms (`Cooldowns.lua`):** Onscreen toast & audio chime on your main when an alt's trade skill CD is ready.
-- **Active Gatherer Radar (`GathererRadar.lua`):** Field farming session broadcaster and live radar board.
-- **Universal Guild Material Search:** 1-box search across all surplus, trade offers, and crafter capabilities.
+- **Universal Resource Atlas & Multi-Source Gathering Compendium:** Decouple world nodes from inventory materials with pure Blizzard itemID relational schema.
+- **13 Polymorphic Acquisition Source Types:** Unified modeling for Gather, Prospect, Disenchant, Extract, Transmute, Smelt, Combine, Mob Drop, Fish, Byproduct, Vendor, Instance, and Container sources.
+- **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs (`GetItemInfo`, `C_Map.GetAreaInfo`, `GetSpellInfo`).
+- **Comprehensive Classic & TBC Catalog:** Complete dataset across Mining, Herbalism, Skinning, Disenchanting, Gas Clouds, Meats, Primals, and Raid Catalysts.
+- **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` and `SupplyBounties.lua` 1-click requests.
 
 ---
 
@@ -25,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Active Character Data Reset (`GSF.DB:ResetActiveCharacterData()`):** Clears the active character's recipe wishlist and Goals HUD trackers with a confirmation prompt, without affecting account settings or other alts.
 - **Safe Full Addon Reset (`GSF.DB:FactoryReset()`):** Ghost-order prevention engine that broadcasts cancellations for the player's open work orders and bounties to the guild before resetting local SavedVariables and reloading the UI.
 - **Settings Layout Harmonization:** Unified General and Goals HUD into a balanced 195px Display card, creating symmetrical 2x2 grid alignment across all cards in the Settings view.
+
+### Changed
+- **Elimination of Legacy Technical Debt & Pure Character Scoping (`Core/Database.lua`):** Completely removed `MigrateLegacyCache()`, historical owner guessing, and flat-table fallback routines. Transitioned to pure character-scoped database architecture (`wishlistByChar`, `goalsByChar`, `characterProfessionsByChar`) with dynamic in-memory runtime binding (`GSF.db.myWishlist`, `GSF.db.myGoals`), eliminating cross-session SavedVariables root leakage and guaranteeing complete character isolation.
 
 ---
 

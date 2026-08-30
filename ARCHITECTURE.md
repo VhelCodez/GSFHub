@@ -58,28 +58,28 @@ GSFHubDB = {
     goalsHUDPos = { point = "TOPRIGHT", x = -200, y = -150 },
     mainCharacter = "CharacterName",    -- Player's designated Main character
     myRoleTags = { "MINER", "HERBALIST" },
-    myGoals = { ... },                  -- Active character personal goals mirror
-    goalsByChar = {                     -- Character-scoped goals
+    goalsByChar = {                     -- Pure character-scoped personal goals
         ["<CharName> - <Realm>"] = { ... }
     },
     minimap = {
         hide = false,
         minimapPos = 220,               -- Angle around minimap in degrees
     },
-    myWishlist = {                      -- Active character recipe wishlist mirror
-        ["<itemId or name>"] = { name = "...", link = "...", addedAt = 1700000000 }
+    wishlistByChar = {                  -- Pure character-scoped recipe wishlists
+        ["<CharName> - <Realm>"] = { ... }
     },
-    wishlistByChar = {                  -- Character-scoped recipe wishlists
+    characterProfessionsByChar = {      -- Pure character-scoped trade skill records
         ["<CharName> - <Realm>"] = { ... }
     },
     myWorkOrders = { ... },
     mySurplus = { ... },
-    characterProfessions = { ... },     -- Local character profession snapshots
-    characterProfessionsByChar = {      -- Character-scoped trade skill records
-        ["<CharName> - <Realm>"] = { ... }
-    },
 }
 ```
+
+> [!NOTE]
+> **Pure Per-Character Storage & Zero Cross-Contamination:**
+> To prevent cross-character data leaks, persistent `SavedVariables` storage is strictly partitioned per character (`wishlistByChar`, `goalsByChar`, `characterProfessionsByChar`). At runtime, in-memory pointers (`GSF.db.myWishlist`, `GSF.db.myGoals`, `GSF.db.characterProfessions`) dynamically bind directly to the active character's partition upon `PLAYER_ENTERING_WORLD`. Stale account-wide root mirrors and legacy migration fallbacks have been completely eliminated.
+
 
 ### 2. `GSFHubCache` (Partitioned Scoped Cache Database)
 Persistent cross-session repository of all synced guild and solo data, partitioned strictly by Scope Key (`Guild - <GuildName> - <RealmName>` or `Solo - <PlayerName> - <RealmName>`):
