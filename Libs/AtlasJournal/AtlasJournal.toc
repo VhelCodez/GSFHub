@@ -1,0 +1,8 @@
+﻿## Interface: 20506
+## Title: AtlasJournal
+## Notes: Standalone Classic & TBC Resource & Gathering Compendium Library
+## Author: GSF Development Team
+## Version: 1.0.0
+
+AtlasJournalData.lua
+AtlasJournal.lua

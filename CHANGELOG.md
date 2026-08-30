@@ -20,16 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-08-30
 
 ### Added
-- **Universal Resource Atlas (`AtlasEngine.lua`):** New dedicated atlas query engine and cache lifecycle manager supporting cross-discipline category matching, real-time localized search, and asynchronous item data cache priming on login.
-- **Pure ItemID Relational Catalog (`AtlasData.lua`):** 132 meticulously verified, relational catalog entries decoupled from static world node strings and keyed purely by Blizzard `itemID`.
+- **Standalone Decoupled Library (`Libs/AtlasJournal/`):** Refactored the entire atlas subsystem into `AtlasJournal` (`LibAtlasJournal-1.0`), a completely self-contained, headless gathering compendium library with its own event-driven callback mechanism (`ON_DATA_READY`), embedded locales (`enUS` / `deDE`), standalone TOC, and isolated verification suite (`Libs/AtlasJournal/verify.ps1`), ready for independent distribution.
+- **Pure ItemID Relational Catalog (`AtlasJournalData.lua`):** 132 meticulously verified relational catalog entries decoupled from static world node strings and keyed purely by Blizzard `itemID`.
 - **13 Polymorphic Acquisition Source Models:** Unified structured schema representing `GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `INSTANCE`, and `VENDOR` sources.
 - **Zero-String Engine Localization:** Client API-based name, icon, spell, and zone resolution via `GetItemInfo()`, `GetSpellInfo()`, `GetItemSubClassInfo()`, and `C_Map.GetAreaInfo()` with quality color coding and interactive hyperlinks.
-- **Curated Strategic Farming Tips:** 90+ localized farming routes, deposit behaviors, and high-efficiency gathering notes across Classic Azeroth and Outland in English and German (`Locales/enUS.lua` and `Locales/deDE.lua`).
-- **Expanded Resource Categories:** Integrated dedicated tabs/filters for `Mining`, `Herbalism`, `Skinning`, `Cloth`, `Elemental / Primals`, `Enchanting`, `Engineering`, `Cooking & Meats`, and `Fishing`.
+- **Curated Strategic Farming Tips:** 90+ localized farming routes, deposit behaviors, and high-efficiency gathering notes across Classic Azeroth and Outland in English and German packaged directly within `AtlasJournal.Locales`.
+- **Expanded Resource Categories:** Integrated dedicated categories for `Mining`, `Herbalism`, `Skinning`, `Cloth`, `Elemental / Primals`, `Enchanting`, `Engineering`, `Cooking & Meats`, and `Fishing`.
 
 ### Changed
-- **Atlas UI Overhaul (`TabAtlas.lua`):** Re-engineered the Resource Atlas right details pane into a scrollable card container rendering multi-source acquisition breakdowns, clickable yields and byproduct tooltips, dynamic item tooltips on hover, and full quality-colored titles.
-- **Goals HUD ItemID Precision (`GoalsHUD.lua`):** Updated bag tracking logic (`CountItemInBags`) to strictly query exact `GetItemCount(itemID)` when `itemID` is present, eliminating ambiguous fuzzy text false positives.
+- **Atlas UI Overhaul (`TabAtlas.lua`):** Re-engineered the Resource Atlas tab to consume `AtlasJournal` strictly via its public API, featuring a scrollable card container rendering multi-source acquisition breakdowns, clickable yields and byproduct tooltips, dynamic item tooltips on hover, and full quality-colored titles.
+- **Goals HUD ItemID Precision (`GoalsHUD.lua`):** Updated bag tracking logic (`CountItemInBags`) to query `AtlasJournal` and strictly evaluate exact `GetItemCount(itemID)`, eliminating ambiguous fuzzy text false positives.
+- **Eliminated Architectural Technical Debt:** Completely removed legacy `GSF.Atlas` and `GSF.AtlasEngine` aliases, standardizing on a clean one-way consumer dependency contract.
 
 ---
 

@@ -9,6 +9,8 @@
 
 # Embedded Libraries
 Libs\Libs.xml
+Libs\AtlasJournal\AtlasJournalData.lua
+Libs\AtlasJournal\AtlasJournal.lua
 
 # Localization
 Locales\Localization.lua
@@ -33,8 +35,6 @@ Modules\Professions\RecipeBook.lua
 Modules\WorkOrders\WorkOrders.lua
 Modules\Surplus\SurplusExchange.lua
 Modules\Drops\RecipeDrops.lua
-Modules\Gathering\AtlasEngine.lua
-Modules\Gathering\AtlasData.lua
 Modules\SupplyChain\SupplyBounties.lua
 Modules\TradeMail\TradeHelper.lua
 Modules\TradeMail\MailHelper.lua

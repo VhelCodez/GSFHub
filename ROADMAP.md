@@ -25,13 +25,14 @@ graph LR
 
 ## 🚀 Released Milestones
 
-### ✅ v1.3.0 - Phase 3: Universal Resource Atlas & Gathering Compendium *(Released)*
-- [x] **Pure ID-Driven Relational Schema (`AtlasData.lua`):** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
+### ✅ v1.3.0 - Phase 3: Universal Resource Atlas & Standalone `AtlasJournal` Library *(Released)*
+- [x] **Standalone Decoupled Library (`Libs/AtlasJournal/`):** Refactored gathering engine into `AtlasJournal` (`LibAtlasJournal-1.0`), an independent, headless library with event-driven callback system (`ON_DATA_READY`), embedded locales (`enUS` / `deDE`), standalone TOC, and isolated verification test (`verify.ps1`).
+- [x] **Pure ID-Driven Relational Schema (`AtlasJournalData.lua`):** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
 - [x] **13 Polymorphic Source Types (`src.type`):** Unified modeling of all acquisition vectors without bespoke logic (`GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `VENDOR`, `INSTANCE`, `CONTAINER`).
 - [x] **Cross-Discipline Category Filtering (`MatchesCategory`):** Multi-source items appear across all relevant profession filters (e.g. `Partikel des Wassers` appears when filtering for Elemental, Fishing, and Engineering).
 - [x] **Comprehensive Classic & TBC Catalog:** Complete verified dataset of 132 unique items across Mining, Herbalism, Skinning, Disenchanting, Gas Extraction, Farmed Meats, Primals, and Raid Catalysts.
 - [x] **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs (`GetItemInfo`, `C_Map.GetAreaInfo`, `GetSpellInfo`).
-- [x] **Pre-Flight Engine Cache & Reactive UI (`AtlasEngine.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
+- [x] **Pre-Flight Engine Cache & Reactive UI (`AtlasJournal.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
 - [x] **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` (strictly querying exact item count) and `SupplyBounties.lua` (1-click bounty requests).
 
 ### ✅ v1.2.7 - Settings Data & Cache Management Suite *(Released)*

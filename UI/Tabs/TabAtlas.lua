@@ -33,16 +33,16 @@ function Tab:Create(parent)
 	self.catDropdown = catDropdown
 
 	local function UpdateCatDropdownText()
-		local name = GSF.AtlasEngine and GSF.AtlasEngine:GetCategoryInfo(activeCategory)
+		local name = AtlasJournal and AtlasJournal:GetCategoryInfo(activeCategory)
 		UIDropDownMenu_SetText(catDropdown, name or activeCategory)
 	end
 	UpdateCatDropdownText()
 
 	UIDropDownMenu_Initialize(catDropdown, function(dropdown, level)
-		if not GSF.AtlasCategories then return end
-		for _, cat in ipairs(GSF.AtlasCategories) do
+		if not AtlasJournal or not AtlasJournal.Categories then return end
+		for _, cat in ipairs(AtlasJournal.Categories) do
 			local info = UIDropDownMenu_CreateInfo()
-			local catName, catIcon = GSF.AtlasEngine:GetCategoryInfo(cat.key)
+			local catName, catIcon = AtlasJournal:GetCategoryInfo(cat.key)
 			info.text = catName
 			info.icon = catIcon
 			info.value = cat.key
@@ -56,6 +56,14 @@ function Tab:Create(parent)
 			UIDropDownMenu_AddButton(info, level)
 		end
 	end)
+
+	if AtlasJournal and AtlasJournal.RegisterCallback then
+		AtlasJournal:RegisterCallback("ON_DATA_READY", function()
+			if Tab and Tab.Refresh and activeView == "ATLAS" then
+				Tab:Refresh()
+			end
+		end)
+	end
 
 	-- Toggle View Buttons (Aligned to TOPRIGHT, matching height 24 of other tabs)
 	local manageGoalsBtn = GSF.UI:CreateButton(frame, GSF.L["MANAGE_GOALS"] or "Goals", 90, 24)
@@ -395,9 +403,9 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 		dispName = target.item or ""
 		local itemIcon = target.icon
 		if not itemIcon or itemIcon:find("INV_Misc_QuestionMark") then
-			local res = GSF.Atlas and GSF.Atlas:FindResource(target.item)
+			local res = AtlasJournal and AtlasJournal:FindResource(target.item)
 			if res then
-				local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+				local d = AtlasJournal:GetItemDetails(res.id)
 				if d and d.icon then itemIcon = d.icon end
 			end
 		end
@@ -416,8 +424,8 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 		modal.itemID = target.itemID
 	elseif target and (target.id or target.itemID or target.category) then
 		local targetID = target.id or target.itemID
-		local details = targetID and GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(targetID)
-		dispName = (details and details.name) or GSF.Atlas:GetDisplayName(target)
+		local details = targetID and AtlasJournal and AtlasJournal:GetItemDetails(targetID)
+		dispName = (details and details.name) or (AtlasJournal and AtlasJournal:GetDisplayName(target))
 		icon = (details and details.icon) or target.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
 		cat = target.category or "General"
 		initTitle = dispName
@@ -486,7 +494,7 @@ function Tab:SelectResource(res)
 	if self.pinBtn then self.pinBtn:Enable() end
 	if self.bountyBtn then self.bountyBtn:Enable() end
 
-	local details = GSF.AtlasEngine:GetItemDetails(res.id)
+	local details = AtlasJournal:GetItemDetails(res.id)
 	local color = ITEM_QUALITY_COLORS[details.quality] or { hex = "ffffffff" }
 
 	self.detailIcon:SetTexture(details.icon)
@@ -505,8 +513,8 @@ function Tab:SelectResource(res)
 
 	self.detailTitle:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
 
-	local catName = GSF.AtlasEngine:GetCategoryInfo(res.category)
-	local minSkill = GSF.Atlas:GetMinSkill(res)
+	local catName = AtlasJournal:GetCategoryInfo(res.category)
+	local minSkill = AtlasJournal:GetMinSkill(res)
 	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r  •  ID: |cffaaaaaa%d|r", catName, minSkill, res.id))
 
 	-- Format Polymorphic Sources
@@ -516,84 +524,84 @@ function Tab:SelectResource(res)
 			if src.type == "GATHER" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
-					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d):\n   %s", GSF.L["SRC_GATHER"] or "Gathering", src.skill or 1, zStr))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d):\n   %s", AtlasJournal:GetLocaleText("SRC_GATHER") or "Gathering", src.skill or 1, zStr))
 			elseif src.type == "PROSPECT" then
 				local fromNames = {}
 				for _, fId in ipairs(src.fromItems or {}) do
-					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					local d = AtlasJournal:GetItemDetails(fId)
 					table.insert(fromNames, d.link or string.format("Item #%d", fId))
 				end
 				local spellName = GetSpellInfo(31252) or "Prospecting"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", GSF.L["SRC_PROSPECT"] or "Prospecting", spellName, src.skill or 300, GSF.L["CRUSHED_FROM"] or "Crushed from 5x", table.concat(fromNames, ", ")))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_PROSPECT") or "Prospecting", spellName, src.skill or 300, AtlasJournal:GetLocaleText("CRUSHED_FROM") or "Crushed from 5x", table.concat(fromNames, ", ")))
 			elseif src.type == "DISENCHANT" then
 				local spellName = GetSpellInfo(13262) or "Disenchant"
 				local qName = src.itemQuality == 4 and "|cffa335eeEpic|r" or (src.itemQuality == 3 and "|cff0070ddRare|r" or "|cff1eff00Uncommon|r")
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", GSF.L["SRC_DISENCHANT"] or "Disenchanting", spellName, GSF.L["DISENCHANTED_FROM"] or "Disenchanted from items", qName, src.itemLevels or "1+"))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", AtlasJournal:GetLocaleText("SRC_DISENCHANT") or "Disenchanting", spellName, AtlasJournal:GetLocaleText("DISENCHANTED_FROM") or "Disenchanted from items", qName, src.itemLevels or "1+"))
 			elseif src.type == "EXTRACT" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
-					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "Outland"
-				local devDetails = GSF.AtlasEngine:GetItemDetails(src.device or 23821)
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Engi %d):\n   %s: %s\n   %s", GSF.L["SRC_EXTRACT"] or "Gas Extraction", src.skill or 305, GSF.L["DEVICE_REQUIRED"] or "Tool", devDetails.link or "Zapthrottle Mote Extractor", zStr))
+				local devDetails = AtlasJournal:GetItemDetails(src.device or 23821)
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Engi %d):\n   %s: %s\n   %s", AtlasJournal:GetLocaleText("SRC_EXTRACT") or "Gas Extraction", src.skill or 305, AtlasJournal:GetLocaleText("DEVICE_REQUIRED") or "Tool", devDetails.link or "Zapthrottle Mote Extractor", zStr))
 			elseif src.type == "TRANSMUTE" then
 				local fromNames = {}
 				for _, fId in ipairs(src.fromItems or {}) do
-					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					local d = AtlasJournal:GetItemDetails(fId)
 					table.insert(fromNames, d.link or string.format("Item #%d", fId))
 				end
 				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or "Transmute"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, %s Cooldown):\n   %s: %s", GSF.L["SRC_TRANSMUTE"] or "Transmutation", spellName, src.cooldown or "20h", GSF.L["REAGENTS"] or "Reagents", table.concat(fromNames, ", ")))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, %s Cooldown):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_TRANSMUTE") or "Transmutation", spellName, src.cooldown or "20h", AtlasJournal:GetLocaleText("REAGENTS") or "Reagents", table.concat(fromNames, ", ")))
 			elseif src.type == "SMELT" then
 				local fromNames = {}
 				for _, fId in ipairs(src.fromItems or {}) do
-					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					local d = AtlasJournal:GetItemDetails(fId)
 					table.insert(fromNames, d.link or string.format("Item #%d", fId))
 				end
 				local spellName = GetSpellInfo(2656) or "Smelt"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", GSF.L["SRC_SMELT"] or "Smelting", spellName, src.skill or 1, GSF.L["REAGENTS"] or "Reagents", table.concat(fromNames, ", ")))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", AtlasJournal:GetLocaleText("SRC_SMELT") or "Smelting", spellName, src.skill or 1, AtlasJournal:GetLocaleText("REAGENTS") or "Reagents", table.concat(fromNames, ", ")))
 			elseif src.type == "COMBINE" then
-				local fromD = GSF.AtlasEngine:GetItemDetails(src.fromItem)
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %dx %s", GSF.L["SRC_COMBINE"] or "Combine", src.count or 10, fromD.link or "Reagent"))
+				local fromD = AtlasJournal:GetItemDetails(src.fromItem)
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %dx %s", AtlasJournal:GetLocaleText("SRC_COMBINE") or "Combine", src.count or 10, fromD.link or "Reagent"))
 			elseif src.type == "MOB_DROP" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
-					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Lvl %s):\n   %s", GSF.L["SRC_MOB_DROP"] or "Creature Drop", src.mobType or "Mobs", src.mobLevel or "Any", zStr))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Lvl %s):\n   %s", AtlasJournal:GetLocaleText("SRC_MOB_DROP") or "Creature Drop", src.mobType or "Mobs", src.mobLevel or "Any", zStr))
 			elseif src.type == "FISH" then
 				local zones = {}
 				for _, aId in ipairs(src.zones or {}) do
-					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+					table.insert(zones, AtlasJournal:GetZoneName(aId))
 				end
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "Waters"
-				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", GSF.L["SRC_FISH"] or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", AtlasJournal:GetLocaleText("SRC_FISH") or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
 			elseif src.type == "BYPRODUCT" then
 				local fromNames = {}
 				for _, fId in ipairs(src.fromItems or {}) do
-					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					local d = AtlasJournal:GetItemDetails(fId)
 					table.insert(fromNames, d.link or string.format("Item #%d", fId))
 				end
-				table.insert(sourceLines, string.format("|cffffd100• %s|r:\n   %s", GSF.L["SRC_BYPRODUCT"] or "Byproduct", table.concat(fromNames, ", ")))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r:\n   %s", AtlasJournal:GetLocaleText("SRC_BYPRODUCT") or "Byproduct", table.concat(fromNames, ", ")))
 			elseif src.type == "INSTANCE" then
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s %s", GSF.L["SRC_INSTANCE"] or "Instance Drop", src.dungeon or "", src.raid or ""))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s %s", AtlasJournal:GetLocaleText("SRC_INSTANCE") or "Instance Drop", src.dungeon or "", src.raid or ""))
 			elseif src.type == "VENDOR" then
-				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s", GSF.L["SRC_VENDOR"] or "Vendor Purchase", src.cost or ""))
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s", AtlasJournal:GetLocaleText("SRC_VENDOR") or "Vendor Purchase", src.cost or ""))
 			end
 		end
 	end
-	self.zonesText:SetText(#sourceLines > 0 and table.concat(sourceLines, "\n\n") or (GSF.L["SRC_GATHER_DESC"] or "Farmed in the world."))
+	self.zonesText:SetText(#sourceLines > 0 and table.concat(sourceLines, "\n\n") or (AtlasJournal:GetLocaleText("SRC_GATHER_DESC") or "Farmed in the world."))
 
 	-- Format Yields
 	if res.yields and #res.yields > 0 then
 		local yieldLinks = {}
 		for _, yId in ipairs(res.yields) do
-			local yd = GSF.AtlasEngine:GetItemDetails(yId)
+			local yd = AtlasJournal:GetItemDetails(yId)
 			table.insert(yieldLinks, yd.link or string.format("Item #%d", yId))
 		end
 		self.yieldsText:SetText(table.concat(yieldLinks, "  •  "))
@@ -606,7 +614,7 @@ function Tab:SelectResource(res)
 	end
 
 	-- Format Farming Tips
-	local tip = (res.tipKey and GSF.L[res.tipKey]) or GSF.L["NO_SPECIFIC_TIPS"] or "No specific notes."
+	local tip = AtlasJournal:GetTip(res)
 	self.tipsText:SetText(tip)
 
 	-- Update Content Height
@@ -712,7 +720,7 @@ end
 
 function Tab:RefreshAtlas()
 	local query = self.searchBox:GetText()
-	local resources = GSF.Atlas:Search(query, activeCategory)
+	local resources = AtlasJournal and AtlasJournal:Search(query, activeCategory) or {}
 
 	for _, row in ipairs(self.resourceRows) do row:Hide() end
 
@@ -745,12 +753,12 @@ function Tab:RefreshAtlas()
 		end
 
 		row:SetPoint("TOPLEFT", self.leftContent, "TOPLEFT", 0, -yOffset)
-		local details = GSF.AtlasEngine:GetItemDetails(res.id)
+		local details = AtlasJournal:GetItemDetails(res.id)
 		local color = ITEM_QUALITY_COLORS[details.quality] or { hex = "ffffffff" }
 
 		row.icon:SetTexture(details.icon)
 		row.name:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
-		local minSkill = GSF.Atlas:GetMinSkill(res)
+		local minSkill = AtlasJournal:GetMinSkill(res)
 		row.skill:SetText(minSkill > 1 and string.format("|cffffd100%d|r", minSkill) or "")
 
 		row:SetScript("OnEnter", function(selfRow)
@@ -1058,9 +1066,9 @@ function Tab:StartDraggingGoal(sourceIndex, goal)
 			if t then iconTex = t end
 		end
 		if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
-			local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
+			local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 			if res then
-				local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+				local d = AtlasJournal:GetItemDetails(res.id)
 				if d and d.icon then iconTex = d.icon end
 			end
 		end
@@ -1371,9 +1379,9 @@ function Tab:RefreshGoals()
 				if t then iconTex = t end
 			end
 			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
-				local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
+				local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 				if res then
-					local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+					local d = AtlasJournal:GetItemDetails(res.id)
 					if d and d.icon then iconTex = d.icon end
 				end
 			end

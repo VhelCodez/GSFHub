@@ -1,6 +1,22 @@
-local ADDON_NAME, GSF = ...
+﻿AtlasJournal = AtlasJournal or {}
 
-GSF.AtlasData = {
+-- ============================================================================
+-- Category Definitions (Classic & TBC Resource Classifications)
+-- ============================================================================
+AtlasJournal.Categories = {
+	{ key = "ALL", spellID = nil, icon = "Interface\\Icons\\INV_Misc_Book_09" },
+	{ key = "MINING", spellID = 2575, icon = "Interface\\Icons\\Trade_Mining" },
+	{ key = "HERBALISM", spellID = 2366, icon = "Interface\\Icons\\Trade_Herbalism" },
+	{ key = "SKINNING", spellID = 8613, icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
+	{ key = "CLOTH", itemClass = 7, itemSubClass = 5, spellID = nil, icon = "Interface\\Icons\\INV_Fabric_Silk_02" },
+	{ key = "ELEMENTAL", itemClass = 7, itemSubClass = 10, spellID = nil, icon = "Interface\\Icons\\Spell_Fire_FlameBlades" },
+	{ key = "ENCHANTING", spellID = 13262, icon = "Interface\\Icons\\Spell_Holy_RemoveCurse" },
+	{ key = "ENGINEERING", spellID = 4036, icon = "Interface\\Icons\\Trade_Engineering" },
+	{ key = "COOKING", spellID = 2550, icon = "Interface\\Icons\\INV_Misc_Food_15" },
+	{ key = "FISHING", spellID = 7620, icon = "Interface\\Icons\\Trade_Fishing" },
+}
+
+AtlasJournal.Data = {
 	-- ========================================================================
 	-- 1. MINING (Ores, Stones, Raw Gems, Bar Precursors)
 	-- ========================================================================

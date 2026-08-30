@@ -86,7 +86,7 @@
   - **Work Orders:** Active requests board, "+ New Work Order" dialog, and order editing for own open orders.
   - **Surplus Pool:** Guild material exchange and bag item listing modal.
   - **Drops & Wishlist:** Recent group recipe drops log and personal wishlist manager.
-  - **Resource Atlas:** 1–375 pure ID-driven encyclopedic catalog with 13 polymorphic acquisition sources (mining, herbalism, skinning, disenchanting, gas extraction, transmutes, mob drops, fishing), zero-string client API localization, and 1-click Pin to HUD.
+  - **Resource Atlas:** 1–375 pure ID-driven encyclopedic catalog powered by the decoupled `AtlasJournal` (`LibAtlasJournal-1.0`) library, with 13 polymorphic acquisition sources (mining, herbalism, skinning, disenchanting, gas extraction, transmutes, mob drops, fishing), zero-string client API localization, and 1-click Pin to HUD.
   - **Roster & Sync:** Role badges, Main/Alt linking, sync statistics, and expanded guild member roster table.
   - **Settings (`[⚙]`):** Symmetrical 2x2 preferences grid featuring Language selector, minimap toggle, decoupled audio alerts, auto-scan on open, Goals HUD settings with position reset, and Data & Cache Management (Rebuild Guild Cache, Clear Character Data, Safe Full Reset).
 

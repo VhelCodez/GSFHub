@@ -338,16 +338,16 @@ function GSF.GoalsHUD:CountItemInBags(itemName, itemID)
 		end
 	end
 
-	-- Fallback: if itemName is a node/deposit name, check primary yield / itemID from Atlas
-	if total == 0 and GSF.Atlas and GSF.Atlas.FindResource then
-		local res = GSF.Atlas:FindResource(itemName)
+	-- Fallback: if itemName is a node/deposit name, check primary yield / itemID from AtlasJournal
+	if total == 0 and AtlasJournal and AtlasJournal.FindResource then
+		local res = AtlasJournal:FindResource(itemName)
 		if res then
 			local resId = res.id or res.itemID
 			if resId then
 				local c = GetItemCount(resId)
 				if c and c > 0 then return c end
 			end
-			local yieldItem = GSF.Atlas.GetItemDisplayName and GSF.Atlas:GetItemDisplayName(res)
+			local yieldItem = AtlasJournal.GetItemDisplayName and AtlasJournal:GetItemDisplayName(res)
 			if yieldItem and yieldItem:lower() ~= lowerName then
 				local c = GetItemCount(yieldItem)
 				if c and c > 0 then return c end
@@ -783,9 +783,9 @@ function GSF.GoalsHUD:RefreshManagerDialog()
 				if t then iconTex = t end
 			end
 			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
-				local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
+				local res = AtlasJournal and AtlasJournal:FindResource(goal.material or goal.name)
 				if res then
-					local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+					local d = AtlasJournal:GetItemDetails(res.id)
 					if d and d.icon then iconTex = d.icon end
 				end
 			end
