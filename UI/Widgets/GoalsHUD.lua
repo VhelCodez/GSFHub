@@ -302,9 +302,9 @@ function GSF.GoalsHUD:RemoveGoalByName(name)
 end
 
 function GSF.GoalsHUD:CountItemInBags(itemName, itemID)
-	if itemID and tonumber(itemID) then
+	if itemID and tonumber(itemID) and tonumber(itemID) > 0 then
 		local countById = GetItemCount(tonumber(itemID))
-		if countById and countById > 0 then return countById end
+		if countById ~= nil then return countById end
 	end
 	if not itemName then return 0 end
 	local nativeCount = GetItemCount(itemName)
@@ -342,8 +342,9 @@ function GSF.GoalsHUD:CountItemInBags(itemName, itemID)
 	if total == 0 and GSF.Atlas and GSF.Atlas.FindResource then
 		local res = GSF.Atlas:FindResource(itemName)
 		if res then
-			if res.itemID then
-				local c = GetItemCount(res.itemID)
+			local resId = res.id or res.itemID
+			if resId then
+				local c = GetItemCount(resId)
 				if c and c > 0 then return c end
 			end
 			local yieldItem = GSF.Atlas.GetItemDisplayName and GSF.Atlas:GetItemDisplayName(res)
@@ -783,7 +784,10 @@ function GSF.GoalsHUD:RefreshManagerDialog()
 			end
 			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
 				local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
-				if res and res.icon then iconTex = res.icon end
+				if res then
+					local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+					if d and d.icon then iconTex = d.icon end
+				end
 			end
 		end
 		row.icon:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")

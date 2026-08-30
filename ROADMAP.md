@@ -14,8 +14,8 @@ graph LR
     v124 --> v125["v1.2.5<br/><b>Scope Isolation</b><br/>(Released)"]
     v125 --> v126["v1.2.6<br/><b>Wishlist & Goals Scope</b><br/>(Released)"]
     v126 --> v127["v1.2.7<br/><b>Cache Suite</b><br/>(Released)"]
-    v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
-    v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Planned)"]
+    v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Released)"]
+    v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -24,6 +24,15 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.3.0 - Phase 3: Universal Resource Atlas & Gathering Compendium *(Released)*
+- [x] **Pure ID-Driven Relational Schema (`AtlasData.lua`):** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
+- [x] **13 Polymorphic Source Types (`src.type`):** Unified modeling of all acquisition vectors without bespoke logic (`GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `VENDOR`, `INSTANCE`, `CONTAINER`).
+- [x] **Cross-Discipline Category Filtering (`MatchesCategory`):** Multi-source items appear across all relevant profession filters (e.g. `Partikel des Wassers` appears when filtering for Elemental, Fishing, and Engineering).
+- [x] **Comprehensive Classic & TBC Catalog:** Complete verified dataset of 132 unique items across Mining, Herbalism, Skinning, Disenchanting, Gas Extraction, Farmed Meats, Primals, and Raid Catalysts.
+- [x] **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs (`GetItemInfo`, `C_Map.GetAreaInfo`, `GetSpellInfo`).
+- [x] **Pre-Flight Engine Cache & Reactive UI (`AtlasEngine.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
+- [x] **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` (strictly querying exact item count) and `SupplyBounties.lua` (1-click bounty requests).
 
 ### ✅ v1.2.7 - Settings Data & Cache Management Suite *(Released)*
 - [x] **Non-Destructive Guild Cache Rebuilder (`GSF.DB:RebuildGuildCache()`):** Purges peer member records and foreign listings while keeping player listings intact, immediately re-syncing from online guild members.
@@ -107,19 +116,7 @@ graph LR
 
 ## 🔮 Upcoming Milestones
 
-### 🚀 Phase 3 (`v1.3.0`) - Universal Resource Atlas & Multi-Source Gathering Compendium *(Next Up)*
-*Detailed plan:* [`.gemini/plans/phase_3_implementation_plan.md`](.gemini/plans/phase_3_implementation_plan.md)
-- [ ] **Pure ID-Driven Relational Schema:** Decouples physical world nodes from materials. Every record is an inventory material keyed by its official Blizzard `itemID`, with zone metadata resolved via native `areaID` (`C_Map.GetAreaInfo`) and categories via `GetSpellInfo` / `GetItemSubClassInfo`.
-- [ ] **13 Polymorphic Source Types (`src.type`):** Unified modeling of all acquisition vectors without bespoke logic (`GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `VENDOR`, `INSTANCE`, `CONTAINER`).
-- [ ] **Cross-Discipline Category Filtering (`MatchesCategory`):** Multi-source items appear across all relevant profession filters (e.g. `Partikel des Wassers` appears when filtering for Elemental, Fishing, and Engineering).
-- [ ] **Comprehensive Classic & TBC Catalog:** Complete verified dataset across Mining (Ores, Stones, Raw Gems, Smelted Bars), Herbalism (Herbs, Swiftthistle, Wildvine, Fel Lotus), Disenchanting (all Classic & TBC Dusts, Essences, Shards, Crystals), Engineering Gas Clouds, Farmed Meats, Primals, and Raid Catalysts.
-- [ ] **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs; eliminates manual German/English node name dictionaries.
-- [ ] **Pre-Flight Engine Cache & Reactive UI (`AtlasEngine.lua`):** Asynchronous item cache priming on login with debounced `GET_ITEM_INFO_RECEIVED` reactive visual updates for zero-lag browsing.
-- [ ] **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` (eliminating text-based bag counting) and `SupplyBounties.lua` (1-click bounty requests).
-
----
-
-### 🧭 Phase 4 (`v1.4.0`) - Navigation Overhaul & Personal QoL Suite *(Planned)*
+### 🧭 Phase 4 (`v1.4.0`) - Navigation Overhaul & Personal QoL Suite *(Next Up)*
 *Detailed plan:* [`.gemini/plans/phase_4_implementation_plan.md`](.gemini/plans/phase_4_implementation_plan.md)
 - [ ] **Hybrid Pinned + Overflow Navigation (`[ ⋯ More ▼ ]`):** Customizable tab bar with overflow dropdown and active label display.
 - [ ] **Cross-Character Account Cooldown Alarms (`Cooldowns.lua`):** Onscreen toast & audio chime on your main when an alt's trade skill CD is ready.

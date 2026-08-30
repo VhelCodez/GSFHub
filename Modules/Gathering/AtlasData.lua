@@ -1,1171 +1,1156 @@
 local ADDON_NAME, GSF = ...
 
-GSF.Atlas = {}
-
-local ATLAS_DB = {
-	-- MINING (Skill 1 - 375)
+GSF.AtlasData = {
+	-- ========================================================================
+	-- 1. MINING (Ores, Stones, Raw Gems, Bar Precursors)
+	-- ========================================================================
 	{
-		name = "Copper Vein",
-		itemID = 2770, -- Copper Ore
-		category = "Mining",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Ore_Copper_01",
-		zones = { "Elwynn Forest", "Durotar", "Dun Morogh", "Tirisfal Glades", "Mulgore", "Darkshore" },
-		yields = "Copper Ore, Rough Stone, Malachite, Tigerseye",
-		tips = "Common in all starting zones along foothills and cave entrances."
+		id = 2770, -- Copper Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 1, zones = { 12, 14, 1, 85, 215, 141, 148, 3430, 3524 } },
+		},
+		yields = { 2835, 774, 818 },
+		tipKey = "ATLAS_TIP_2770",
 	},
 	{
-		name = "Tin Vein",
-		itemID = 2771, -- Tin Ore
-		category = "Mining",
-		minSkill = 65,
-		icon = "Interface\\Icons\\INV_Ore_Tin_01",
-		zones = { "Westfall", "Loch Modan", "Silverpine Forest", "Darkshore", "Redridge Mountains", "Hillsbrad Foothills" },
-		yields = "Tin Ore, Coarse Stone, Lesser Moonstone, Shadowgem",
-		tips = "Abundant around gnoll and murloc camps in level 15-25 zones."
+		id = 2835, -- Rough Stone
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 2770 }, zones = { 12, 14, 1, 85, 215, 141, 148 } },
+		},
+		tipKey = "ATLAS_TIP_2835",
 	},
 	{
-		name = "Silver Vein",
-		itemID = 2775, -- Silver Ore
-		category = "Mining",
-		minSkill = 75,
-		icon = "Interface\\Icons\\INV_Ore_TrueSilver_01",
-		zones = { "Redridge Mountains", "Wetlands", "Duskwood", "Ashenvale", "Hillsbrad Foothills" },
-		yields = "Silver Ore, Lesser Moonstone, Shadowgem",
-		tips = "Rare spawn replacing Tin Veins."
+		id = 2771, -- Tin Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 65, zones = { 40, 38, 130, 148, 44, 267, 3433, 3525 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 20, fromItems = { 2771 } },
+		},
+		yields = { 2836, 1210, 1705, 1206 },
+		tipKey = "ATLAS_TIP_2771",
 	},
 	{
-		name = "Iron Deposit",
-		itemID = 2772, -- Iron Ore
-		category = "Mining",
-		minSkill = 125,
-		icon = "Interface\\Icons\\INV_Ore_Iron_01",
-		zones = { "Arathi Highlands", "Thousand Needles", "Badlands", "Desolace", "Stranglethorn Vale" },
-		yields = "Iron Ore, Heavy Stone, Jade, Lesser Moonstone",
-		tips = "Arathi Highlands perimeter and Badlands valley are the most efficient loops."
+		id = 2836, -- Coarse Stone
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 2771 }, zones = { 40, 38, 130, 148, 44, 267 } },
+		},
+		tipKey = "ATLAS_TIP_2836",
 	},
 	{
-		name = "Gold Vein",
-		itemID = 2776, -- Gold Ore
-		category = "Mining",
-		minSkill = 155,
-		icon = "Interface\\Icons\\INV_Ore_Gold_01",
-		zones = { "Badlands", "Arathi Highlands", "Stranglethorn Vale", "Feralas" },
-		yields = "Gold Ore, Jade, Lesser Moonstone, Citrine",
-		tips = "Rare spawn replacing Iron Deposits."
+		id = 2775, -- Silver Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 75, zones = { 44, 11, 10, 331, 267 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 75, fromItems = { 2775 } },
+		},
+		yields = { 1210, 1705, 1206 },
+		tipKey = "ATLAS_TIP_2775",
 	},
 	{
-		name = "Mithril Deposit",
-		itemID = 3858, -- Mithril Ore
-		category = "Mining",
-		minSkill = 175,
-		icon = "Interface\\Icons\\INV_Ore_Mithril_02",
-		zones = { "Badlands", "Tanaris", "Searing Gorge", "The Hinterlands", "Felwood", "Western Plaguelands" },
-		yields = "Mithril Ore, Solid Stone, Aquamarine, Citrine, Star Ruby",
-		tips = "Badlands outer canyon and Tanaris desert perimeter have highest density."
+		id = 2772, -- Iron Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 125, zones = { 45, 400, 3, 405, 33 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 125, fromItems = { 2772 } },
+		},
+		yields = { 2838, 929, 1705, 3864 },
+		tipKey = "ATLAS_TIP_2772",
 	},
 	{
-		name = "Truesilver Deposit",
-		itemID = 7911, -- Truesilver Ore
-		category = "Mining",
-		minSkill = 230,
-		icon = "Interface\\Icons\\INV_Ore_TrueSilver_01",
-		zones = { "Winterspring", "Western Plaguelands", "Eastern Plaguelands", "Tanaris", "Searing Gorge" },
-		yields = "Truesilver Ore, Star Ruby, Aquamarine",
-		tips = "Rare spawn replacing Mithril Deposits and Small Thorium."
+		id = 2838, -- Heavy Stone
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 2772 }, zones = { 45, 400, 3, 405, 33 } },
+		},
+		tipKey = "ATLAS_TIP_2838",
 	},
 	{
-		name = "Small Thorium Vein",
-		itemID = 10620, -- Thorium Ore
-		category = "Mining",
-		minSkill = 245,
-		icon = "Interface\\Icons\\INV_Ore_Thorium_01",
-		zones = { "Un'Goro Crater", "Felwood", "Winterspring", "Burning Steppes", "Western Plaguelands" },
-		yields = "Thorium Ore, Dense Stone, Blue Sapphire, Star Ruby, Large Opal",
-		tips = "Un'Goro Crater inner and outer rim loops are ideal for 245-275."
+		id = 2776, -- Gold Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 155, zones = { 45, 3, 33, 400, 357 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 155, fromItems = { 2776 } },
+		},
+		yields = { 929, 3864 },
+		tipKey = "ATLAS_TIP_2776",
 	},
 	{
-		name = "Rich Thorium Vein",
-		itemID = 10620, -- Thorium Ore
-		category = "Mining",
-		minSkill = 275,
-		icon = "Interface\\Icons\\INV_Ore_Thorium_02",
-		zones = { "Winterspring", "Eastern Plaguelands", "Silithus", "Burning Steppes", "Un'Goro Crater" },
-		yields = "Thorium Ore, Arcane Crystal, Dense Stone, Azerothian Diamond, Blue Sapphire",
-		tips = "Winterspring caves and Silithus hive tunnels yield valuable Arcane Crystals."
+		id = 3858, -- Mithril Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 175, zones = { 3, 33, 440, 47, 357, 51 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 175, fromItems = { 3858 } },
+		},
+		yields = { 7912, 7909, 7910, 3864 },
+		tipKey = "ATLAS_TIP_3858",
 	},
 	{
-		name = "Dark Iron Deposit",
-		itemID = 11370, -- Dark Iron Ore
-		category = "Mining",
-		minSkill = 230,
-		icon = "Interface\\Icons\\INV_Ore_Iron_01",
-		zones = { "Blackrock Depths", "Molten Core", "Searing Gorge", "Burning Steppes" },
-		yields = "Dark Iron Ore, Black Vitriol, Blood of the Mountain",
-		tips = "Found inside Blackrock Mountain instances and lava beds."
+		id = 7912, -- Solid Stone
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 3858 }, zones = { 3, 33, 440, 47, 357, 51 } },
+		},
+		tipKey = "ATLAS_TIP_7912",
 	},
 	{
-		name = "Fel Iron Deposit",
-		itemID = 23424, -- Fel Iron Ore
-		category = "Mining",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Ore_FelIron",
-		zones = { "Hellfire Peninsula", "Zangarmarsh", "Terokkar Forest", "Blade's Edge Mountains" },
-		yields = "Fel Iron Ore, Mote of Fire, Mote of Earth, Lesser Moonstone",
-		tips = "Hellfire Peninsula perimeter boundary provides the fastest 300-325 route."
+		id = 7911, -- Truesilver Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 230, zones = { 440, 357, 47, 361, 490, 618 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 225, fromItems = { 7911 } },
+		},
+		yields = { 7909, 7910 },
+		tipKey = "ATLAS_TIP_7911",
 	},
 	{
-		name = "Adamantite Deposit",
-		itemID = 23425, -- Adamantite Ore
-		category = "Mining",
-		minSkill = 325,
-		icon = "Interface\\Icons\\INV_Ore_Adamantite",
-		zones = { "Nagrand", "Terokkar Forest", "Blade's Edge Mountains", "Netherstorm", "Shadowmoon Valley" },
-		yields = "Adamantite Ore, Mote of Earth, Adamantite Powder",
-		tips = "Nagrand mountain ranges and Blade's Edge canyons offer endless nodes."
+		id = 11370, -- Dark Iron Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 230, zones = { 51, 4 } },
+		},
+		yields = { 11382 },
+		tipKey = "ATLAS_TIP_11370",
 	},
 	{
-		name = "Rich Adamantite Deposit",
-		itemID = 23425, -- Adamantite Ore
-		category = "Mining",
-		minSkill = 350,
-		icon = "Interface\\Icons\\INV_Ore_Adamantite",
-		zones = { "Nagrand", "Shadowmoon Valley", "Netherstorm", "Blade's Edge Mountains" },
-		yields = "Adamantite Ore, Mote of Earth, Rare Gems (Dawnstone, Talasite, Living Ruby)",
-		tips = "Spawns in caves, plateaus, and high-level 68-70 Outland areas."
+		id = 10620, -- Thorium Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 245, zones = { 490, 618, 51, 139, 28, 440, 361 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 250, fromItems = { 10620 } },
+		},
+		yields = { 12365, 12799, 12361, 12364, 12800, 7910 },
+		tipKey = "ATLAS_TIP_10620",
 	},
 	{
-		name = "Khorium Vein",
-		itemID = 23426, -- Khorium Ore
-		category = "Mining",
-		minSkill = 375,
-		icon = "Interface\\Icons\\INV_Ore_Khorium",
-		zones = { "Nagrand", "Netherstorm", "Shadowmoon Valley", "Blade's Edge Mountains", "Terokkar Forest" },
-		yields = "Khorium Ore, Mote of Fire, Primal Might components",
-		tips = "Rare spawn replacing Adamantite Deposits. Highly sought after for endgame crafts."
+		id = 12365, -- Dense Stone
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 10620 }, zones = { 490, 618, 51, 139, 28, 361 } },
+		},
+		tipKey = "ATLAS_TIP_12365",
 	},
 	{
-		name = "Nethercite Deposit",
-		itemID = 32468, -- Nethercite Ore
-		category = "Mining",
-		minSkill = 350,
-		icon = "Interface\\Icons\\INV_Misc_Gem_Crystal_02",
-		zones = { "Shadowmoon Valley (Netherwing Ledge)" },
-		yields = "Nethercite Ore (Netherwing Reputation)",
-		tips = "Located on floating islands around Netherwing Ledge."
-	},
-
-	-- HERBALISM (Skill 1 - 375)
-	{
-		name = "Peacebloom",
-		itemID = 2447,
-		category = "Herbalism",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Misc_Herb_08",
-		zones = { "Elwynn Forest", "Durotar", "Dun Morogh", "Tirisfal Glades", "Mulgore", "Teldrassil" },
-		yields = "Peacebloom",
-		tips = "Found in open grassy plains in all starting zones."
+		id = 23424, -- Fel Iron Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 300, zones = { 3483, 3521, 3519, 3522, 3518, 3520 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424 } },
+		},
+		yields = { 23077, 23079, 23107, 23112, 23117, 23436, 23437, 23438, 23439, 23440, 23441, 22573, 22574 },
+		tipKey = "ATLAS_TIP_23424",
 	},
 	{
-		name = "Silverleaf",
-		itemID = 765,
-		category = "Herbalism",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Misc_Herb_10",
-		zones = { "Elwynn Forest", "Durotar", "Dun Morogh", "Tirisfal Glades", "Mulgore", "Teldrassil" },
-		yields = "Silverleaf",
-		tips = "Spawns near tree bases and forest bushes in starting areas."
+		id = 23425, -- Adamantite Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 325, zones = { 3518, 3522, 3519, 3523, 3520 } },
+			{ type = "PROSPECT", spellID = 31252, skill = 325, fromItems = { 23425 } },
+		},
+		yields = { 23077, 23079, 23107, 23112, 23117, 23436, 23437, 23438, 23439, 23440, 23441, 24243, 22573 },
+		tipKey = "ATLAS_TIP_23425",
 	},
 	{
-		name = "Earthroot",
-		itemID = 2449,
-		category = "Herbalism",
-		minSkill = 15,
-		icon = "Interface\\Icons\\INV_Misc_Herb_07",
-		zones = { "Westfall", "Loch Modan", "Silverpine Forest", "Darkshore", "Barrens", "Redridge" },
-		yields = "Earthroot",
-		tips = "Spawns along rock cliffs, hill ridges, and mountains."
+		id = 23426, -- Khorium Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 375, zones = { 3518, 3520, 3523, 3522, 3519 } },
+		},
+		yields = { 23436, 23437, 23438, 23439, 23440, 23441, 22574 },
+		tipKey = "ATLAS_TIP_23426",
 	},
 	{
-		name = "Mageroyal",
-		itemID = 785,
-		category = "Herbalism",
-		minSkill = 50,
-		icon = "Interface\\Icons\\INV_Misc_Herb_12",
-		zones = { "Westfall", "Loch Modan", "Silverpine Forest", "Darkshore", "Barrens", "Redridge" },
-		yields = "Mageroyal",
-		tips = "Found across lowlands and farming plains in level 10-20 zones."
+		id = 23427, -- Eternium Ore
+		category = "MINING",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23427",
 	},
 	{
-		name = "Briarthorn",
-		itemID = 2450,
-		category = "Herbalism",
-		minSkill = 70,
-		icon = "Interface\\Icons\\INV_Misc_Herb_14",
-		zones = { "Duskwood", "Redridge Mountains", "Silverpine Forest", "Barrens", "Loch Modan" },
-		yields = "Briarthorn",
-		tips = "Spawns under thick trees and wooden fences."
-	},
-	{
-		name = "Stranglekelp",
-		itemID = 3820,
-		category = "Herbalism",
-		minSkill = 85,
-		icon = "Interface\\Icons\\INV_Misc_Herb_11",
-		zones = { "Wetlands", "Westfall Coast", "Darkshore", "Stranglethorn Vale", "Hillsbrad Coast" },
-		yields = "Stranglekelp",
-		tips = "Grows entirely underwater along sea coasts and lake beds."
-	},
-	{
-		name = "Bruiseweed",
-		itemID = 2452,
-		category = "Herbalism",
-		minSkill = 100,
-		icon = "Interface\\Icons\\INV_Misc_Herb_01",
-		zones = { "Ashenvale", "Stonetalon Mountains", "Hillsbrad Foothills", "Wetlands", "Redridge" },
-		yields = "Bruiseweed",
-		tips = "Common near buildings, camps, and ruined walls."
-	},
-	{
-		name = "Wild Steelbloom",
-		itemID = 3355,
-		category = "Herbalism",
-		minSkill = 115,
-		icon = "Interface\\Icons\\INV_Misc_Herb_09",
-		zones = { "Arathi Highlands", "Stonetalon Mountains", "Badlands", "Stranglethorn Vale", "Thousand Needles" },
-		yields = "Wild Steelbloom",
-		tips = "Spawns on high cliffs, plateaus, and mountain tops."
-	},
-	{
-		name = "Grave Moss",
-		itemID = 3369,
-		category = "Herbalism",
-		minSkill = 120,
-		icon = "Interface\\Icons\\INV_Misc_Dust_02",
-		zones = { "Duskwood", "Desolace", "Scarlet Monastery (Graveyard)", "Western Plaguelands" },
-		yields = "Grave Moss",
-		tips = "Spawns inside cemeteries, crypts, and undead tombs. Crucial for Shadow Protection potions."
-	},
-	{
-		name = "Kingsblood",
-		itemID = 3356,
-		category = "Herbalism",
-		minSkill = 125,
-		icon = "Interface\\Icons\\INV_Misc_Herb_03",
-		zones = { "Arathi Highlands", "Stranglethorn Vale", "Ashenvale", "Wetlands", "Hillsbrad Foothills" },
-		yields = "Kingsblood",
-		tips = "Abundant across rolling green meadows and open fields."
-	},
-	{
-		name = "Liferoot",
-		itemID = 3357,
-		category = "Herbalism",
-		minSkill = 150,
-		icon = "Interface\\Icons\\INV_Misc_Herb_04",
-		zones = { "Stranglethorn Vale", "Wetlands", "The Hinterlands", "Dustwallow Marsh", "Hillsbrad" },
-		yields = "Liferoot",
-		tips = "Found directly along riverbanks, lakeshores, and wetland swamps."
-	},
-	{
-		name = "Fadeleaf",
-		itemID = 3818,
-		category = "Herbalism",
-		minSkill = 160,
-		icon = "Interface\\Icons\\INV_Misc_Herb_17",
-		zones = { "Stranglethorn Vale", "Swamp of Sorrows", "Arathi Highlands", "Badlands" },
-		yields = "Fadeleaf",
-		tips = "Spawns in concealed shady spots and under jungle trees. Required for Rogue Blinding Powder."
-	},
-	{
-		name = "Goldthorn",
-		itemID = 3821,
-		category = "Herbalism",
-		minSkill = 170,
-		icon = "Interface\\Icons\\INV_Misc_Herb_15",
-		zones = { "Stranglethorn Vale", "Arathi Highlands", "Dustwallow Marsh", "Feralas", "The Hinterlands" },
-		yields = "Goldthorn",
-		tips = "Spawns atop hills, plateaus, and mountain crests."
-	},
-	{
-		name = "Khadgar's Whisker",
-		itemID = 3358,
-		category = "Herbalism",
-		minSkill = 185,
-		icon = "Interface\\Icons\\INV_Misc_Herb_02",
-		zones = { "Stranglethorn Vale", "The Hinterlands", "Arathi Highlands", "Feralas", "Swamp of Sorrows" },
-		yields = "Khadgar's Whisker",
-		tips = "Dense in jungle foliage and river valleys."
-	},
-	{
-		name = "Wintersbite",
-		itemID = 3819,
-		category = "Herbalism",
-		minSkill = 195,
-		icon = "Interface\\Icons\\INV_Misc_Herb_05",
-		zones = { "Alterac Mountains" },
-		yields = "Wintersbite",
-		tips = "Exclusive to the snowy mountain peaks of Alterac Mountains. Key ingredient for Frost Oil/Protection."
-	},
-	{
-		name = "Firebloom",
-		itemID = 4625,
-		category = "Herbalism",
-		minSkill = 205,
-		icon = "Interface\\Icons\\INV_Misc_Herb_19",
-		zones = { "Tanaris", "Searing Gorge", "Badlands", "Blasted Lands" },
-		yields = "Firebloom",
-		tips = "Thrives in desert sand dunes and scorched volcanic rock."
-	},
-	{
-		name = "Purple Lotus",
-		itemID = 8831,
-		category = "Herbalism",
-		minSkill = 210,
-		icon = "Interface\\Icons\\INV_Misc_Herb_17",
-		zones = { "Tanaris", "Stranglethorn Vale", "Feralas", "Azshara", "Felwood" },
-		yields = "Purple Lotus, Wildvine",
-		tips = "Spawns around troll and ogre ruins. Yields valuable Wildvine for tailoring and leatherworking."
-	},
-	{
-		name = "Arthas' Tears",
-		itemID = 8836,
-		category = "Herbalism",
-		minSkill = 220,
-		icon = "Interface\\Icons\\INV_Misc_Herb_13",
-		zones = { "Western Plaguelands", "Eastern Plaguelands", "Felwood" },
-		yields = "Arthas' Tears",
-		tips = "Common throughout the blighted soil of the Plaguelands."
-	},
-	{
-		name = "Sungrass",
-		itemID = 8838,
-		category = "Herbalism",
-		minSkill = 230,
-		icon = "Interface\\Icons\\INV_Misc_Herb_18",
-		zones = { "The Hinterlands", "Feralas", "Azshara", "Silithus", "Eastern Plaguelands" },
-		yields = "Sungrass",
-		tips = "Abundant across sunny clifftops in Hinterlands and Feralas."
-	},
-	{
-		name = "Blindweed",
-		itemID = 8839,
-		category = "Herbalism",
-		minSkill = 235,
-		icon = "Interface\\Icons\\INV_Misc_Herb_14",
-		zones = { "Swamp of Sorrows", "Zul'Farrak" },
-		yields = "Blindweed",
-		tips = "Extremely dense in the murky waters of Swamp of Sorrows."
-	},
-	{
-		name = "Ghost Mushroom",
-		itemID = 8845,
-		category = "Herbalism",
-		minSkill = 245,
-		icon = "Interface\\Icons\\INV_Mushroom_08",
-		zones = { "The Hinterlands (Jintha'Alor caves)", "Maraudon", "Dire Maul", "Zangarmarsh (Sporeggar caves)" },
-		yields = "Ghost Mushroom",
-		tips = "Spawns in damp underground tunnels and dungeon caves. Essential for Elixir of Shadow Power."
-	},
-	{
-		name = "Gromsblood",
-		itemID = 8846,
-		category = "Herbalism",
-		minSkill = 250,
-		icon = "Interface\\Icons\\INV_Misc_Herb_16",
-		zones = { "Felwood", "Blasted Lands", "Desolace (Mannoroc)", "Shadowmoon Valley" },
-		yields = "Gromsblood",
-		tips = "Grows exclusively in demon-corrupted soils. Essential for Mighty Rage and Elixir of the Mongoose."
-	},
-	{
-		name = "Golden Sansam",
-		itemID = 13463,
-		category = "Herbalism",
-		minSkill = 260,
-		icon = "Interface\\Icons\\INV_Misc_Herb_SansamRoot",
-		zones = { "Azshara", "Feralas", "Un'Goro Crater", "Felwood", "Eastern Plaguelands" },
-		yields = "Golden Sansam",
-		tips = "Found in mountainous level 50-60 zones."
-	},
-	{
-		name = "Dreamfoil",
-		itemID = 13464,
-		category = "Herbalism",
-		minSkill = 270,
-		icon = "Interface\\Icons\\INV_Misc_Herb_DreamFoil",
-		zones = { "Azshara", "Silithus", "Un'Goro Crater", "Felwood", "Eastern Plaguelands" },
-		yields = "Dreamfoil",
-		tips = "High demand for Major Mana and Flask of Supreme Power."
-	},
-	{
-		name = "Mountain Silversage",
-		itemID = 13465,
-		category = "Herbalism",
-		minSkill = 280,
-		icon = "Interface\\Icons\\INV_Misc_Herb_MountainSilversage",
-		zones = { "Winterspring", "Silithus", "Eastern Plaguelands", "Burning Steppes", "Un'Goro Crater" },
-		yields = "Mountain Silversage",
-		tips = "Spawns on jagged mountain ledges in high-level zones. Essential for Elixir of the Mongoose."
-	},
-	{
-		name = "Plaguebloom",
-		itemID = 13466,
-		category = "Herbalism",
-		minSkill = 285,
-		icon = "Interface\\Icons\\INV_Misc_Herb_PlagueBloom",
-		zones = { "Western Plaguelands", "Eastern Plaguelands", "Felwood" },
-		yields = "Plaguebloom",
-		tips = "Plaguelands road perimeter route is the classic farming loop for raiding consumables."
-	},
-	{
-		name = "Icecap",
-		itemID = 13467,
-		category = "Herbalism",
-		minSkill = 290,
-		icon = "Interface\\Icons\\INV_Misc_Herb_IceCap",
-		zones = { "Winterspring" },
-		yields = "Icecap",
-		tips = "Exclusive to the frozen tundra of Winterspring. Key ingredient for Greater Arcane Elixirs."
-	},
-	{
-		name = "Black Lotus",
-		itemID = 13468,
-		category = "Herbalism",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Misc_Herb_BlackLotus",
-		zones = { "Eastern Plaguelands", "Western Plaguelands", "Winterspring", "Silithus", "Burning Steppes" },
-		yields = "Black Lotus",
-		tips = "Pinnacle classic raid herbalism node with long respawn timers. Required for all major raid Flasks."
-	},
-	{
-		name = "Felweed",
-		itemID = 22785,
-		category = "Herbalism",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Misc_Herb_Felweed",
-		zones = { "Hellfire Peninsula", "Zangarmarsh", "Terokkar Forest", "Blade's Edge", "Nagrand" },
-		yields = "Felweed, Mote of Life, Fel Lotus",
-		tips = "The base herb of Outland, found everywhere across all 7 zones."
-	},
-	{
-		name = "Dreaming Glory",
-		itemID = 22786,
-		category = "Herbalism",
-		minSkill = 315,
-		icon = "Interface\\Icons\\INV_Misc_Herb_DreamingGlory",
-		zones = { "Terokkar Forest", "Nagrand", "Blade's Edge Mountains", "Netherstorm" },
-		yields = "Dreaming Glory, Mote of Life, Fel Lotus",
-		tips = "Abundant across open plains in Nagrand and Terokkar. Core ingredient for Super Healing Potions."
-	},
-	{
-		name = "Ragveil",
-		itemID = 22787,
-		category = "Herbalism",
-		minSkill = 325,
-		icon = "Interface\\Icons\\INV_Misc_Herb_Ragveil",
-		zones = { "Zangarmarsh" },
-		yields = "Ragveil, Mote of Life, Fel Lotus",
-		tips = "Spawns underneath giant mushroom stalks across Zangarmarsh."
-	},
-	{
-		name = "Terocone",
-		itemID = 22789,
-		category = "Herbalism",
-		minSkill = 325,
-		icon = "Interface\\Icons\\INV_Misc_Herb_Terocone",
-		zones = { "Terokkar Forest" },
-		yields = "Terocone, Mote of Life, Fel Lotus",
-		tips = "Found exclusively at the base of trees in Terokkar Forest. Essential for Elixir of Major Agility."
-	},
-	{
-		name = "Flame Cap",
-		itemID = 22788,
-		category = "Herbalism",
-		minSkill = 335,
-		icon = "Interface\\Icons\\INV_Misc_Herb_FlameCap",
-		zones = { "Zangarmarsh (around Sporeggar & Marshlight Lake)" },
-		yields = "Flame Cap",
-		tips = "Gives a Fire Spell Power & melee proc on consumption. High demand for Fire Mages and Warlocks."
-	},
-	{
-		name = "Ancient Lichen",
-		itemID = 22790,
-		category = "Herbalism",
-		minSkill = 340,
-		icon = "Interface\\Icons\\INV_Misc_Herb_AncientLichen",
-		zones = { "Underbog", "The Steamvault", "Mana-Tombs", "Sethekk Halls", "Auchenai Crypts" },
-		yields = "Ancient Lichen, Mote of Life, Fel Lotus",
-		tips = "Spawns inside Outland dungeon instances. Rogues and stealth druids can farm solo in Underbog."
-	},
-	{
-		name = "Netherbloom",
-		itemID = 22791,
-		category = "Herbalism",
-		minSkill = 350,
-		icon = "Interface\\Icons\\INV_Misc_Herb_Netherbloom",
-		zones = { "Netherstorm" },
-		yields = "Netherbloom, Mote of Life, Random Stat Buff on harvest, Fel Lotus",
-		tips = "Found across all purple floating dome islands in Netherstorm."
-	},
-	{
-		name = "Nightmare Vine",
-		itemID = 22792,
-		category = "Herbalism",
-		minSkill = 365,
-		icon = "Interface\\Icons\\INV_Misc_Herb_NightmareVine",
-		zones = { "Shadowmoon Valley" },
-		yields = "Nightmare Vine, Mote of Life, Fel Lotus",
-		tips = "Spawns near green lava fissures and demon strongholds in Shadowmoon Valley."
-	},
-	{
-		name = "Mana Thistle",
-		itemID = 22793,
-		category = "Herbalism",
-		minSkill = 375,
-		icon = "Interface\\Icons\\INV_Misc_Herb_ManaThistle",
-		zones = { "Netherstorm", "Shadowmoon Valley", "Terokkar Forest (Skettis plateau)", "Isle of Quel'Danas" },
-		yields = "Mana Thistle, Mote of Life, Fel Lotus",
-		tips = "Crown herb of TBC alchemy. Required for all TBC Flasks and Super Mana Potions."
+		id = 32468, -- Nethercite Ore
+		category = "MINING",
+		sources = {
+			{ type = "GATHER", skill = 350, zones = { 3520 } },
+		},
+		tipKey = "ATLAS_TIP_32468",
 	},
 
-	-- SKINNING & LEATHER (Skill 1 - 375)
+	-- Raw Gems (TBC Rare & Prospecting)
 	{
-		name = "Light Leather",
-		itemID = 2318,
-		category = "Skinning",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_01",
-		zones = { "Elwynn Forest", "Durotar", "Dun Morogh", "Westfall", "Loch Modan", "Darkshore", "Silverpine" },
-		yields = "Light Leather, Ruined Leather Scraps, Light Hide",
-		tips = "Skinned from level 1-20 beasts (wolves, boars, bears, cats)."
+		id = 23436, -- Living Ruby
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23436",
 	},
 	{
-		name = "Medium Leather",
-		itemID = 2319,
-		category = "Skinning",
-		minSkill = 75,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_02",
-		zones = { "Wetlands", "Duskwood", "Ashenvale", "Hillsbrad Foothills", "Redridge Mountains" },
-		yields = "Medium Leather, Medium Hide",
-		tips = "Skinned from level 20-30 crocolisks, spiders, raptors, and wolves."
+		id = 23437, -- Talasite
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23437",
 	},
 	{
-		name = "Heavy Leather",
-		itemID = 4234,
-		category = "Skinning",
-		minSkill = 150,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_03",
-		zones = { "Stranglethorn Vale", "Thousand Needles", "Desolace", "Arathi Highlands", "Dustwallow Marsh" },
-		yields = "Heavy Leather, Heavy Hide",
-		tips = "Stranglethorn Vale raptor and panther hunting camps provide constant leather."
+		id = 23438, -- Star of Elune
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23438",
 	},
 	{
-		name = "Thick Leather",
-		itemID = 4304,
-		category = "Skinning",
-		minSkill = 200,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_04",
-		zones = { "Feralas", "Tanaris", "The Hinterlands", "Azshara", "Badlands" },
-		yields = "Thick Leather, Thick Hide",
-		tips = "Skinned from level 40-50 yetis, gorillas, and basilisks."
+		id = 23439, -- Noble Topaz
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23439",
 	},
 	{
-		name = "Rugged Leather",
-		itemID = 8170,
-		category = "Skinning",
-		minSkill = 250,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_05",
-		zones = { "Winterspring", "Western Plaguelands", "Eastern Plaguelands", "Un'Goro Crater" },
-		yields = "Rugged Leather, Rugged Hide",
-		tips = "Winterspring yetis and Un'Goro dinosaurs provide steady 250-300 skillups."
+		id = 23440, -- Dawnstone
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23440",
 	},
 	{
-		name = "Devilsaur Leather",
-		itemID = 15417,
-		category = "Skinning",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Misc_MonsterScales_04",
-		zones = { "Un'Goro Crater" },
-		yields = "Devilsaur Leather",
-		tips = "Skinned from elite Devilsaurs roaming Un'Goro Crater. Required for Devilsaur Armor."
+		id = 23441, -- Nightseye
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23425, 23426 }, zones = { 3518, 3520, 3523, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23441",
 	},
 	{
-		name = "Knothide Leather",
-		itemID = 21887,
-		category = "Skinning",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Misc_LeatherScrap_07",
-		zones = { "Hellfire Peninsula", "Nagrand", "Terokkar Forest", "Blade's Edge Mountains" },
-		yields = "Knothide Leather, Knothide Leather Scraps, Fel Hide",
-		tips = "Nagrand Clefthoof and Talbuk herd grinding is the most prolific source of leather in TBC."
+		id = 23077, -- Blood Garnet
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3521, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23077",
 	},
 	{
-		name = "Fel Scales",
-		itemID = 25707,
-		category = "Skinning",
-		minSkill = 325,
-		icon = "Interface\\Icons\\INV_Misc_MonsterScales_06",
-		zones = { "Hellfire Peninsula", "Blade's Edge Mountains", "Shadowmoon Valley" },
-		yields = "Fel Scales",
-		tips = "Skinned from Outland basilisks, ravagers, and scorpid mobs."
+		id = 23079, -- Deep Peridot
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3521, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23079",
 	},
 	{
-		name = "Cobra Scales",
-		itemID = 29539,
-		category = "Skinning",
-		minSkill = 350,
-		icon = "Interface\\Icons\\INV_Misc_MonsterScales_08",
-		zones = { "Shadowmoon Valley", "Nagrand (Twilight Ridge)" },
-		yields = "Cobra Scales",
-		tips = "Skinned from Shadow Serpents in Shadowmoon Valley. Required for Nethercobra Leg Armor."
+		id = 23107, -- Shadow Draenite
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3521, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23107",
 	},
 	{
-		name = "Nether Dragonscales",
-		itemID = 29547,
-		category = "Skinning",
-		minSkill = 365,
-		icon = "Interface\\Icons\\INV_Misc_MonsterScales_09",
-		zones = { "Shadowmoon Valley (Netherwing Ledge)", "Blade's Edge Mountains" },
-		yields = "Nether Dragonscale",
-		tips = "Skinned from Nether Drakes and Netherwing Whelps. Required for Dragonstrike & endgame mail."
+		id = 23112, -- Golden Draenite
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3521, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23112",
 	},
 	{
-		name = "Wind Scales",
-		itemID = 29548,
-		category = "Skinning",
-		minSkill = 365,
-		icon = "Interface\\Icons\\INV_Misc_MonsterScales_10",
-		zones = { "Blade's Edge Mountains" },
-		yields = "Wind Scales",
-		tips = "Skinned from Scalewing Serpents in Blade's Edge Mountains. Used for Windscale Armor."
+		id = 23117, -- Azure Moonstone
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 300, fromItems = { 23424, 23425 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3521, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_23117",
+	},
+	{
+		id = 24243, -- Adamantite Powder
+		category = "MINING",
+		sources = {
+			{ type = "PROSPECT", spellID = 31252, skill = 325, fromItems = { 23425 } },
+		},
+		tipKey = "ATLAS_TIP_24243",
 	},
 
-	-- ELEMENTS & PRIMALS (Skill 1 - 375)
+	-- ========================================================================
+	-- 2. HERBALISM (Classic & TBC Herbs, Lotus, Byproducts)
+	-- ========================================================================
 	{
-		name = "Elemental Fire",
-		itemID = 7068,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Fire_Fire",
-		zones = { "Arathi Highlands (Circle of East Binding)", "Un'Goro Crater", "Searing Gorge", "Molten Core" },
-		yields = "Elemental Fire, Heart of Fire",
-		tips = "Drops from Burning Exiles in Arathi and Fire Elementals in Un'Goro. Essential for Greater Fire Protection."
+		id = 2447, -- Peacebloom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 1, zones = { 12, 14, 1, 85, 215, 141, 3430, 3524 } },
+		},
+		tipKey = "ATLAS_TIP_2447",
 	},
 	{
-		name = "Elemental Earth",
-		itemID = 7067,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Nature_StrengthOfEarthTotem02",
-		zones = { "Badlands", "Arathi Highlands", "Silithus", "Maraudon" },
-		yields = "Elemental Earth, Core of Earth",
-		tips = "Drops from Lesser Rock Elementals in Badlands and Earth Exiles in Arathi. Used for Greater Nature Protection."
+		id = 765, -- Silverleaf
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 1, zones = { 12, 14, 1, 85, 215, 141, 3430, 3524 } },
+		},
+		tipKey = "ATLAS_TIP_765",
 	},
 	{
-		name = "Elemental Water",
-		itemID = 7069,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Frost_SummonWaterElemental",
-		zones = { "Stranglethorn Vale", "Arathi Highlands", "Felwood", "Dustwallow Marsh" },
-		yields = "Elemental Water, Globe of Water",
-		tips = "Drops from Water Elementals along Arathi and Stranglethorn coastlines. Used for Greater Frost Protection."
+		id = 2449, -- Earthroot
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 15, zones = { 40, 14, 215, 38, 130, 44 } },
+		},
+		tipKey = "ATLAS_TIP_2449",
 	},
 	{
-		name = "Elemental Air",
-		itemID = 7070,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Nature_EarthBind",
-		zones = { "Silithus", "Arathi Highlands", "Westfall (Dust Devils)" },
-		yields = "Elemental Air, Breath of Wind",
-		tips = "Drops from Dust Stormers and Whirling Invaders in Silithus."
+		id = 785, -- Mageroyal
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 50, zones = { 40, 38, 130, 148, 14, 44 } },
+		},
+		yields = { 2453 },
+		tipKey = "ATLAS_TIP_785",
 	},
 	{
-		name = "Primal Fire",
-		itemID = 21884,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Fire_Volcano",
-		zones = { "Nagrand (Elemental Plateau)", "Blade's Edge Mountains", "Shadowmoon Valley (Hand of Gul'dan)" },
-		yields = "Mote of Fire (10x -> 1x Primal Fire)",
-		tips = "Drops from Raging Fire-Souls on the Elemental Plateau and Enraged Fire Spirits in Shadowmoon."
+		id = 2450, -- Briarthorn
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 70, zones = { 40, 38, 130, 148, 44, 267 } },
+		},
+		yields = { 2453 },
+		tipKey = "ATLAS_TIP_2450",
 	},
 	{
-		name = "Primal Water",
-		itemID = 21885,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Frost_FrostBolt02",
-		zones = { "Nagrand (Elemental Plateau / Lake Sunspring)", "Terokkar Forest (Skettis Lake)", "Zangarmarsh" },
-		yields = "Mote of Water (10x -> 1x Primal Water)",
-		tips = "Drops from Crashing Wave-Spirits and Skettis Surgers. Can also be fished from Pure Water pools."
+		id = 2453, -- Swiftthistle
+		category = "HERBALISM",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 785, 2450 }, zones = { 40, 38, 130, 148, 44 } },
+		},
+		tipKey = "ATLAS_TIP_2453",
 	},
 	{
-		name = "Primal Earth",
-		itemID = 22452,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Nature_NatureTouchGrow",
-		zones = { "Nagrand (Elemental Plateau)", "Blade's Edge Mountains", "Shadowmoon Valley" },
-		yields = "Mote of Earth (10x -> 1x Primal Earth)",
-		tips = "Drops from Shattered Rumblers in Nagrand and is a byproduct of mining all Outland ores."
+		id = 3820, -- Stranglekelp
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 85, zones = { 40, 148, 331, 11, 33 } },
+		},
+		tipKey = "ATLAS_TIP_3820",
 	},
 	{
-		name = "Primal Air",
-		itemID = 22451,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Nature_Cyclone",
-		zones = { "Nagrand (Elemental Plateau)", "Shadowmoon Valley (Altar of Sha'tar)" },
-		yields = "Mote of Air (10x -> 1x Primal Air)",
-		tips = "Drops from Storming Wind-Rippers on the Elemental Plateau and Enraged Air Spirits."
+		id = 2452, -- Bruiseweed
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 100, zones = { 44, 11, 10, 331, 267, 406 } },
+		},
+		tipKey = "ATLAS_TIP_2452",
 	},
 	{
-		name = "Primal Life",
-		itemID = 21886,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Misc_Herb_Felweed",
-		zones = { "Zangarmarsh", "Terokkar Forest", "Blade's Edge Mountains" },
-		yields = "Mote of Life (10x -> 1x Primal Life)",
-		tips = "Drops from Bog Lords, Fungal Giants, and is a byproduct of picking all Outland herbs."
+		id = 3355, -- Wild Steelbloom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 115, zones = { 45, 267, 331, 10, 400, 3 } },
+		},
+		tipKey = "ATLAS_TIP_3355",
 	},
 	{
-		name = "Primal Mana",
-		itemID = 22457,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Arcane_PortalIronForge",
-		zones = { "Netherstorm" },
-		yields = "Mote of Mana (10x -> 1x Primal Mana)",
-		tips = "Drops from Mana Seekers, Mage Wraiths, and Phase Hunters in Netherstorm."
+		id = 3356, -- Grave Moss
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 120, zones = { 10, 405, 45, 11 } },
+		},
+		tipKey = "ATLAS_TIP_3356",
 	},
 	{
-		name = "Primal Shadow",
-		itemID = 22456,
-		category = "Elemental",
-		minSkill = 1,
-		icon = "Interface\\Icons\\Spell_Shadow_ShadowBolt",
-		zones = { "Terokkar Forest (Skettis)", "Nagrand (Kil'sorrow Fortress)", "Shadowmoon Valley" },
-		yields = "Mote of Shadow (10x -> 1x Primal Shadow)",
-		tips = "Drops from Terokkar Shadowmancers, Void Ekes, and Dark Conclave cultists."
+		id = 3357, -- Kingsblood
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 125, zones = { 45, 33, 267, 10, 11, 15, 400 } },
+		},
+		tipKey = "ATLAS_TIP_3357",
+	},
+	{
+		id = 3358, -- Liferoot
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 150, zones = { 33, 11, 267, 45, 47 } },
+		},
+		tipKey = "ATLAS_TIP_3358",
+	},
+	{
+		id = 3818, -- Fadeleaf
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 160, zones = { 33, 3, 45, 15, 357 } },
+		},
+		tipKey = "ATLAS_TIP_3818",
+	},
+	{
+		id = 3821, -- Goldthorn
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 170, zones = { 33, 45, 47, 15, 357 } },
+		},
+		tipKey = "ATLAS_TIP_3821",
+	},
+	{
+		id = 3369, -- Khadgar's Whisker
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 185, zones = { 33, 45, 47, 15, 357 } },
+		},
+		tipKey = "ATLAS_TIP_3369",
+	},
+	{
+		id = 3819, -- Wintersbite
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 195, zones = { 41 } },
+		},
+		tipKey = "ATLAS_TIP_3819",
+	},
+	{
+		id = 4625, -- Firebloom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 205, zones = { 440, 51, 3, 4 } },
+		},
+		tipKey = "ATLAS_TIP_4625",
+	},
+	{
+		id = 8831, -- Purple Lotus
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 210, zones = { 440, 357, 16, 47 } },
+		},
+		yields = { 8153 },
+		tipKey = "ATLAS_TIP_8831",
+	},
+	{
+		id = 8153, -- Wildvine
+		category = "HERBALISM",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 8831 }, zones = { 440, 357, 16, 47 } },
+			{ type = "MOB_DROP", mobType = "Trolls", mobLevel = "35-50", zones = { 33, 47 } },
+		},
+		tipKey = "ATLAS_TIP_8153",
+	},
+	{
+		id = 8836, -- Arthas' Tears
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 220, zones = { 28, 139, 361 } },
+		},
+		tipKey = "ATLAS_TIP_8836",
+	},
+	{
+		id = 8838, -- Sungrass
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 230, zones = { 357, 47, 16, 361, 490 } },
+		},
+		tipKey = "ATLAS_TIP_8838",
+	},
+	{
+		id = 8839, -- Blindweed
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 235, zones = { 15, 33 } },
+		},
+		tipKey = "ATLAS_TIP_8839",
+	},
+	{
+		id = 8845, -- Ghost Mushroom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 245, zones = { 47, 361, 490 } },
+		},
+		tipKey = "ATLAS_TIP_8845",
+	},
+	{
+		id = 8846, -- Gromsblood
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 250, zones = { 361, 405, 4, 3483 } },
+		},
+		tipKey = "ATLAS_TIP_8846",
+	},
+	{
+		id = 13464, -- Golden Sansam
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 260, zones = { 490, 361, 357, 16 } },
+		},
+		tipKey = "ATLAS_TIP_13464",
+	},
+	{
+		id = 13463, -- Dreamfoil
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 270, zones = { 361, 490, 16, 618 } },
+		},
+		tipKey = "ATLAS_TIP_13463",
+	},
+	{
+		id = 13465, -- Mountain Silversage
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 280, zones = { 618, 490, 361, 139 } },
+		},
+		tipKey = "ATLAS_TIP_13465",
+	},
+	{
+		id = 13466, -- Plaguebloom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 285, zones = { 28, 139, 361 } },
+		},
+		tipKey = "ATLAS_TIP_13466",
+	},
+	{
+		id = 13467, -- Icecap
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 290, zones = { 618 } },
+		},
+		tipKey = "ATLAS_TIP_13467",
+	},
+	{
+		id = 13468, -- Black Lotus
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 300, zones = { 618, 490, 139, 51 } },
+		},
+		tipKey = "ATLAS_TIP_13468",
+	},
+	{
+		id = 22785, -- Felweed
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 300, zones = { 3483, 3521, 3519, 3522, 3518, 3520 } },
+		},
+		yields = { 22794, 22575 },
+		tipKey = "ATLAS_TIP_22785",
+	},
+	{
+		id = 22786, -- Dreaming Glory
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 315, zones = { 3483, 3519, 3522, 3523 } },
+		},
+		yields = { 22794, 22576 },
+		tipKey = "ATLAS_TIP_22786",
+	},
+	{
+		id = 22787, -- Ragveil
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 325, zones = { 3521 } },
+		},
+		yields = { 22794 },
+		tipKey = "ATLAS_TIP_22787",
+	},
+	{
+		id = 22788, -- Flame Cap
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 335, zones = { 3521 } },
+		},
+		tipKey = "ATLAS_TIP_22788",
+	},
+	{
+		id = 22789, -- Terocone
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 325, zones = { 3519 } },
+		},
+		yields = { 22794 },
+		tipKey = "ATLAS_TIP_22789",
+	},
+	{
+		id = 22790, -- Ancient Lichen
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 340, zones = { 3521, 3519 } },
+		},
+		yields = { 22794 },
+		tipKey = "ATLAS_TIP_22790",
+	},
+	{
+		id = 22791, -- Netherbloom
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 350, zones = { 3523 } },
+		},
+		yields = { 22794, 22576 },
+		tipKey = "ATLAS_TIP_22791",
+	},
+	{
+		id = 22792, -- Nightmare Vine
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 365, zones = { 3520 } },
+		},
+		yields = { 22794, 22575 },
+		tipKey = "ATLAS_TIP_22792",
+	},
+	{
+		id = 22793, -- Mana Thistle
+		category = "HERBALISM",
+		sources = {
+			{ type = "GATHER", skill = 375, zones = { 3518, 3519, 3522, 3523, 3520 } },
+		},
+		yields = { 22794, 22576 },
+		tipKey = "ATLAS_TIP_22793",
+	},
+	{
+		id = 22794, -- Fel Lotus
+		category = "HERBALISM",
+		sources = {
+			{ type = "BYPRODUCT", fromItems = { 22785, 22786, 22787, 22789, 22790, 22791, 22792, 22793 }, zones = { 3483, 3521, 3519, 3518, 3522, 3523, 3520 } },
+		},
+		tipKey = "ATLAS_TIP_22794",
 	},
 
-	-- CLOTH (Skill 1 - 375)
+	-- ========================================================================
+	-- 3. SKINNING & LEATHER
+	-- ========================================================================
 	{
-		name = "Linen Cloth",
-		itemID = 2589,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Linen_01",
-		zones = { "Westfall", "Loch Modan", "Silverpine Forest", "Darkshore", "Barrens", "Deadmines" },
-		yields = "Linen Cloth",
-		tips = "Drops from level 5-18 humanoid enemies (defias, troggs, gnolls, murlocs)."
+		id = 2318, -- Light Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 1, zones = { 12, 14, 1, 85, 215, 148, 40 } },
+		},
+		tipKey = "ATLAS_TIP_2318",
 	},
 	{
-		name = "Wool Cloth",
-		itemID = 2592,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Wool_01",
-		zones = { "Redridge Mountains", "Wetlands", "Duskwood", "Ashenvale", "Hillsbrad Foothills", "Shadowfang Keep" },
-		yields = "Wool Cloth",
-		tips = "Drops from level 18-30 humanoids and undead."
+		id = 2319, -- Medium Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 100, zones = { 40, 10, 44, 267, 331, 11 } },
+		},
+		tipKey = "ATLAS_TIP_2319",
 	},
 	{
-		name = "Silk Cloth",
-		itemID = 4306,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Silk_01",
-		zones = { "Stranglethorn Vale", "Arathi Highlands", "Desolace", "Scarlet Monastery", "Razorfen Downs" },
-		yields = "Silk Cloth",
-		tips = "Scarlet Monastery (Cathedral & Armory) provides full bag loads of Silk per run."
+		id = 4234, -- Heavy Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 150, zones = { 45, 400, 33, 15, 405 } },
+		},
+		tipKey = "ATLAS_TIP_4234",
 	},
 	{
-		name = "Mageweave Cloth",
-		itemID = 4338,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Mageweave_01",
-		zones = { "Tanaris", "Feralas", "The Hinterlands", "Zul'Farrak", "Blackrock Depths" },
-		yields = "Mageweave Cloth",
-		tips = "Zul'Farrak graveyard zombies and Hinterlands troll temples yield dense stacks."
+		id = 4304, -- Thick Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 200, zones = { 33, 357, 47, 440, 490 } },
+		},
+		tipKey = "ATLAS_TIP_4304",
 	},
 	{
-		name = "Runecloth",
-		itemID = 14047,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Purple_01",
-		zones = { "Western Plaguelands", "Eastern Plaguelands", "Felwood", "Stratholme", "Scholomance" },
-		yields = "Runecloth",
-		tips = "Stratholme Live/Undead side and Eastern Plaguelands undead camps."
+		id = 8170, -- Rugged Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 250, zones = { 490, 618, 361, 139, 28 } },
+		},
+		tipKey = "ATLAS_TIP_8170",
 	},
 	{
-		name = "Felcloth",
-		itemID = 14256,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Felcloth_01",
-		zones = { "Felwood (Jadefire Glen)", "Azshara (Legash Encampment)", "Dire Maul East" },
-		yields = "Felcloth",
-		tips = "Drops from level 50-60 satyrs and demons. Essential for Mooncloth and Warlock robes."
+		id = 15415, -- Devilsaur Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 260, zones = { 490 } },
+		},
+		tipKey = "ATLAS_TIP_15415",
 	},
 	{
-		name = "Netherweave Cloth",
-		itemID = 21877,
-		category = "Cloth",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Fabric_Netherweave",
-		zones = { "Hellfire Peninsula", "Zangarmarsh", "Terokkar Forest", "Netherstorm", "Shadowmoon Valley" },
-		yields = "Netherweave Cloth",
-		tips = "Drops from all humanoid Outland enemies (Orcs, Blood Elves, Broken, Ogres)."
+		id = 25707, -- Knothide Leather Scraps
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 300, zones = { 3483, 3521 } },
+		},
+		tipKey = "ATLAS_TIP_25707",
+	},
+	{
+		id = 21887, -- Knothide Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 300, zones = { 3483, 3521, 3519, 3518, 3522 } },
+			{ type = "COMBINE", count = 5, fromItem = 25707 },
+		},
+		tipKey = "ATLAS_TIP_21887",
+	},
+	{
+		id = 25708, -- Thick Clefthoof Leather
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 330, zones = { 3518, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_25708",
+	},
+	{
+		id = 25700, -- Fel Scales
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 340, zones = { 3483, 3520 } },
+		},
+		tipKey = "ATLAS_TIP_25700",
+	},
+	{
+		id = 29539, -- Cobra Scales
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 350, zones = { 3518, 3520 } },
+		},
+		tipKey = "ATLAS_TIP_29539",
+	},
+	{
+		id = 29547, -- Wind Scales
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 360, zones = { 3522 } },
+		},
+		tipKey = "ATLAS_TIP_29547",
+	},
+	{
+		id = 29548, -- Nether Dragonscales
+		category = "SKINNING",
+		sources = {
+			{ type = "GATHER", skill = 365, zones = { 3522, 3520, 3523 } },
+		},
+		tipKey = "ATLAS_TIP_29548",
 	},
 
-	-- FISHING (Skill 1 - 375)
+	-- ========================================================================
+	-- 4. CLOTH (Humanoid Mob Farming)
+	-- ========================================================================
 	{
-		name = "Brilliant Smallfish & Longjaw Mud Snapper",
-		itemID = 6291,
-		category = "Fishing",
-		minSkill = 1,
-		icon = "Interface\\Icons\\INV_Misc_Fish_04",
-		zones = { "Elwynn Forest", "Durotar", "Dun Morogh", "Tirisfal Glades", "Mulgore", "Teldrassil" },
-		yields = "Raw Brilliant Smallfish, Raw Longjaw Mud Snapper",
-		tips = "Found in all starting area lakes, rivers, and coastal shallows."
+		id = 2589, -- Linen Cloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "5-15", zones = { 12, 14, 1, 85, 40, 130 } },
+		},
+		tipKey = "ATLAS_TIP_2589",
 	},
 	{
-		name = "Bristle Whisker Catfish",
-		itemID = 6308,
-		category = "Fishing",
-		minSkill = 50,
-		icon = "Interface\\Icons\\INV_Misc_Fish_10",
-		zones = { "Westfall", "Loch Modan", "Silverpine Forest", "Redridge Mountains", "Barrens" },
-		yields = "Raw Bristle Whisker Catfish",
-		tips = "Inland rivers and canals in level 15-25 zones."
+		id = 2592, -- Wool Cloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "15-25", zones = { 40, 38, 130, 44, 148, 331 } },
+		},
+		tipKey = "ATLAS_TIP_2592",
 	},
 	{
-		name = "Mithril Head Trout",
-		itemID = 8364,
-		category = "Fishing",
-		minSkill = 100,
-		icon = "Interface\\Icons\\INV_Misc_Fish_19",
-		zones = { "Arathi Highlands", "Stranglethorn Vale", "Ashenvale", "Hillsbrad Foothills", "Wetlands" },
-		yields = "Raw Mithril Head Trout",
-		tips = "Inland lakes and rivers in level 30-40 zones."
+		id = 4306, -- Silk Cloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "25-40", zones = { 267, 10, 45, 400, 33 } },
+		},
+		tipKey = "ATLAS_TIP_4306",
 	},
 	{
-		name = "Raw Nightfin Snapper",
-		itemID = 13759,
-		category = "Fishing",
-		minSkill = 150,
-		icon = "Interface\\Icons\\INV_Misc_Fish_12",
-		zones = { "Feralas (Jademir Lake)", "Moonglade", "Duskwood", "Azshara", "Felwood" },
-		yields = "Raw Nightfin Snapper (Nightfin Soup: +8 MP5)",
-		tips = "Fished predominantly between 6:00 PM and 6:00 AM server time. Essential MP5 food for healers."
+		id = 4338, -- Mageweave Cloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "40-50", zones = { 440, 47, 357, 33, 405 } },
+		},
+		tipKey = "ATLAS_TIP_4338",
 	},
 	{
-		name = "Raw Sunscale Salmon",
-		itemID = 13758,
-		category = "Fishing",
-		minSkill = 150,
-		icon = "Interface\\Icons\\INV_Misc_Fish_15",
-		zones = { "Feralas", "The Hinterlands", "Azshara", "Felwood" },
-		yields = "Raw Sunscale Salmon (Poached Sunscale: +6 HP5)",
-		tips = "Fished predominantly between 6:00 AM and 6:00 PM server time."
+		id = 14047, -- Runecloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "50-60", zones = { 139, 28, 361, 618, 4 } },
+		},
+		tipKey = "ATLAS_TIP_14047",
 	},
 	{
-		name = "Winter Squid",
-		itemID = 13755,
-		category = "Fishing",
-		minSkill = 205,
-		icon = "Interface\\Icons\\INV_Misc_Fish_13",
-		zones = { "Azshara (Bay of Storms)", "Tanaris (Steamwheedle Port)", "Feralas Coast" },
-		yields = "Winter Squid (Grilled Squid: +10 Agility)",
-		tips = "Fished from coastal ocean waters, primarily available during winter months (September to March)."
+		id = 14256, -- Felcloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Demon", mobLevel = "50-60", zones = { 361, 16, 4 } },
+		},
+		tipKey = "ATLAS_TIP_14256",
 	},
 	{
-		name = "Raw Greater Sagefish",
-		itemID = 21151,
-		category = "Fishing",
-		minSkill = 225,
-		icon = "Interface\\Icons\\INV_Misc_Fish_08",
-		zones = { "Alterac Mountains", "Silithus", "Western Plaguelands", "Felwood", "Un'Goro Crater" },
-		yields = "Raw Greater Sagefish (Sagefish Delight: +6 MP5)",
-		tips = "Fished from Sagefish School pools in inland freshwater lakes."
+		id = 21877, -- Netherweave Cloth
+		category = "CLOTH",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Humanoid", mobLevel = "60-70", zones = { 3483, 3521, 3519, 3522, 3523, 3520 } },
+		},
+		tipKey = "ATLAS_TIP_21877",
+	},
+
+	-- ========================================================================
+	-- 5. ELEMENTAL & PRIMALS (Mobs, Gas Clouds, Transmutes, Fishing)
+	-- ========================================================================
+	{
+		id = 22574, -- Mote of Fire
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Elemental", mobLevel = "65-70", zones = { 3522, 3520 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3522, 3520 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23426 }, zones = { 3483, 3520 } },
+		},
+		yields = { 21884 },
+		tipKey = "ATLAS_TIP_22574",
 	},
 	{
-		name = "Spotted Feltail",
-		itemID = 27422,
-		category = "Fishing",
-		minSkill = 300,
-		icon = "Interface\\Icons\\INV_Misc_Fish_21",
-		zones = { "Terokkar Forest", "Zangarmarsh", "Hellfire Peninsula (Pools of Aggonar)" },
-		yields = "Spotted Feltail (Feltail Delight: +20 Stamina & Spirit)",
-		tips = "Common in all Outland freshwater lakes and Feltail School pools."
+		id = 21884, -- Primal Fire
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22574 },
+			{ type = "TRANSMUTE", spellID = 28567, cooldown = "20h", fromItems = { 21885 } },
+		},
+		tipKey = "ATLAS_TIP_21884",
 	},
 	{
-		name = "Golden Darter",
-		itemID = 27435,
-		category = "Fishing",
-		minSkill = 350,
-		icon = "Interface\\Icons\\INV_Misc_Fish_24",
-		zones = { "Terokkar Forest (Tuurem rivers and Skettis lakes)" },
-		yields = "Golden Darter (Golden Fish Sticks: +44 Healing & +15 Spell Damage)",
-		tips = "Golden Darter School pools along Terokkar rivers. Premier healing buff food for TBC raiding."
+		id = 22578, -- Mote of Water
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Elemental", mobLevel = "62-70", zones = { 3521, 3518 } },
+			{ type = "FISH", skill = 350, school = "Pure Water", zones = { 3518, 3519 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3521 } },
+		},
+		yields = { 21885 },
+		tipKey = "ATLAS_TIP_22578",
 	},
 	{
-		name = "Furious Crawdad",
-		itemID = 27425,
-		category = "Fishing",
-		minSkill = 375,
-		icon = "Interface\\Icons\\INV_Misc_MonsterClaw_03",
-		zones = { "Terokkar Forest (Highland Mixed School pools - Flying Mount Required)" },
-		yields = "Furious Crawdad (Spicy Crawdad: +30 Stamina & Spirit)",
-		tips = "Located in high mountainous lake craters in Terokkar (Blackwind Lake, Lake Jorune). Premier tank buff food."
+		id = 21885, -- Primal Water
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22578 },
+		},
+		tipKey = "ATLAS_TIP_21885",
+	},
+	{
+		id = 22572, -- Mote of Air
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Elemental", mobLevel = "64-67", zones = { 3518, 3520 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3518 } },
+		},
+		yields = { 22451 },
+		tipKey = "ATLAS_TIP_22572",
+	},
+	{
+		id = 22451, -- Primal Air
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22572 },
+		},
+		tipKey = "ATLAS_TIP_22451",
+	},
+	{
+		id = 22573, -- Mote of Earth
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Elemental", mobLevel = "64-67", zones = { 3518, 3522 } },
+			{ type = "BYPRODUCT", fromItems = { 23424, 23425 }, zones = { 3483, 3518, 3522 } },
+		},
+		yields = { 22452 },
+		tipKey = "ATLAS_TIP_22573",
+	},
+	{
+		id = 22452, -- Primal Earth
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22573 },
+		},
+		tipKey = "ATLAS_TIP_22452",
+	},
+	{
+		id = 22575, -- Mote of Life
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Bog Lord", mobLevel = "62-65", zones = { 3521 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3521 } },
+			{ type = "BYPRODUCT", fromItems = { 22785, 22792 }, zones = { 3483, 3520 } },
+		},
+		yields = { 21886 },
+		tipKey = "ATLAS_TIP_22575",
+	},
+	{
+		id = 21886, -- Primal Life
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22575 },
+		},
+		tipKey = "ATLAS_TIP_21886",
+	},
+	{
+		id = 22577, -- Mote of Shadow
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Demon", mobLevel = "64-70", zones = { 3483, 3518, 3523, 3520 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3520 } },
+		},
+		yields = { 22456 },
+		tipKey = "ATLAS_TIP_22577",
+	},
+	{
+		id = 22456, -- Primal Shadow
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22577 },
+		},
+		tipKey = "ATLAS_TIP_22456",
+	},
+	{
+		id = 22576, -- Mote of Mana
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Mana Aberration", mobLevel = "67-70", zones = { 3523 } },
+			{ type = "EXTRACT", device = 23821, skill = 305, zones = { 3523 } },
+			{ type = "BYPRODUCT", fromItems = { 22786, 22791, 22793 }, zones = { 3523, 3519 } },
+		},
+		yields = { 22457 },
+		tipKey = "ATLAS_TIP_22576",
+	},
+	{
+		id = 22457, -- Primal Mana
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "COMBINE", count = 10, fromItem = 22576 },
+		},
+		tipKey = "ATLAS_TIP_22457",
+	},
+	{
+		id = 23571, -- Primal Might
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "TRANSMUTE", spellID = 28566, cooldown = "20h", fromItems = { 22452, 21885, 22451, 21884, 22457 } },
+		},
+		tipKey = "ATLAS_TIP_23571",
+	},
+	{
+		id = 23572, -- Primal Nether
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "INSTANCE", dungeon = "Heroic Dungeons (End Bosses)", raid = "Karazhan, Gruul, Magtheridon" },
+			{ type = "VENDOR", cost = "10x Badges of Justice (G'eras, Shattrath)" },
+		},
+		tipKey = "ATLAS_TIP_23572",
+	},
+	{
+		id = 30183, -- Nether Vortex
+		category = "ELEMENTAL",
+		sources = {
+			{ type = "INSTANCE", raid = "Serpentshrine Cavern & Tempest Keep" },
+			{ type = "VENDOR", cost = "15x Badges of Justice" },
+		},
+		tipKey = "ATLAS_TIP_30183",
+	},
+
+	-- ========================================================================
+	-- 6. ENCHANTING (Disenchanting Tables)
+	-- ========================================================================
+	{
+		id = 10940, -- Strange Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "1-20" },
+		},
+		tipKey = "ATLAS_TIP_10940",
+	},
+	{
+		id = 11083, -- Soul Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "21-30" },
+		},
+		tipKey = "ATLAS_TIP_11083",
+	},
+	{
+		id = 11137, -- Vision Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "31-40" },
+		},
+		tipKey = "ATLAS_TIP_11137",
+	},
+	{
+		id = 11176, -- Dream Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "41-50" },
+		},
+		tipKey = "ATLAS_TIP_11176",
+	},
+	{
+		id = 16204, -- Illusion Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "51-60" },
+		},
+		tipKey = "ATLAS_TIP_16204",
+	},
+	{
+		id = 22445, -- Arcane Dust
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "58-70" },
+		},
+		tipKey = "ATLAS_TIP_22445",
+	},
+	{
+		id = 22447, -- Lesser Planar Essence
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "58-65" },
+		},
+		tipKey = "ATLAS_TIP_22447",
+	},
+	{
+		id = 22446, -- Greater Planar Essence
+		category = "ENCHANTING",
+		sources = {
+			{ type = "COMBINE", count = 3, fromItem = 22447 },
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 2, itemLevels = "65-70" },
+		},
+		tipKey = "ATLAS_TIP_22446",
+	},
+	{
+		id = 22448, -- Small Prismatic Shard
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 3, itemLevels = "58-66" },
+		},
+		tipKey = "ATLAS_TIP_22448",
+	},
+	{
+		id = 22449, -- Large Prismatic Shard
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 3, itemLevels = "67-70" },
+		},
+		tipKey = "ATLAS_TIP_22449",
+	},
+	{
+		id = 22450, -- Void Crystal
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 4, itemLevels = "100-141" },
+		},
+		tipKey = "ATLAS_TIP_22450",
+	},
+	{
+		id = 20725, -- Nexus Crystal
+		category = "ENCHANTING",
+		sources = {
+			{ type = "DISENCHANT", spellID = 13262, itemQuality = 4, itemLevels = "60-80" },
+		},
+		tipKey = "ATLAS_TIP_20725",
+	},
+
+	-- ========================================================================
+	-- 7. COOKING MEATS & SPECIALIZED FISHING
+	-- ========================================================================
+	{
+		id = 27671, -- Clefthoof Meat
+		category = "COOKING",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Clefthoof", mobLevel = "64-67", zones = { 3518, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_27671",
+	},
+	{
+		id = 27677, -- Ravager Flesh
+		category = "COOKING",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Ravager", mobLevel = "60-67", zones = { 3483, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_27677",
+	},
+	{
+		id = 27682, -- Talbuk Venison
+		category = "COOKING",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Talbuk", mobLevel = "64-66", zones = { 3518 } },
+		},
+		tipKey = "ATLAS_TIP_27682",
+	},
+	{
+		id = 27681, -- Warpstalker Meat
+		category = "COOKING",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Warpstalker", mobLevel = "63-70", zones = { 3519, 3523 } },
+		},
+		tipKey = "ATLAS_TIP_27681",
+	},
+	{
+		id = 27674, -- Basilisk Meat
+		category = "COOKING",
+		sources = {
+			{ type = "MOB_DROP", mobType = "Basilisk", mobLevel = "63-67", zones = { 3519, 3522 } },
+		},
+		tipKey = "ATLAS_TIP_27674",
+	},
+	{
+		id = 27432, -- Furious Crawdad
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 430, school = "Highland Mixed School", zones = { 3519 } },
+		},
+		tipKey = "ATLAS_TIP_27432",
+	},
+	{
+		id = 27434, -- Golden Darter
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 355, school = "Highland Mixed School / River", zones = { 3519 } },
+		},
+		tipKey = "ATLAS_TIP_27434",
+	},
+	{
+		id = 27431, -- Figlamp Fish
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 350, school = "Lake Pools", zones = { 3521, 3518 } },
+		},
+		tipKey = "ATLAS_TIP_27431",
+	},
+	{
+		id = 27429, -- Zangarian Sporefish
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 320, school = "Sporefish School", zones = { 3521 } },
+		},
+		tipKey = "ATLAS_TIP_27429",
+	},
+	{
+		id = 6370, -- Oily Blackmouth
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 100, school = "Oily Blackmouth School", zones = { 40, 148, 11, 33 } },
+		},
+		tipKey = "ATLAS_TIP_6370",
+	},
+	{
+		id = 6371, -- Firefin Snapper
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 150, school = "Firefin Snapper School", zones = { 11, 45, 33, 440, 16 } },
+		},
+		tipKey = "ATLAS_TIP_6371",
+	},
+	{
+		id = 13422, -- Stonescale Eel
+		category = "FISHING",
+		sources = {
+			{ type = "FISH", skill = 205, school = "Stonescale Eel Swarm", zones = { 440, 357, 16 } },
+		},
+		tipKey = "ATLAS_TIP_13422",
 	},
 }
-
-local LOCALIZED_NODES_DE = {
-	["Copper Vein"] = "Kupfervorkommen",
-	["Tin Vein"] = "Zinnvorkommen",
-	["Silver Vein"] = "Silbervorkommen",
-	["Iron Deposit"] = "Eisenvorkommen",
-	["Gold Vein"] = "Goldvorkommen",
-	["Mithril Deposit"] = "Mithrilvorkommen",
-	["Truesilver Deposit"] = "Echtsilbervorkommen",
-	["Small Thorium Vein"] = "Kleines Thoriumvorkommen",
-	["Rich Thorium Vein"] = "Reiches Thoriumvorkommen",
-	["Dark Iron Deposit"] = "Dunkeleisenvorkommen",
-	["Fel Iron Deposit"] = "Teufelseisenvorkommen",
-	["Adamantite Deposit"] = "Adamantitvorkommen",
-	["Rich Adamantite Deposit"] = "Reiches Adamantitvorkommen",
-	["Khorium Vein"] = "Khoriumvorkommen",
-	["Nethercite Deposit"] = "Netherzitvorkommen",
-}
-
-local LOCALIZED_ZONES_DE = {
-	["Elwynn Forest"] = "Wald von Elwynn",
-	["Durotar"] = "Durotar",
-	["Dun Morogh"] = "Dun Morogh",
-	["Tirisfal Glades"] = "Tirisfal",
-	["Mulgore"] = "Mulgore",
-	["Darkshore"] = "Dunkelküste",
-	["Westfall"] = "Westfall",
-	["Loch Modan"] = "Loch Modan",
-	["Silverpine Forest"] = "Silberwald",
-	["Redridge Mountains"] = "Rotkammgebirge",
-	["Hillsbrad Foothills"] = "Vorgebirge des Hügellands",
-	["Wetlands"] = "Sumpfland",
-	["Duskwood"] = "Dämmerwald",
-	["Ashenvale"] = "Eschenwald",
-	["Arathi Highlands"] = "Arathihochland",
-	["Thousand Needles"] = "Tausend Nadeln",
-	["Badlands"] = "Ödland",
-	["Desolace"] = "Desolace",
-	["Stranglethorn Vale"] = "Schlingendorntal",
-	["Tanaris"] = "Tanaris",
-	["Searing Gorge"] = "Sengende Schlucht",
-	["The Hinterlands"] = "Hinterland",
-	["Felwood"] = "Teufelswald",
-	["Western Plaguelands"] = "Westliche Pestländer",
-	["Eastern Plaguelands"] = "Östliche Pestländer",
-	["Winterspring"] = "Winterquell",
-	["Burning Steppes"] = "Brennende Steppe",
-	["Blasted Lands"] = "Verwüstete Lande",
-	["Un'Goro Crater"] = "Krater von Un'Goro",
-	["Silithus"] = "Silithus",
-	["Hellfire Peninsula"] = "Höllenfeuerhalbinsel",
-	["Zangarmarsh"] = "Zangarmarschen",
-	["Terokkar Forest"] = "Wälder von Terokkar",
-	["Nagrand"] = "Nagrand",
-	["Blade's Edge Mountains"] = "Schergrat",
-	["Netherstorm"] = "Nethersturm",
-	["Shadowmoon Valley"] = "Schattenmondtal",
-	["Barrens"] = "Brachland",
-	["The Barrens"] = "Brachland",
-	["Feralas"] = "Feralas",
-	["Swamp of Sorrows"] = "Sümpfe des Elends",
-	["Dustwallow Marsh"] = "Düstermarschen",
-	["Stonetalon Mountains"] = "Steinkrallengebirge",
-	["Ghostlands"] = "Geisterlande",
-	["Eversong Woods"] = "Immersangwald",
-	["Bloodmyst Isle"] = "Blutmythosinsel",
-	["Azuremyst Isle"] = "Azurmythosinsel",
-	["Isle of Quel'Danas"] = "Insel von Quel'Danas",
-}
-
-local LOCALIZED_YIELDS_DE = {
-	["Copper Ore"] = "Kupfererz", ["Rough Stone"] = "Rauer Stein", ["Malachite"] = "Malachit", ["Tigerseye"] = "Tigerauge",
-	["Tin Ore"] = "Zinnerz", ["Coarse Stone"] = "Grober Stein", ["Lesser Moonstone"] = "Geringer Mondstein", ["Shadowgem"] = "Schattengemme",
-	["Silver Ore"] = "Silbererz", ["Iron Ore"] = "Eisenerz", ["Heavy Stone"] = "Schwerer Stein", ["Jade"] = "Jade",
-	["Gold Ore"] = "Golderz", ["Citrine"] = "Citrin", ["Mithril Ore"] = "Mithrilerz", ["Solid Stone"] = "Fester Stein",
-	["Aquamarine"] = "Aquamarin", ["Star Ruby"] = "Sternrubin", ["Truesilver Ore"] = "Echtsilbererz", ["Dark Iron Ore"] = "Dunkeleisenerz",
-	["Blood of the Mountain"] = "Blut des Berges", ["Black Vitriol"] = "Schwarzes Vitriol", ["Thorium Ore"] = "Thoriumerz",
-	["Dense Stone"] = "Verdichteter Stein", ["Blue Sapphire"] = "Blauer Saphir", ["Large Opal"] = "Großer Opal",
-	["Huge Emerald"] = "Riesiger Smaragd", ["Azerothian Diamond"] = "Azeroth-Diamant", ["Arcane Crystal"] = "Arkankristall",
-	["Fel Iron Ore"] = "Teufelseisenerz", ["Mote of Earth"] = "Erdpartikel", ["Mote of Fire"] = "Feuerpartikel",
-	["Adamantite Ore"] = "Adamantiterz", ["Adamantite Powder"] = "Adamantitpulver", ["Khorium Ore"] = "Khoriumerz",
-	["Nethercite Ore"] = "Netherziterz", ["Peacebloom"] = "Friedensblume", ["Silverleaf"] = "Silberblatt",
-	["Earthroot"] = "Erdwurzel", ["Mageroyal"] = "Maguskönigskraut", ["Briarthorn"] = "Wilddornrose",
-	["Stranglekelp"] = "Würgetang", ["Bruiseweed"] = "Beulengras", ["Wild Steelbloom"] = "Wilder Stahlstern",
-	["Grave Moss"] = "Grabmoos", ["Kingsblood"] = "Königsblut", ["Liferoot"] = "Lebenswurz",
-	["Fadeleaf"] = "Blassblatt", ["Goldthorn"] = "Golddorn", ["Khadgar's Whisker"] = "Khadgars Schnurrbart",
-	["Wintersbite"] = "Winterbiss", ["Firebloom"] = "Feuerblüte", ["Purple Lotus"] = "Lila Lotus",
-	["Arthas' Tears"] = "Arthas' Tränen", ["Sungrass"] = "Sonnengras", ["Blindweed"] = "Blindkraut",
-	["Ghost Mushroom"] = "Geisterpilz", ["Gromsblood"] = "Gromsblut", ["Golden Sansam"] = "Goldener Sansam",
-	["Dreamfoil"] = "Traumblatt", ["Mountain Silversage"] = "Bergsilbersalbei", ["Plaguebloom"] = "Pestblüte",
-	["Icecap"] = "Eiskappe", ["Black Lotus"] = "Schwarzer Lotus", ["Felweed"] = "Teufelsgras",
-	["Dreaming Glory"] = "Traumwinde", ["Ragveil"] = "Zottelkappe", ["Terocone"] = "Terofrucht",
-	["Ancient Lichen"] = "Urzeitliche Flechte", ["Netherbloom"] = "Netherblüte", ["Nightmare Vine"] = "Alptraumranke",
-	["Mana Thistle"] = "Manadistel", ["Ruined Leather Scraps"] = "Verdorbene Lederfetzen", ["Light Leather"] = "Leichtes Leder",
-	["Light Hide"] = "Leichter Balg", ["Medium Leather"] = "Mittleres Leder", ["Medium Hide"] = "Mittlerer Balg",
-	["Heavy Leather"] = "Schweres Leder", ["Heavy Hide"] = "Schwerer Balg", ["Thick Leather"] = "Dickes Leder",
-	["Thick Hide"] = "Dicker Balg", ["Rugged Leather"] = "Unverwüstliches Leder", ["Rugged Hide"] = "Unverwüstlicher Balg",
-	["Knothide Leather"] = "Knotenhautleder", ["Fel Scales"] = "Teufelsschuppen", ["Cobra Scales"] = "Kobraschuppen",
-	["Nether Dragonscales"] = "Netherdrachenschuppen",
-}
-
-function GSF.Atlas:GetZoneDisplayName(zoneName)
-	if not zoneName then return "" end
-	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
-	if lang == "deDE" and LOCALIZED_ZONES_DE[zoneName] then
-		return LOCALIZED_ZONES_DE[zoneName]
-	end
-	return zoneName
-end
-
-function GSF.Atlas:GetYieldsDisplayName(yieldsStr)
-	if not yieldsStr then return "" end
-	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
-	if lang ~= "deDE" then return yieldsStr end
-	local result = yieldsStr
-	for en, de in pairs(LOCALIZED_YIELDS_DE) do
-		result = result:gsub(en, de)
-	end
-	return result
-end
-
-function GSF.Atlas:GetTipsDisplayName(tipsStr)
-	if not tipsStr then return "" end
-	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
-	if lang ~= "deDE" then return tipsStr end
-	-- Localize common tip phrases
-	local t = tipsStr
-	t = t:gsub("Common in all starting zones along foothills and cave entrances%.", "Häufig in allen Startgebieten entlang von Berghängen und Höhleneingängen.")
-	t = t:gsub("Abundant around gnoll and murloc camps in level 15%-25 zones%.", "Reichlich um Gnoll- und Murloclager in Stufe 15-25 Gebieten vorhanden.")
-	t = t:gsub("Rare spawn replacing Tin Veins%.", "Seltener Spawn, der Zinnvorkommen ersetzt.")
-	t = t:gsub("Rare spawn replacing Iron Deposits%.", "Seltener Spawn, der Eisenvorkommen ersetzt.")
-	t = t:gsub("perimeter and Badlands valley are the most efficient loops%.", "und das Tal im Ödland bieten die effizientesten Farm-Routen.")
-	t = t:gsub("outer canyon and Tanaris desert perimeter have highest density%.", "äußerer Canyon und die Tanaris-Wüstenränder haben die höchste Dichte.")
-	return t
-end
-
-function GSF.Atlas:GetDisplayName(entry)
-	if not entry then return "" end
-	local lang = GSF.GetSelectedLanguage and GSF:GetSelectedLanguage() or GetLocale()
-	if lang == "deDE" and LOCALIZED_NODES_DE[entry.name] then
-		return LOCALIZED_NODES_DE[entry.name]
-	end
-	if entry.category == "Mining" then
-		return entry.name
-	end
-	if entry.itemID then
-		local itemName = GetItemInfo and GetItemInfo(entry.itemID)
-		if itemName and itemName ~= "" then
-			return itemName
-		end
-	end
-	return entry.name
-end
-
-function GSF.Atlas:GetItemDisplayName(entry)
-	if not entry then return "" end
-	if entry.itemID then
-		local itemName = GetItemInfo and GetItemInfo(entry.itemID)
-		if itemName and itemName ~= "" then
-			return itemName
-		end
-	end
-	if entry.yields then
-		local primary = entry.yields:match("^([^,]+)")
-		if primary and primary:trim() ~= "" then
-			local getYields = self.GetYieldsDisplayName or self.GetLocalizedYields
-			if getYields then
-				local primaryLoc = getYields(self, primary:trim()):match("^([^,]+)")
-				if primaryLoc and primaryLoc:trim() ~= "" then
-					return primaryLoc:trim()
-				end
-			end
-			return primary:trim()
-		end
-	end
-	return self:GetDisplayName(entry)
-end
-
-GSF.Atlas.GetLocalizedYields = GSF.Atlas.GetYieldsDisplayName
-
-function GSF.Atlas:GetAll()
-	return ATLAS_DB
-end
-
-function GSF.Atlas:GetByCategory(category)
-	if not category or category == "All" then
-		return ATLAS_DB
-	end
-
-	local results = {}
-	for _, entry in ipairs(ATLAS_DB) do
-		if entry.category:lower() == category:lower() then
-			table.insert(results, entry)
-		end
-	end
-	return results
-end
-
-function GSF.Atlas:Search(query, category)
-	if not query or query:trim() == "" then
-		return self:GetByCategory(category)
-	end
-
-	local lowerQ = query:lower():trim()
-	local filtered = self:GetByCategory(category)
-	local results = {}
-
-	for _, entry in ipairs(filtered) do
-		local dispName = self:GetDisplayName(entry):lower()
-		local match = false
-		if entry.name:lower():find(lowerQ, 1, true) or dispName:find(lowerQ, 1, true) then
-			match = true
-		elseif entry.yields:lower():find(lowerQ, 1, true) then
-			match = true
-		elseif entry.tips:lower():find(lowerQ, 1, true) then
-			match = true
-		else
-			for _, z in ipairs(entry.zones) do
-				if z:lower():find(lowerQ, 1, true) then
-					match = true
-					break
-				end
-			end
-		end
-
-		if match then
-			table.insert(results, entry)
-		end
-	end
-
-	return results
-end
-
-function GSF.Atlas:FindResource(name)
-	if not name then return nil end
-	local lower = name:lower():trim()
-	for _, entry in ipairs(ATLAS_DB) do
-		local dispName = self:GetDisplayName(entry):lower()
-		if entry.name:lower():find(lower, 1, true) or dispName:find(lower, 1, true) or entry.yields:lower():find(lower, 1, true) then
-			return entry
-		end
-	end
-	return nil
-end

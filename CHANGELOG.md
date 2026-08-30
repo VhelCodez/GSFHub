@@ -9,12 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned (Phase 3 - v1.3.0)
-- **Universal Resource Atlas & Multi-Source Gathering Compendium:** Decouple world nodes from inventory materials with pure Blizzard itemID relational schema.
-- **13 Polymorphic Acquisition Source Types:** Unified modeling for Gather, Prospect, Disenchant, Extract, Transmute, Smelt, Combine, Mob Drop, Fish, Byproduct, Vendor, Instance, and Container sources.
-- **Zero-String Multilingual Localization:** 100% dynamic localized name, icon, and zone resolution via client engine APIs (`GetItemInfo`, `C_Map.GetAreaInfo`, `GetSpellInfo`).
-- **Comprehensive Classic & TBC Catalog:** Complete dataset across Mining, Herbalism, Skinning, Disenchanting, Gas Clouds, Meats, Primals, and Raid Catalysts.
-- **Direct Downstream Integration:** Direct `itemID` binding for `GoalsHUD.lua` and `SupplyBounties.lua` 1-click requests.
+### Planned (Phase 4 - v1.4.0)
+- **Navigation Overhaul:** Hybrid Pinned + Overflow `[ ⋯ More ▼ ]` tab architecture with responsive horizontal wrapping.
+- **Cross-Character Account Cooldown Alarms:** Account-wide tracking and alarms for Alchemy transmutations, Tailoring cloth weaves, and Salt Shakers.
+- **Active Gatherer Radar:** Real-time presence broadcasts when guild members are farming specific zones.
+- **Universal Global Search:** Omni-search bar indexing recipes, materials, crafters, bounties, and surplus.
+
+---
+
+## [1.3.0] - 2026-08-30
+
+### Added
+- **Universal Resource Atlas (`AtlasEngine.lua`):** New dedicated atlas query engine and cache lifecycle manager supporting cross-discipline category matching, real-time localized search, and asynchronous item data cache priming on login.
+- **Pure ItemID Relational Catalog (`AtlasData.lua`):** 132 meticulously verified, relational catalog entries decoupled from static world node strings and keyed purely by Blizzard `itemID`.
+- **13 Polymorphic Acquisition Source Models:** Unified structured schema representing `GATHER`, `PROSPECT`, `DISENCHANT`, `EXTRACT`, `TRANSMUTE`, `SMELT`, `COMBINE`, `MOB_DROP`, `FISH`, `BYPRODUCT`, `INSTANCE`, and `VENDOR` sources.
+- **Zero-String Engine Localization:** Client API-based name, icon, spell, and zone resolution via `GetItemInfo()`, `GetSpellInfo()`, `GetItemSubClassInfo()`, and `C_Map.GetAreaInfo()` with quality color coding and interactive hyperlinks.
+- **Curated Strategic Farming Tips:** 90+ localized farming routes, deposit behaviors, and high-efficiency gathering notes across Classic Azeroth and Outland in English and German (`Locales/enUS.lua` and `Locales/deDE.lua`).
+- **Expanded Resource Categories:** Integrated dedicated tabs/filters for `Mining`, `Herbalism`, `Skinning`, `Cloth`, `Elemental / Primals`, `Enchanting`, `Engineering`, `Cooking & Meats`, and `Fishing`.
+
+### Changed
+- **Atlas UI Overhaul (`TabAtlas.lua`):** Re-engineered the Resource Atlas right details pane into a scrollable card container rendering multi-source acquisition breakdowns, clickable yields and byproduct tooltips, dynamic item tooltips on hover, and full quality-colored titles.
+- **Goals HUD ItemID Precision (`GoalsHUD.lua`):** Updated bag tracking logic (`CountItemInBags`) to strictly query exact `GetItemCount(itemID)` when `itemID` is present, eliminating ambiguous fuzzy text false positives.
 
 ---
 

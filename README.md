@@ -86,7 +86,7 @@
   - **Work Orders:** Active requests board, "+ New Work Order" dialog, and order editing for own open orders.
   - **Surplus Pool:** Guild material exchange and bag item listing modal.
   - **Drops & Wishlist:** Recent group recipe drops log and personal wishlist manager.
-  - **Resource Atlas:** 1–375 encyclopedic resource database with localized node names and 1-click Pin to HUD.
+  - **Resource Atlas:** 1–375 pure ID-driven encyclopedic catalog with 13 polymorphic acquisition sources (mining, herbalism, skinning, disenchanting, gas extraction, transmutes, mob drops, fishing), zero-string client API localization, and 1-click Pin to HUD.
   - **Roster & Sync:** Role badges, Main/Alt linking, sync statistics, and expanded guild member roster table.
   - **Settings (`[⚙]`):** Symmetrical 2x2 preferences grid featuring Language selector, minimap toggle, decoupled audio alerts, auto-scan on open, Goals HUD settings with position reset, and Data & Cache Management (Rebuild Guild Cache, Clear Character Data, Safe Full Reset).
 
@@ -106,8 +106,8 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 - **v1.2.5 (Released):** Multi-Guild & Solo Character Scope Isolation: Partitioned cache database by Guild and Solo scope keys, automated guild roster verification and non-guild member pruning, P2P network sync firewall, and per-character profession scoping.
 - **v1.2.6 (Released):** Character Scope Isolation for Wishlists & Goals: Partitioned recipe wishlists and personal goals by character key (`wishlistByChar` & `goalsByChar`), smart non-destructive legacy migration, and peer wishlist drop tracking.
 - **v1.2.7 (Released):** Settings Data & Cache Management Suite: Non-destructive guild cache rebuilder, active character data reset, safe ghost-order-preventing factory reset, symmetrical Settings view layout, and pure character scoping with complete elimination of legacy migration technical debt.
-- **v1.3.0 (Next Up):** Universal Resource Atlas & Multi-Source Gathering Compendium (Pure ID-driven relational schema, 13 polymorphic source types, cross-discipline filtering, and complete Classic & TBC gathering data).
-- **v1.4.0 (Planned):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
+- **v1.3.0 (Released):** Universal Resource Atlas & Multi-Source Gathering Compendium (Pure ID-driven relational schema, 13 polymorphic source types, cross-discipline filtering, and complete Classic & TBC gathering data).
+- **v1.4.0 (Next Up):** Navigation Overhaul (Hybrid Pinned + Overflow `[ ⋯ More ▼ ]`), Cross-Character Account Cooldown Alarms, Active Gatherer Radar & Universal Search.
 - **v1.5.0 (Planned):** Crafting Specializations, Specialization Planning with In-Game Quest Roadmaps, Shared Guild Cooldown Monitor.
 - **v1.6.0 (Planned):** TBC Guild Bank & Vault Suite (Silent Snapshot Scanner, Remote Mirror, Smart Tab Surplus Sync, Reserve Alerts).
 - **v1.7.0 (Planned):** Guild Intelligence, Macro Economy Analytics, Streamlined Stockpile Shortage Watcher & Activity Honor Roll.

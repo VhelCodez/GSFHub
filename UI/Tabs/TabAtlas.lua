@@ -4,7 +4,7 @@ local Tab = {}
 GSF.TabAtlas = Tab
 
 local selectedResource = nil
-local activeCategory = "All"
+local activeCategory = "ALL"
 local activeView = "ATLAS" -- "ATLAS" or "BOUNTIES"
 
 function Tab:Create(parent)
@@ -29,23 +29,30 @@ function Tab:Create(parent)
 	-- Category Filter Dropdown
 	local catDropdown = CreateFrame("Frame", "GSFAtlasCatDropdown", frame, "UIDropDownMenuTemplate")
 	catDropdown:SetPoint("LEFT", searchBox, "RIGHT", 4, -2)
-	UIDropDownMenu_SetWidth(catDropdown, 125)
-	UIDropDownMenu_SetText(catDropdown, GSF.L["CAT_ALL"] or "All Categories")
+	UIDropDownMenu_SetWidth(catDropdown, 130)
 	self.catDropdown = catDropdown
 
-	local categories = { "All", "Mining", "Herbalism", "Skinning", "Elemental", "Cloth", "Fishing" }
-	UIDropDownMenu_Initialize(catDropdown, function(self, level)
-		for _, cat in ipairs(categories) do
+	local function UpdateCatDropdownText()
+		local name = GSF.AtlasEngine and GSF.AtlasEngine:GetCategoryInfo(activeCategory)
+		UIDropDownMenu_SetText(catDropdown, name or activeCategory)
+	end
+	UpdateCatDropdownText()
+
+	UIDropDownMenu_Initialize(catDropdown, function(dropdown, level)
+		if not GSF.AtlasCategories then return end
+		for _, cat in ipairs(GSF.AtlasCategories) do
 			local info = UIDropDownMenu_CreateInfo()
-			info.text = GSF.L["CAT_" .. cat:upper()] or cat
-			info.value = cat
+			local catName, catIcon = GSF.AtlasEngine:GetCategoryInfo(cat.key)
+			info.text = catName
+			info.icon = catIcon
+			info.value = cat.key
 			info.func = function(btn)
 				activeCategory = btn.value
 				UIDropDownMenu_SetSelectedValue(catDropdown, btn.value)
-				UIDropDownMenu_SetText(catDropdown, GSF.L["CAT_" .. btn.value:upper()] or btn.value)
+				UpdateCatDropdownText()
 				Tab:Refresh()
 			end
-			info.checked = (activeCategory == cat)
+			info.checked = (activeCategory == cat.key)
 			UIDropDownMenu_AddButton(info, level)
 		end
 	end)
@@ -127,6 +134,10 @@ function Tab:Create(parent)
 	detailIcon:SetPoint("TOPLEFT", rightPane, "TOPLEFT", 15, -15)
 	self.detailIcon = detailIcon
 
+	local detailIconBtn = CreateFrame("Button", nil, rightPane)
+	detailIconBtn:SetAllPoints(detailIcon)
+	self.detailIconBtn = detailIconBtn
+
 	local detailTitle = rightPane:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
 	detailTitle:SetPoint("TOPLEFT", detailIcon, "TOPRIGHT", 12, -2)
 	detailTitle:SetText(GSF.L["SELECT_RESOURCE_PROMPT"] or "Select a resource to view farming data")
@@ -136,36 +147,42 @@ function Tab:Create(parent)
 	detailSub:SetPoint("TOPLEFT", detailTitle, "BOTTOMLEFT", 0, -4)
 	self.detailSub = detailSub
 
-	local zonesLabel = rightPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	zonesLabel:SetPoint("TOPLEFT", detailIcon, "BOTTOMLEFT", 0, -15)
-	zonesLabel:SetText(GSF.L["BEST_FARMING_ZONES"] or "Best Farming Locations:")
+	local rightScroll, rightContent = GSF.UI:CreateScrollList(rightPane, 420, 260)
+	rightScroll:SetPoint("TOPLEFT", rightPane, "TOPLEFT", 15, -65)
+	rightScroll:SetPoint("BOTTOMRIGHT", rightPane, "BOTTOMRIGHT", -15, 45)
+	self.rightScroll = rightScroll
+	self.rightContent = rightContent
+
+	local zonesLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	zonesLabel:SetPoint("TOPLEFT", rightContent, "TOPLEFT", 0, 0)
+	zonesLabel:SetText(GSF.L["SRC_SOURCES_HEADER"] or "Acquisition Sources:")
 	self.zonesLabel = zonesLabel
 
-	local zonesText = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	local zonesText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	zonesText:SetPoint("TOPLEFT", zonesLabel, "BOTTOMLEFT", 0, -5)
-	zonesText:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
+	zonesText:SetWidth(410)
 	zonesText:SetJustifyH("LEFT")
 	self.zonesText = zonesText
 
-	local yieldsLabel = rightPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local yieldsLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	yieldsLabel:SetPoint("TOPLEFT", zonesText, "BOTTOMLEFT", 0, -12)
-	yieldsLabel:SetText(GSF.L["RESOURCE_YIELDS"] or "Harvest Yields & Gems:")
+	yieldsLabel:SetText(GSF.L["RESOURCE_YIELDS"] or "Harvest Yields & Byproducts:")
 	self.yieldsLabel = yieldsLabel
 
-	local yieldsText = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	local yieldsText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	yieldsText:SetPoint("TOPLEFT", yieldsLabel, "BOTTOMLEFT", 0, -5)
-	yieldsText:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
+	yieldsText:SetWidth(410)
 	yieldsText:SetJustifyH("LEFT")
 	self.yieldsText = yieldsText
 
-	local tipsLabel = rightPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local tipsLabel = rightContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	tipsLabel:SetPoint("TOPLEFT", yieldsText, "BOTTOMLEFT", 0, -12)
 	tipsLabel:SetText(GSF.L["FARMING_TIPS"] or "Farming Route & Tips:")
 	self.tipsLabel = tipsLabel
 
-	local tipsText = rightPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	local tipsText = rightContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	tipsText:SetPoint("TOPLEFT", tipsLabel, "BOTTOMLEFT", 0, -5)
-	tipsText:SetPoint("RIGHT", rightPane, "RIGHT", -15, 0)
+	tipsText:SetWidth(410)
 	tipsText:SetJustifyH("LEFT")
 	self.tipsText = tipsText
 
@@ -379,7 +396,10 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 		local itemIcon = target.icon
 		if not itemIcon or itemIcon:find("INV_Misc_QuestionMark") then
 			local res = GSF.Atlas and GSF.Atlas:FindResource(target.item)
-			if res and res.icon then itemIcon = res.icon end
+			if res then
+				local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+				if d and d.icon then itemIcon = d.icon end
+			end
 		end
 		icon = itemIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
 		cat = target.category or "General"
@@ -394,16 +414,16 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 		initQty = tostring(target.target or "")
 		initNotes = target.notes or ""
 		modal.itemID = target.itemID
-	elseif target and target.category then
-		local nodeName = GSF.Atlas:GetDisplayName(target)
-		local itemName = GSF.Atlas.GetItemDisplayName and GSF.Atlas:GetItemDisplayName(target)
-		dispName = itemName or nodeName
-		icon = target.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+	elseif target and (target.id or target.itemID or target.category) then
+		local targetID = target.id or target.itemID
+		local details = targetID and GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(targetID)
+		dispName = (details and details.name) or GSF.Atlas:GetDisplayName(target)
+		icon = (details and details.icon) or target.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
 		cat = target.category or "General"
 		initTitle = dispName
 		initQty = ""
 		initNotes = ""
-		modal.itemID = target.itemID
+		modal.itemID = targetID
 	else
 		dispName = tostring(target or "")
 		icon = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -466,25 +486,139 @@ function Tab:SelectResource(res)
 	if self.pinBtn then self.pinBtn:Enable() end
 	if self.bountyBtn then self.bountyBtn:Enable() end
 
-	local dispName = GSF.Atlas:GetDisplayName(res)
-	local catLoc = GSF.L["CAT_" .. (res.category or ""):upper()] or res.category
-	local iconTex = res.icon
-	if res.itemID then
-		local _, _, _, _, _, _, _, _, _, t = GetItemInfo(res.itemID)
-		if t then iconTex = t end
-	end
-	self.detailIcon:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")
-	self.detailTitle:SetText(string.format("|cff%s%s|r", GSF.COLORS.PRIMARY, dispName))
-	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r", catLoc, res.minSkill or 1))
+	local details = GSF.AtlasEngine:GetItemDetails(res.id)
+	local color = ITEM_QUALITY_COLORS[details.quality] or { hex = "ffffffff" }
 
-	local zoneLines = {}
-	for _, z in ipairs(res.zones or {}) do
-		local zLoc = GSF.Atlas:GetZoneDisplayName(z)
-		table.insert(zoneLines, "• " .. zLoc)
+	self.detailIcon:SetTexture(details.icon)
+	if self.detailIconBtn then
+		self.detailIconBtn:SetScript("OnEnter", function(f)
+			GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+			if details.link then
+				GameTooltip:SetHyperlink(details.link)
+			else
+				GameTooltip:SetItemByID(res.id)
+			end
+			GameTooltip:Show()
+		end)
+		self.detailIconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	end
-	self.zonesText:SetText(#zoneLines > 0 and table.concat(zoneLines, "\n") or "None")
-	self.yieldsText:SetText(GSF.Atlas:GetYieldsDisplayName(res.yields) or "None")
-	self.tipsText:SetText(GSF.Atlas:GetTipsDisplayName(res.tips) or "No specific notes.")
+
+	self.detailTitle:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
+
+	local catName = GSF.AtlasEngine:GetCategoryInfo(res.category)
+	local minSkill = GSF.Atlas:GetMinSkill(res)
+	self.detailSub:SetText(string.format("%s  •  Min Skill: |cffffd100%d|r  •  ID: |cffaaaaaa%d|r", catName, minSkill, res.id))
+
+	-- Format Polymorphic Sources
+	local sourceLines = {}
+	if res.sources then
+		for _, src in ipairs(res.sources) do
+			if src.type == "GATHER" then
+				local zones = {}
+				for _, aId in ipairs(src.zones or {}) do
+					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+				end
+				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d):\n   %s", GSF.L["SRC_GATHER"] or "Gathering", src.skill or 1, zStr))
+			elseif src.type == "PROSPECT" then
+				local fromNames = {}
+				for _, fId in ipairs(src.fromItems or {}) do
+					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					table.insert(fromNames, d.link or string.format("Item #%d", fId))
+				end
+				local spellName = GetSpellInfo(31252) or "Prospecting"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", GSF.L["SRC_PROSPECT"] or "Prospecting", spellName, src.skill or 300, GSF.L["CRUSHED_FROM"] or "Crushed from 5x", table.concat(fromNames, ", ")))
+			elseif src.type == "DISENCHANT" then
+				local spellName = GetSpellInfo(13262) or "Disenchant"
+				local qName = src.itemQuality == 4 and "|cffa335eeEpic|r" or (src.itemQuality == 3 and "|cff0070ddRare|r" or "|cff1eff00Uncommon|r")
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", GSF.L["SRC_DISENCHANT"] or "Disenchanting", spellName, GSF.L["DISENCHANTED_FROM"] or "Disenchanted from items", qName, src.itemLevels or "1+"))
+			elseif src.type == "EXTRACT" then
+				local zones = {}
+				for _, aId in ipairs(src.zones or {}) do
+					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+				end
+				local zStr = #zones > 0 and table.concat(zones, ", ") or "Outland"
+				local devDetails = GSF.AtlasEngine:GetItemDetails(src.device or 23821)
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Engi %d):\n   %s: %s\n   %s", GSF.L["SRC_EXTRACT"] or "Gas Extraction", src.skill or 305, GSF.L["DEVICE_REQUIRED"] or "Tool", devDetails.link or "Zapthrottle Mote Extractor", zStr))
+			elseif src.type == "TRANSMUTE" then
+				local fromNames = {}
+				for _, fId in ipairs(src.fromItems or {}) do
+					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					table.insert(fromNames, d.link or string.format("Item #%d", fId))
+				end
+				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or "Transmute"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, %s Cooldown):\n   %s: %s", GSF.L["SRC_TRANSMUTE"] or "Transmutation", spellName, src.cooldown or "20h", GSF.L["REAGENTS"] or "Reagents", table.concat(fromNames, ", ")))
+			elseif src.type == "SMELT" then
+				local fromNames = {}
+				for _, fId in ipairs(src.fromItems or {}) do
+					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					table.insert(fromNames, d.link or string.format("Item #%d", fId))
+				end
+				local spellName = GetSpellInfo(2656) or "Smelt"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Skill %d):\n   %s: %s", GSF.L["SRC_SMELT"] or "Smelting", spellName, src.skill or 1, GSF.L["REAGENTS"] or "Reagents", table.concat(fromNames, ", ")))
+			elseif src.type == "COMBINE" then
+				local fromD = GSF.AtlasEngine:GetItemDetails(src.fromItem)
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %dx %s", GSF.L["SRC_COMBINE"] or "Combine", src.count or 10, fromD.link or "Reagent"))
+			elseif src.type == "MOB_DROP" then
+				local zones = {}
+				for _, aId in ipairs(src.zones or {}) do
+					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+				end
+				local zStr = #zones > 0 and table.concat(zones, ", ") or "World"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (%s, Lvl %s):\n   %s", GSF.L["SRC_MOB_DROP"] or "Creature Drop", src.mobType or "Mobs", src.mobLevel or "Any", zStr))
+			elseif src.type == "FISH" then
+				local zones = {}
+				for _, aId in ipairs(src.zones or {}) do
+					table.insert(zones, GSF.AtlasEngine:GetZoneName(aId))
+				end
+				local zStr = #zones > 0 and table.concat(zones, ", ") or "Waters"
+				table.insert(sourceLines, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", GSF.L["SRC_FISH"] or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
+			elseif src.type == "BYPRODUCT" then
+				local fromNames = {}
+				for _, fId in ipairs(src.fromItems or {}) do
+					local d = GSF.AtlasEngine:GetItemDetails(fId)
+					table.insert(fromNames, d.link or string.format("Item #%d", fId))
+				end
+				table.insert(sourceLines, string.format("|cffffd100• %s|r:\n   %s", GSF.L["SRC_BYPRODUCT"] or "Byproduct", table.concat(fromNames, ", ")))
+			elseif src.type == "INSTANCE" then
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s %s", GSF.L["SRC_INSTANCE"] or "Instance Drop", src.dungeon or "", src.raid or ""))
+			elseif src.type == "VENDOR" then
+				table.insert(sourceLines, string.format("|cffffd100• %s|r: %s", GSF.L["SRC_VENDOR"] or "Vendor Purchase", src.cost or ""))
+			end
+		end
+	end
+	self.zonesText:SetText(#sourceLines > 0 and table.concat(sourceLines, "\n\n") or (GSF.L["SRC_GATHER_DESC"] or "Farmed in the world."))
+
+	-- Format Yields
+	if res.yields and #res.yields > 0 then
+		local yieldLinks = {}
+		for _, yId in ipairs(res.yields) do
+			local yd = GSF.AtlasEngine:GetItemDetails(yId)
+			table.insert(yieldLinks, yd.link or string.format("Item #%d", yId))
+		end
+		self.yieldsText:SetText(table.concat(yieldLinks, "  •  "))
+		self.yieldsLabel:Show()
+		self.yieldsText:Show()
+	else
+		self.yieldsText:SetText("")
+		self.yieldsLabel:Hide()
+		self.yieldsText:Hide()
+	end
+
+	-- Format Farming Tips
+	local tip = (res.tipKey and GSF.L[res.tipKey]) or GSF.L["NO_SPECIFIC_TIPS"] or "No specific notes."
+	self.tipsText:SetText(tip)
+
+	-- Update Content Height
+	local totalHeight = 20 + self.zonesText:GetStringHeight()
+	if res.yields and #res.yields > 0 then
+		totalHeight = totalHeight + 25 + self.yieldsText:GetStringHeight()
+	end
+	totalHeight = totalHeight + 25 + self.tipsText:GetStringHeight() + 30
+	self.rightContent:SetHeight(math.max(totalHeight, 260))
+	if self.rightScroll and self.rightScroll.UpdateScrollBar then
+		self.rightScroll:UpdateScrollBar()
+	end
 end
 
 function Tab:UpdateTexts()
@@ -611,14 +745,24 @@ function Tab:RefreshAtlas()
 		end
 
 		row:SetPoint("TOPLEFT", self.leftContent, "TOPLEFT", 0, -yOffset)
-		local iconTex = res.icon
-		if res.itemID then
-			local _, _, _, _, _, _, _, _, _, t = GetItemInfo(res.itemID)
-			if t then iconTex = t end
-		end
-		row.icon:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")
-		row.name:SetText(GSF.Atlas:GetDisplayName(res))
-		row.skill:SetText(string.format("|cffffd100%d|r", res.minSkill or 1))
+		local details = GSF.AtlasEngine:GetItemDetails(res.id)
+		local color = ITEM_QUALITY_COLORS[details.quality] or { hex = "ffffffff" }
+
+		row.icon:SetTexture(details.icon)
+		row.name:SetText(string.format("|c%s%s|r", color.hex or "ffffffff", details.name))
+		local minSkill = GSF.Atlas:GetMinSkill(res)
+		row.skill:SetText(minSkill > 1 and string.format("|cffffd100%d|r", minSkill) or "")
+
+		row:SetScript("OnEnter", function(selfRow)
+			GameTooltip:SetOwner(selfRow, "ANCHOR_RIGHT")
+			if details.link then
+				GameTooltip:SetHyperlink(details.link)
+			else
+				GameTooltip:SetItemByID(res.id)
+			end
+			GameTooltip:Show()
+		end)
+		row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 		row:SetScript("OnClick", function()
 			Tab:SelectResource(res)
@@ -646,7 +790,18 @@ function Tab:RefreshAtlas()
 		if self.tipsText then self.tipsText:SetText("") end
 	else
 		if self.resourcesEmptyText then self.resourcesEmptyText:Hide() end
-		if not selectedResource and #resources > 0 then
+		local keepSelected = false
+		if selectedResource then
+			for _, r in ipairs(resources) do
+				if r.id == selectedResource.id then
+					keepSelected = true
+					break
+				end
+			end
+		end
+		if keepSelected then
+			self:SelectResource(selectedResource)
+		else
 			self:SelectResource(resources[1])
 		end
 	end
@@ -904,7 +1059,10 @@ function Tab:StartDraggingGoal(sourceIndex, goal)
 		end
 		if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
 			local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
-			if res and res.icon then iconTex = res.icon end
+			if res then
+				local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+				if d and d.icon then iconTex = d.icon end
+			end
 		end
 	end
 	ghost.icon:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -1214,7 +1372,10 @@ function Tab:RefreshGoals()
 			end
 			if not iconTex or iconTex:find("INV_Misc_QuestionMark") then
 				local res = GSF.Atlas and GSF.Atlas:FindResource(goal.material or goal.name)
-				if res and res.icon then iconTex = res.icon end
+				if res then
+					local d = GSF.AtlasEngine and GSF.AtlasEngine:GetItemDetails(res.id)
+					if d and d.icon then iconTex = d.icon end
+				end
 			end
 		end
 		row.icon:SetTexture(iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")

@@ -2,7 +2,7 @@
 ## Title: GSFHub |cff33ff99(Guild Self-Found Hub)|r
 ## Notes: Decentralized profession manager, crafting work orders, surplus exchange, recipe drops coordinator, 1-375 resource farming atlas, and guild supply chain for SSF/GSF guilds.
 ## Author: GSF Community
-## Version: 1.2.7
+## Version: 1.3.0
 ## SavedVariables: GSFHubDB, GSFHubCache
 ## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate
 ## DefaultState: enabled
@@ -33,6 +33,7 @@ Modules\Professions\RecipeBook.lua
 Modules\WorkOrders\WorkOrders.lua
 Modules\Surplus\SurplusExchange.lua
 Modules\Drops\RecipeDrops.lua
+Modules\Gathering\AtlasEngine.lua
 Modules\Gathering\AtlasData.lua
 Modules\SupplyChain\SupplyBounties.lua
 Modules\TradeMail\TradeHelper.lua
