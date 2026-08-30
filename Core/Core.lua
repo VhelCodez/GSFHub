@@ -90,47 +90,78 @@ function GSFHub:OnEnable()
 end
 
 function GSFHub:PLAYER_ENTERING_WORLD()
-	GSF.cache.realmName = GetRealmName()
-	local guild = GSF.DB:GetGuildName()
-	if guild then
-		GSF.cache.guildName = guild
+	local scopeKey, isGuild, scopeChanged = GSF.DB:UpdateScope()
+
+	if isGuild then
+		-- Request fresh guild roster from server
+		if C_GuildInfo and C_GuildInfo.GuildRoster then
+			C_GuildInfo.GuildRoster()
+		elseif GuildRoster then
+			GuildRoster()
+		end
+
 		if GSF.Sync then
 			-- Stagger initial sync to allow guild channel to connect
 			self:ScheduleTimer(function()
 				GSF.Sync:BroadcastHello()
 			end, 3)
 		end
-	else
-		GSF.cache.guildName = ""
+	end
+
+	if GSF.MainFrame and GSF.MainFrame:IsShown() then
+		GSF.MainFrame:RefreshCurrentTab()
 	end
 end
 
 function GSFHub:PLAYER_GUILD_UPDATE()
-	local guild = GSF.DB:GetGuildName()
-	if guild and guild ~= "" and guild ~= GSF.cache.guildName then
-		GSF.cache.guildName = guild
-		if GSF.Sync then
-			self:ScheduleTimer(function()
-				GSF.Sync:BroadcastHello()
-			end, 3)
+	local scopeKey, isGuild, scopeChanged = GSF.DB:UpdateScope()
+	if scopeChanged then
+		if isGuild then
+			if C_GuildInfo and C_GuildInfo.GuildRoster then
+				C_GuildInfo.GuildRoster()
+			elseif GuildRoster then
+				GuildRoster()
+			end
+
+			if GSF.Sync then
+				self:ScheduleTimer(function()
+					GSF.Sync:BroadcastHello()
+				end, 3)
+			end
 		end
-	elseif not guild then
-		GSF.cache.guildName = ""
+
+		if GSF.MainFrame and GSF.MainFrame:IsShown() then
+			GSF.MainFrame:RefreshCurrentTab()
+		end
 	end
 end
 
 function GSFHub:GUILD_ROSTER_UPDATE()
 	if IsInGuild() then
 		local numMembers = GetNumGuildMembers()
+		if numMembers == 0 then return end
+
+		local currentGuildMembers = {}
 		for i = 1, numMembers do
 			local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline = GetGuildRosterInfo(i)
 			if name then
 				local shortName = strsplit("-", name, 2)
+				currentGuildMembers[shortName] = true
 				local member = GSF.DB:EnsureMemberRecord(shortName)
 				if isOnline then
 					member.lastSeen = time()
 				end
+				if classDisplayName and classDisplayName ~= "" then
+					member.class = classDisplayName
+				end
 			end
+		end
+
+		-- Prune characters and work orders that do not belong to this guild
+		GSF.DB:PruneNonGuildMembers(currentGuildMembers)
+
+		if GSF.MainFrame and GSF.MainFrame:IsShown() then
+			GSF.MainFrame:RefreshCurrentTab()
 		end
 	end
 end

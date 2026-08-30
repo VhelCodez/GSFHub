@@ -25,8 +25,11 @@ end
 
 function GSF.Alts:GetMyMain()
 	local myName = GSF.DB:GetPlayerName()
-	if GSF.db and GSF.db.mainCharacter and GSF.db.mainCharacter:trim() ~= "" then
-		return GSF.db.mainCharacter:trim()
+	if GSF.cache and GSF.cache.mainCharacter and GSF.cache.mainCharacter:trim() ~= "" then
+		return GSF.cache.mainCharacter:trim()
+	end
+	if GSF.cache and GSF.cache.alts and GSF.cache.alts[myName] and GSF.cache.alts[myName]:trim() ~= "" then
+		return GSF.cache.alts[myName]:trim()
 	end
 	return self:GetMain(myName)
 end
@@ -35,15 +38,17 @@ function GSF.Alts:SetMyMain(mainName)
 	local myName = GSF.DB:GetPlayerName()
 	mainName = (mainName and mainName:trim() ~= "") and mainName:trim() or ""
 	if mainName == "" or mainName:lower() == myName:lower() then
-		GSF.db.mainCharacter = ""
+		if GSF.cache then GSF.cache.mainCharacter = "" end
+		if GSF.db then GSF.db.mainCharacter = "" end
 		self:SetMain(myName, myName)
-		if GSF.Sync then
+		if GSF.Sync and IsInGuild() then
 			GSF.Sync:BroadcastAlt(myName, myName)
 		end
 	else
-		GSF.db.mainCharacter = mainName
+		if GSF.cache then GSF.cache.mainCharacter = mainName end
+		if GSF.db then GSF.db.mainCharacter = mainName end
 		self:SetMain(myName, mainName)
-		if GSF.Sync then
+		if GSF.Sync and IsInGuild() then
 			GSF.Sync:BroadcastAlt(myName, mainName)
 		end
 	end

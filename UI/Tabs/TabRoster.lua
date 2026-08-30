@@ -99,7 +99,7 @@ function Tab:Create(parent)
 	mainHint:SetText(myName)
 	mainBox.mainHint = mainHint
 
-	local curMain = GSF.db and GSF.db.mainCharacter and GSF.db.mainCharacter:match("^%s*(.-)%s*$") or ""
+	local curMain = (GSF.Alts and GSF.Alts:GetMyMain()) or ""
 	if curMain ~= "" and curMain:lower() ~= myName:lower() then
 		mainBox:SetText(curMain)
 		mainHint:Hide()
@@ -172,16 +172,21 @@ function Tab:Refresh()
 	local numMembers = 0
 	local numRecipes = 0
 	local memberList = {}
+	local isGuild = IsInGuild() and GSF.isGuildScope
+	local myName = GSF.DB:GetPlayerName()
 
 	if GSF.cache and GSF.cache.members then
 		for name, data in pairs(GSF.cache.members) do
-			numMembers = numMembers + 1
-			table.insert(memberList, data)
-			if data.professions then
-				for _, p in pairs(data.professions) do
-					if p.recipes then
-						for _ in pairs(p.recipes) do
-							numRecipes = numRecipes + 1
+			-- When in solo mode, only show the player's own record
+			if isGuild or name == myName then
+				numMembers = numMembers + 1
+				table.insert(memberList, data)
+				if data.professions then
+					for _, p in pairs(data.professions) do
+						if p.recipes then
+							for _ in pairs(p.recipes) do
+								numRecipes = numRecipes + 1
+							end
 						end
 					end
 				end
@@ -189,24 +194,35 @@ function Tab:Refresh()
 		end
 	end
 
-	if not IsInGuild() then
+	-- If in solo mode and player record isn't in cache yet, ensure it
+	if not isGuild and #memberList == 0 then
+		local myMember = GSF.DB:EnsureMemberRecord(myName)
+		table.insert(memberList, myMember)
+		numMembers = 1
+	end
+
+	if not isGuild then
 		self.syncBtn:Disable()
-		self.statText:SetText(string.format("|cff888888%s|r", GSF.L["SOLO_MODE"] or "Offline Mode (No Guild)"))
+		self.statText:SetText(string.format("|cff888888%s (%s)|r", GSF.L["SOLO_MODE"] or "Offline Mode (No Guild)", myName))
 	else
 		self.syncBtn:Enable()
-		self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
+		local gName = (GSF.cache and GSF.cache.guildName ~= "" and GSF.cache.guildName) or GSF.DB:GetGuildName() or ""
+		if gName ~= "" then
+			self.statText:SetText(string.format("%s: " .. GSF.L["TOTAL_MEMBERS_CACHED"], gName, numMembers, numRecipes))
+		else
+			self.statText:SetText(string.format(GSF.L["TOTAL_MEMBERS_CACHED"], numMembers, numRecipes))
+		end
 	end
 
 	if self.mainBox and not self.mainBox:HasFocus() then
-		local pName = GSF.DB:GetPlayerName()
-		local curMain = GSF.db and GSF.db.mainCharacter and GSF.db.mainCharacter:match("^%s*(.-)%s*$") or ""
-		if curMain ~= "" and curMain:lower() ~= pName:lower() then
+		local curMain = (GSF.Alts and GSF.Alts:GetMyMain()) or ""
+		if curMain ~= "" and curMain:lower() ~= myName:lower() then
 			self.mainBox:SetText(curMain)
 			if self.mainBox.mainHint then self.mainBox.mainHint:Hide() end
 		else
 			self.mainBox:SetText("")
 			if self.mainBox.mainHint then
-				self.mainBox.mainHint:SetText(pName)
+				self.mainBox.mainHint:SetText(myName)
 				self.mainBox.mainHint:Show()
 			end
 		end

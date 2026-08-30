@@ -180,7 +180,7 @@ function GSF.WorkOrders:GetOrders(filterMyProfessions, includeCompleted)
 	local list = {}
 	if not GSF.cache or not GSF.cache.workOrders then return list end
 
-	local myProfessions = GSF.db.characterProfessions or {}
+	local myProfessions = (GSF.DB and GSF.DB.GetMyProfessions and GSF.DB:GetMyProfessions()) or GSF.db.characterProfessions or {}
 
 	for id, order in pairs(GSF.cache.workOrders) do
 		local include = true
@@ -211,8 +211,8 @@ function GSF.WorkOrders:OnOrderReceived(order, sender)
 	local myName = GSF.DB:GetPlayerName()
 	if sender == myName then return end
 
-	-- Check if player can craft this
-	local myProfs = GSF.db.characterProfessions or {}
+	-- Check if current character can craft this
+	local myProfs = (GSF.DB and GSF.DB.GetMyProfessions and GSF.DB:GetMyProfessions()) or GSF.db.characterProfessions or {}
 	local isRelevant = (order.profession == "Any" or myProfs[order.profession] ~= nil)
 
 	if isRelevant and GSF.db.enableToasts and GSF.Toast then

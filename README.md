@@ -41,9 +41,10 @@
 - Set your primary Main character identity.
 - In all lists, crafters and requesters are cleanly displayed as `AltName (MainName)` so everyone knows who is who.
 
-### 6. 🔄 Decentralized P2P Sync with Offline Persistence
+### 6. 🔄 Decentralized P2P Sync with Multi-Guild & Solo Isolation
 - Automatically synchronizes data over the hidden `GUILD` addon communication channel using compact serialization and `LibDeflate` compression.
-- Data is saved in persistent `SavedVariables` (`GSFHubCache`), ensuring you have immediate offline access to all guild knowledge.
+- Data is saved in partitioned persistent `SavedVariables` (`GSFHubCache.scopes`), strictly isolating your guild knowledge from unguilded characters or characters in other guilds.
+- Non-guild characters and non-guild orders are firewalled and never leaked to guildmates.
 
 ---
 

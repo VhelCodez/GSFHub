@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.5] - 2026-08-30
+
+### Added
+- **Multi-Guild & Solo Scope Partitioning (`GSFHubCache.scopes`):** Partitioned cache storage by Scope Key (`Guild - <GuildName> - <RealmName>` and `Solo - <PlayerName> - <RealmName>`). Unguilded characters and characters in different guilds are completely isolated and never mixed together.
+- **Active Guild Roster Pruning:** `GUILD_ROSTER_UPDATE` now verifies cached members against the official server roster, expunging non-guild characters, foreign work orders, bounties, and alt mappings from the guild database while preserving personal data in their respective solo scopes.
+- **Per-Character Profession Scoping (`GSF.DB:GetMyProfessions()`):** Scanned trade skills are tracked per character rather than globally across the account, preventing foreign profession matches in Work Order filtering and toast alerts.
+
+### Changed
+- **P2P Gossip Network Firewall:** `GSF.Sync:SendMyData()` now strictly transmits orders and surplus created by the active character within the active guild scope, eliminating accidental broadcast of personal non-guild or cross-guild listings over addon channels.
+- **Roster View Scope Polish:** Tab 6 (`TabRoster`) dynamically reflects active scope mode, showing solo status for unguilded characters and verified guild rosters for guilded members.
+- **Non-Destructive Cache Migration:** Automatically migrates legacy flat cache databases into the partitioned `scopes` structure without data loss.
+
+---
+
 ## [1.2.4] - 2026-08-29
 
 ### Added

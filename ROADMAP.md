@@ -11,7 +11,8 @@ graph LR
     v10["v1.0.0<br/><b>Core Suite</b><br/>(Released)"] --> v11["v1.1.0<br/><b>Multi-Language</b><br/>(Released)"]
     v11 --> v12["v1.2.3<br/><b>Gathering & Atlas</b><br/>(Released)"]
     v12 --> v124["v1.2.4<br/><b>UI Harmonization</b><br/>(Released)"]
-    v124 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
+    v124 --> v125["v1.2.5<br/><b>Scope Isolation</b><br/>(Released)"]
+    v125 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
@@ -21,6 +22,13 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.2.5 - Multi-Guild & Solo Scope Isolation Suite *(Released)*
+- [x] **Partitioned Scoped Cache (`GSFHubCache.scopes`):** Partitioned by `Guild - <GuildName> - <RealmName>` and `Solo - <PlayerName> - <RealmName>`, isolating guild data from foreign characters.
+- [x] **Active Guild Roster Pruning:** Automatic pruning of non-guild characters, work orders, bounties, and alts upon roster updates.
+- [x] **P2P Gossip Network Firewall:** `SendMyData()` strictly sends active character's contributions within the active guild scope.
+- [x] **Per-Character Scoped Professions:** `GSF.DB:GetMyProfessions()` prevents profession filtering leaks across alts.
+- [x] **Zero-Loss Legacy Migration:** Safely migrates existing flat cache data into scoped partitions.
 
 ### ✅ v1.2.4 - UI Harmonization & Alignment Suite *(Released)*
 - [x] **Subpixel Checkbox Label Calibration:** Exactly 12px measured gap between checkbox border and text across `Berufe`, `Aufträge`, and `Atlas`.

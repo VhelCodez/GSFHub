@@ -114,7 +114,11 @@ function GSF.Scanner:ScanTradeSkill()
 		recipes = recipes,
 	}
 
-	GSF.db.characterProfessions[profName] = member.professions[profName]
+	if GSF.DB and GSF.DB.SyncActiveCharacterProfessions then
+		GSF.DB:SyncActiveCharacterProfessions()
+	elseif GSF.db and GSF.db.characterProfessions then
+		GSF.db.characterProfessions[profName] = member.professions[profName]
+	end
 	GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
 
 	GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, profName, curRank, maxRank)
@@ -182,7 +186,11 @@ function GSF.Scanner:ScanCraft()
 		recipes = recipes,
 	}
 
-	GSF.db.characterProfessions[craftName] = member.professions[craftName]
+	if GSF.DB and GSF.DB.SyncActiveCharacterProfessions then
+		GSF.DB:SyncActiveCharacterProfessions()
+	elseif GSF.db and GSF.db.characterProfessions then
+		GSF.db.characterProfessions[craftName] = member.professions[craftName]
+	end
 	GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
 
 	GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, craftName, curRank or 0, maxRank or 375)

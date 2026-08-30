@@ -15,7 +15,7 @@ function GSF.Sync:Initialize()
 end
 
 function GSF.Sync:SendPacket(opcode, payload, distribution, target)
-	if not IsInGuild() then return end
+	if not IsInGuild() or not GSF.isGuildScope then return end
 	distribution = distribution or "GUILD"
 	
 	local encoded = GSF.Protocol:Encode(opcode, payload)
@@ -25,12 +25,12 @@ function GSF.Sync:SendPacket(opcode, payload, distribution, target)
 end
 
 function GSF.Sync:BroadcastHello(forceQueryAll)
-	if not IsInGuild() then return end
+	if not IsInGuild() or not GSF.isGuildScope then return end
 	local myName = GSF.DB:GetPlayerName()
-	local myMember = GSF.cache.members[myName]
+	local myMember = GSF.cache and GSF.cache.members and GSF.cache.members[myName]
 
 	local payload = {
-		rev = GSF.cache.revisions or {},
+		rev = (GSF.cache and GSF.cache.revisions) or {},
 		main = GSF.Alts:GetMain(myName),
 		force = forceQueryAll or false,
 	}
@@ -44,18 +44,32 @@ function GSF.Sync:RequestMemberData(targetName)
 end
 
 function GSF.Sync:SendMyData(targetName)
+	if not IsInGuild() or not GSF.isGuildScope then return end
 	local myName = GSF.DB:GetPlayerName()
-	local memberData = GSF.cache.members[myName] or {}
+	local memberData = (GSF.cache and GSF.cache.members and GSF.cache.members[myName]) or {}
 	
+	-- Gather only orders requested by this character in this guild scope
+	local myOrders = {}
+	if GSF.cache and GSF.cache.workOrders then
+		for orderId, order in pairs(GSF.cache.workOrders) do
+			if order.requester == myName and order.status ~= GSF.ORDER_STATUS.CANCELLED then
+				myOrders[orderId] = order
+			end
+		end
+	end
+
+	-- Gather surplus strictly for this character in this guild scope
+	local mySurplus = memberData.surplus or {}
+
 	local payload = {
 		name = myName,
 		main = GSF.Alts:GetMain(myName),
 		class = GSF.DB:GetPlayerClass(),
 		professions = memberData.professions or {},
-		surplus = GSF.db.mySurplus or {},
-		wishlist = GSF.db.myWishlist or {},
-		orders = GSF.db.myWorkOrders or {},
-		bounties = GSF.cache.bounties or {},
+		surplus = mySurplus,
+		wishlist = (GSF.db and GSF.db.myWishlist) or {},
+		orders = myOrders,
+		bounties = (GSF.cache and GSF.cache.bounties) or {},
 	}
 
 	if targetName then

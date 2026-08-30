@@ -74,58 +74,77 @@ GSFHubDB = {
 }
 ```
 
-### 2. `GSFHubCache` (Guild-Wide Shared Database)
-Persistent cross-session repository of all synced guild data:
+### 2. `GSFHubCache` (Partitioned Scoped Cache Database)
+Persistent cross-session repository of all synced guild and solo data, partitioned strictly by Scope Key (`Guild - <GuildName> - <RealmName>` or `Solo - <PlayerName> - <RealmName>`):
 ```lua
 GSFHubCache = {
-    guildName = "Guild Name",
-    realmName = "Realm Name",
-    members = {
-        ["MemberName"] = {
-            name = "MemberName",
-            main = "MainName",
-            class = "MAGE",
-            roles = { "CRAFTER", "MASTER_CRAFTER" },
-            lastSeen = 1700000000,
-            professions = {
-                ["Tailoring"] = {
-                    name = "Tailoring",
-                    curRank = 375,
-                    maxRank = 375,
-                    lastScanned = 1700000000,
-                    recipes = { ... }
+    scopes = {
+        ["Guild - Progression Guild - Nethergarde Keep"] = {
+            scopeKey = "Guild - Progression Guild - Nethergarde Keep",
+            guildName = "Progression Guild",
+            realmName = "Nethergarde Keep",
+            isGuild = true,
+            members = {
+                ["MemberName"] = {
+                    name = "MemberName",
+                    main = "MainName",
+                    class = "MAGE",
+                    roles = { "CRAFTER", "MASTER_CRAFTER" },
+                    lastSeen = 1700000000,
+                    professions = {
+                        ["Tailoring"] = {
+                            name = "Tailoring",
+                            curRank = 375,
+                            maxRank = 375,
+                            lastScanned = 1700000000,
+                            recipes = { ... }
+                        }
+                    },
+                    surplus = { ... }
                 }
             },
-            surplus = { ... }
+            workOrders = { ... },
+            bounties = {
+                ["<BountyId>"] = {
+                    id = "BT-Requester-1700000000",
+                    requester = "RequesterName",
+                    claimer = "GathererName",
+                    item = "Fel Iron Ore",
+                    itemID = 23424,
+                    count = 20,
+                    status = "IN_TRANSIT",      -- OPEN, CLAIMED, IN_TRANSIT, COMPLETED, CANCELLED
+                    timestamp = 1700000000,
+                    mailedAt = 1700000500,
+                    recipe = "Fel Iron Chain Vest"
+                }
+            },
+            recentDrops = { ... },              -- Last 30 recipe drops recorded
+            alts = {
+                ["AltCharacter"] = "MainCharacter"
+            },
+            revisions = {
+                recipes = 12,
+                orders = 5,
+                surplus = 8,
+                bounties = 4
+            }
+        },
+        ["Solo - BankAlt - Nethergarde Keep"] = {
+            scopeKey = "Solo - BankAlt - Nethergarde Keep",
+            guildName = "",
+            realmName = "Nethergarde Keep",
+            isGuild = false,
+            members = { ... },
+            workOrders = { ... },
+            ...
         }
-    },
-    workOrders = { ... },
-    bounties = {
-        ["<BountyId>"] = {
-            id = "BT-Requester-1700000000",
-            requester = "RequesterName",
-            claimer = "GathererName",
-            item = "Fel Iron Ore",
-            itemID = 23424,
-            count = 20,
-            status = "IN_TRANSIT",      -- OPEN, CLAIMED, IN_TRANSIT, COMPLETED, CANCELLED
-            timestamp = 1700000000,
-            mailedAt = 1700000500,
-            recipe = "Fel Iron Chain Vest"
-        }
-    },
-    recentDrops = { ... },              -- Last 30 recipe drops recorded
-    alts = {
-        ["AltCharacter"] = "MainCharacter"
-    },
-    revisions = {
-        recipes = 12,
-        orders = 5,
-        surplus = 8,
-        bounties = 4
     }
 }
 ```
+
+> [!NOTE]
+> **Dynamic Scope Binding & Zero Data Contamination:**
+> Upon login or guild status update (`PLAYER_ENTERING_WORLD`, `PLAYER_GUILD_UPDATE`), `GSF.cache` is bound directly to `GSFHubCache.scopes[activeScopeKey]`. Non-guild characters and cross-guild characters are strictly firewalled into separate scopes and never appear in foreign rosters or order boards. Roster updates automatically prune non-guild members from active guild caches.
 
 ---
 
