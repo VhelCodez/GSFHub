@@ -13,7 +13,8 @@ graph LR
     v12 --> v124["v1.2.4<br/><b>UI Harmonization</b><br/>(Released)"]
     v124 --> v125["v1.2.5<br/><b>Scope Isolation</b><br/>(Released)"]
     v125 --> v126["v1.2.6<br/><b>Wishlist & Goals Scope</b><br/>(Released)"]
-    v126 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
+    v126 --> v127["v1.2.7<br/><b>Cache Suite</b><br/>(Released)"]
+    v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
@@ -23,6 +24,12 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.2.7 - Settings Data & Cache Management Suite *(Released)*
+- [x] **Non-Destructive Guild Cache Rebuilder (`GSF.DB:RebuildGuildCache()`):** Purges peer member records and foreign listings while keeping player listings intact, immediately re-syncing from online guild members.
+- [x] **Active Character Data Reset (`GSF.DB:ResetActiveCharacterData()`):** Clears the current character's wishlist and Goals HUD trackers with a confirmation dialog.
+- [x] **Safe Full Addon Reset (`GSF.DB:FactoryReset()`):** Ghost-order-preventing factory reset that cancels open work orders and bounties over the guild channel before resetting SavedVariables.
+- [x] **Symmetrical Settings Layout (`TabSettings.lua`):** 2x2 card grid with pixel-balanced heights, unifying General Display and Cache Management.
 
 ### ✅ v1.2.6 - Character Scope Isolation for Wishlists & Goals *(Released)*
 - [x] **Per-Character Recipe Wishlist Scoping (`wishlistByChar`):** Partitioned recipe wishlists by character key (`"<CharacterName> - <RealmName>"`). Pinned recipes on an engineering alt no longer bleed into newly created or other guild characters.

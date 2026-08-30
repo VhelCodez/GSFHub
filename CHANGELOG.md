@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.7] - 2026-08-30
+
+### Added
+- **Settings Data & Cache Management Suite (`TabSettings.lua`):** Added a dedicated Cache & Data Management panel with non-destructive cache repair and reset utilities.
+- **Selective Guild Cache Rebuilder (`GSF.DB:RebuildGuildCache()`):** Purges stale peer records, foreign work orders, and foreign bounties while safely preserving the player's own active listings, followed by an immediate broadcast to download a fresh sync mesh from online guild members.
+- **Active Character Data Reset (`GSF.DB:ResetActiveCharacterData()`):** Clears the active character's recipe wishlist and Goals HUD trackers with a confirmation prompt, without affecting account settings or other alts.
+- **Safe Full Addon Reset (`GSF.DB:FactoryReset()`):** Ghost-order prevention engine that broadcasts cancellations for the player's open work orders and bounties to the guild before resetting local SavedVariables and reloading the UI.
+- **Settings Layout Harmonization:** Unified General and Goals HUD into a balanced 195px Display card, creating symmetrical 2x2 grid alignment across all cards in the Settings view.
+
+---
+
 ## [1.2.6] - 2026-08-30
 
 ### Fixed

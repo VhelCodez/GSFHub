@@ -3,16 +3,47 @@ local ADDON_NAME, GSF = ...
 local Tab = {}
 GSF.TabSettings = Tab
 
+-- Register confirmation dialogs
+StaticPopupDialogs["GSFHUB_CONFIRM_CHAR_RESET"] = {
+	text = GSF.L["CONFIRM_CHAR_RESET"] or "Are you sure you want to clear all wishlisted recipes and personal goals for this character?",
+	button1 = GSF.L["YES"] or "Yes",
+	button2 = GSF.L["CANCEL"] or "Cancel",
+	OnAccept = function()
+		if GSF.DB then
+			GSF.DB:ResetActiveCharacterData()
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+StaticPopupDialogs["GSFHUB_CONFIRM_FACTORY_RESET"] = {
+	text = GSF.L["CONFIRM_FACTORY_RESET"] or "Are you sure you want to reset all GSFHub settings, cache, and local listings? This will cancel your open orders and reload your UI.",
+	button1 = GSF.L["YES"] or "Yes",
+	button2 = GSF.L["CANCEL"] or "Cancel",
+	OnAccept = function()
+		if GSF.DB then
+			GSF.DB:FactoryReset()
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
 function Tab:Create(parent)
 	local frame = CreateFrame("Frame", nil, parent)
 	frame:SetAllPoints()
 	self.frame = frame
 
 	---------------------------------------------------------------------------
-	-- Section 1: General & Language (Top Left)
+	-- Section 1: General & Display (Top Left)
 	---------------------------------------------------------------------------
 	local genCard = CreateFrame("Frame", nil, frame)
-	genCard:SetSize(345, 175)
+	genCard:SetSize(345, 195)
 	genCard:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -12)
 	if BackdropTemplateMixin then Mixin(genCard, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(genCard, false)
@@ -21,16 +52,16 @@ function Tab:Create(parent)
 
 	local genTitle = genCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	genTitle:SetPoint("TOPLEFT", genCard, "TOPLEFT", 12, -10)
-	genTitle:SetText(GSF.L["SETTINGS_GENERAL"] or "General & Language")
+	genTitle:SetText(GSF.L["SETTINGS_GENERAL_DISPLAY"] or "General & Display")
 	self.genTitle = genTitle
 
 	local langLabel = genCard:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	langLabel:SetPoint("TOPLEFT", genTitle, "BOTTOMLEFT", 0, -10)
+	langLabel:SetPoint("TOPLEFT", genTitle, "BOTTOMLEFT", 0, -8)
 	langLabel:SetText(GSF.L["LANGUAGE_LABEL"] or "Language:")
 	self.langLabel = langLabel
 
 	local langDropdown = CreateFrame("Button", "GSFSettingsLangDropdown", genCard, "UIDropDownMenuTemplate")
-	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, -8)
+	langDropdown:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", -15, -6)
 	UIDropDownMenu_SetWidth(langDropdown, 160)
 	self.langDropdown = langDropdown
 
@@ -66,7 +97,7 @@ function Tab:Create(parent)
 	end)
 
 	local minimapCheck = CreateFrame("CheckButton", nil, genCard, "UICheckButtonTemplate")
-	minimapCheck:SetPoint("TOPLEFT", langDropdown, "BOTTOMLEFT", 12, -4)
+	minimapCheck:SetPoint("TOPLEFT", langDropdown, "BOTTOMLEFT", 12, -2)
 	minimapCheck.text:SetText(GSF.L["SHOW_MINIMAP_ICON"] or "Show Minimap Icon")
 	minimapCheck.text:SetFontObject("GameFontHighlightSmall")
 	minimapCheck.text:SetPoint("LEFT", minimapCheck, "RIGHT", 2, 1)
@@ -89,24 +120,8 @@ function Tab:Create(parent)
 		end
 	end)
 
-	---------------------------------------------------------------------------
-	-- Section 2: Goals HUD Tracker (Bottom Left)
-	---------------------------------------------------------------------------
-	local hudCard = CreateFrame("Frame", nil, frame)
-	hudCard:SetSize(345, 185)
-	hudCard:SetPoint("TOPLEFT", genCard, "BOTTOMLEFT", 0, -12)
-	if BackdropTemplateMixin then Mixin(hudCard, BackdropTemplateMixin) end
-	GSF.UI:CreateBackdrop(hudCard, false)
-	hudCard:SetBackdropColor(0.08, 0.08, 0.12, 0.75)
-	self.hudCard = hudCard
-
-	local hudTitle = hudCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	hudTitle:SetPoint("TOPLEFT", hudCard, "TOPLEFT", 12, -10)
-	hudTitle:SetText(GSF.L["SETTINGS_GOALS_HUD"] or "Personal Goals HUD")
-	self.hudTitle = hudTitle
-
-	local goalsHUDCheck = CreateFrame("CheckButton", nil, hudCard, "UICheckButtonTemplate")
-	goalsHUDCheck:SetPoint("TOPLEFT", hudTitle, "BOTTOMLEFT", 0, -10)
+	local goalsHUDCheck = CreateFrame("CheckButton", nil, genCard, "UICheckButtonTemplate")
+	goalsHUDCheck:SetPoint("TOPLEFT", minimapCheck, "BOTTOMLEFT", 0, -2)
 	goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Personal Goals HUD")
 	goalsHUDCheck.text:SetFontObject("GameFontHighlightSmall")
 	goalsHUDCheck.text:SetPoint("LEFT", goalsHUDCheck, "RIGHT", 2, 1)
@@ -119,8 +134,8 @@ function Tab:Create(parent)
 		end
 	end)
 
-	local resetPosBtn = GSF.UI:CreateButton(hudCard, GSF.L["RESET_HUD_POS"] or "Reset Position", 160, 24)
-	resetPosBtn:SetPoint("TOPLEFT", goalsHUDCheck, "BOTTOMLEFT", 0, -12)
+	local resetPosBtn = GSF.UI:CreateButton(genCard, GSF.L["RESET_HUD_POS"] or "Reset HUD Position", 160, 22)
+	resetPosBtn:SetPoint("TOPLEFT", goalsHUDCheck, "BOTTOMLEFT", 4, -4)
 	self.resetPosBtn = resetPosBtn
 
 	resetPosBtn:SetScript("OnClick", function()
@@ -133,10 +148,60 @@ function Tab:Create(parent)
 	end)
 
 	---------------------------------------------------------------------------
+	-- Section 2: Data & Cache Management (Bottom Left)
+	---------------------------------------------------------------------------
+	local cacheCard = CreateFrame("Frame", nil, frame)
+	cacheCard:SetSize(345, 175)
+	cacheCard:SetPoint("TOPLEFT", genCard, "BOTTOMLEFT", 0, -10)
+	if BackdropTemplateMixin then Mixin(cacheCard, BackdropTemplateMixin) end
+	GSF.UI:CreateBackdrop(cacheCard, false)
+	cacheCard:SetBackdropColor(0.08, 0.08, 0.12, 0.75)
+	self.cacheCard = cacheCard
+
+	local cacheTitle = cacheCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	cacheTitle:SetPoint("TOPLEFT", cacheCard, "TOPLEFT", 12, -10)
+	cacheTitle:SetText(GSF.L["SETTINGS_DATA_MANAGEMENT"] or "Data & Cache Management")
+	self.cacheTitle = cacheTitle
+
+	local rebuildBtn = GSF.UI:CreateButton(cacheCard, GSF.L["REBUILD_CACHE_BTN"] or "Rebuild Guild Cache", 210, 24)
+	rebuildBtn:SetPoint("TOPLEFT", cacheTitle, "BOTTOMLEFT", 0, -12)
+	self.rebuildBtn = rebuildBtn
+
+	rebuildBtn:SetScript("OnEnter", function(btn)
+		GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+		GameTooltip:SetText(GSF.L["REBUILD_CACHE_BTN"] or "Rebuild Guild Cache", 1, 0.82, 0)
+		GameTooltip:AddLine(GSF.L["REBUILD_CACHE_DESC"] or "Clears peer cache and requests a fresh sync from online guild members. Preserves your own listings.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	rebuildBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	rebuildBtn:SetScript("OnClick", function()
+		if GSF.DB then
+			GSF.DB:RebuildGuildCache()
+		end
+	end)
+
+	local resetCharBtn = GSF.UI:CreateButton(cacheCard, GSF.L["RESET_CHAR_DATA_BTN"] or "Clear Character Data", 210, 24)
+	resetCharBtn:SetPoint("TOPLEFT", rebuildBtn, "BOTTOMLEFT", 0, -10)
+	self.resetCharBtn = resetCharBtn
+
+	resetCharBtn:SetScript("OnClick", function()
+		StaticPopup_Show("GSFHUB_CONFIRM_CHAR_RESET")
+	end)
+
+	local factoryResetBtn = GSF.UI:CreateButton(cacheCard, GSF.L["FACTORY_RESET_BTN"] or "Full Addon Reset", 210, 24)
+	factoryResetBtn:SetPoint("TOPLEFT", resetCharBtn, "BOTTOMLEFT", 0, -10)
+	self.factoryResetBtn = factoryResetBtn
+
+	factoryResetBtn:SetScript("OnClick", function()
+		StaticPopup_Show("GSFHUB_CONFIRM_FACTORY_RESET")
+	end)
+
+	---------------------------------------------------------------------------
 	-- Section 3: Notifications & Audio (Top Right)
 	---------------------------------------------------------------------------
 	local notifCard = CreateFrame("Frame", nil, frame)
-	notifCard:SetSize(355, 175)
+	notifCard:SetSize(355, 195)
 	notifCard:SetPoint("TOPLEFT", frame, "TOPLEFT", 375, -12)
 	if BackdropTemplateMixin then Mixin(notifCard, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(notifCard, false)
@@ -200,8 +265,8 @@ function Tab:Create(parent)
 	-- Section 4: About & Diagnostics (Bottom Right)
 	---------------------------------------------------------------------------
 	local aboutCard = CreateFrame("Frame", nil, frame)
-	aboutCard:SetSize(355, 185)
-	aboutCard:SetPoint("TOPLEFT", notifCard, "BOTTOMLEFT", 0, -12)
+	aboutCard:SetSize(355, 175)
+	aboutCard:SetPoint("TOPLEFT", notifCard, "BOTTOMLEFT", 0, -10)
 	if BackdropTemplateMixin then Mixin(aboutCard, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(aboutCard, false)
 	aboutCard:SetBackdropColor(0.08, 0.08, 0.12, 0.75)
@@ -259,17 +324,31 @@ function Tab:UpdateTexts()
 		else return GSF.L["LANG_AUTO"] end
 	end
 
-	if self.genTitle then self.genTitle:SetText(GSF.L["SETTINGS_GENERAL"] or "General & Language") end
+	if self.genTitle then self.genTitle:SetText(GSF.L["SETTINGS_GENERAL_DISPLAY"] or "General & Display") end
 	if self.langLabel then self.langLabel:SetText(GSF.L["LANGUAGE_LABEL"] or "Language:") end
 	if self.langDropdown then
 		local cur = GSF.db and GSF.db.selectedLocale or "auto"
 		UIDropDownMenu_SetText(self.langDropdown, GetLangText(cur))
 	end
 	if self.minimapCheck then self.minimapCheck.text:SetText(GSF.L["SHOW_MINIMAP_ICON"] or "Show Minimap Icon") end
-
-	if self.hudTitle then self.hudTitle:SetText(GSF.L["SETTINGS_GOALS_HUD"] or "Personal Goals HUD") end
 	if self.goalsHUDCheck then self.goalsHUDCheck.text:SetText(GSF.L["ENABLE_GOALS_HUD"] or "Show Personal Goals HUD") end
-	if self.resetPosBtn then self.resetPosBtn:SetText(GSF.L["RESET_HUD_POS"] or "Reset Position") end
+	if self.resetPosBtn then self.resetPosBtn:SetText(GSF.L["RESET_HUD_POS"] or "Reset HUD Position") end
+
+	if self.cacheTitle then self.cacheTitle:SetText(GSF.L["SETTINGS_DATA_MANAGEMENT"] or "Data & Cache Management") end
+	if self.rebuildBtn then self.rebuildBtn:SetText(GSF.L["REBUILD_CACHE_BTN"] or "Rebuild Guild Cache") end
+	if self.resetCharBtn then self.resetCharBtn:SetText(GSF.L["RESET_CHAR_DATA_BTN"] or "Clear Character Data") end
+	if self.factoryResetBtn then self.factoryResetBtn:SetText(GSF.L["FACTORY_RESET_BTN"] or "Full Addon Reset") end
+
+	if StaticPopupDialogs["GSFHUB_CONFIRM_CHAR_RESET"] then
+		StaticPopupDialogs["GSFHUB_CONFIRM_CHAR_RESET"].text = GSF.L["CONFIRM_CHAR_RESET"] or "Are you sure you want to clear all wishlisted recipes and personal goals for this character?"
+		StaticPopupDialogs["GSFHUB_CONFIRM_CHAR_RESET"].button1 = GSF.L["YES"] or "Yes"
+		StaticPopupDialogs["GSFHUB_CONFIRM_CHAR_RESET"].button2 = GSF.L["CANCEL"] or "Cancel"
+	end
+	if StaticPopupDialogs["GSFHUB_CONFIRM_FACTORY_RESET"] then
+		StaticPopupDialogs["GSFHUB_CONFIRM_FACTORY_RESET"].text = GSF.L["CONFIRM_FACTORY_RESET"] or "Are you sure you want to reset all GSFHub settings, cache, and local listings? This will cancel your open orders and reload your UI."
+		StaticPopupDialogs["GSFHUB_CONFIRM_FACTORY_RESET"].button1 = GSF.L["YES"] or "Yes"
+		StaticPopupDialogs["GSFHUB_CONFIRM_FACTORY_RESET"].button2 = GSF.L["CANCEL"] or "Cancel"
+	end
 
 	if self.notifTitle then self.notifTitle:SetText(GSF.L["SETTINGS_NOTIFICATIONS"] or "Notifications & Audio") end
 	if self.toastCheck then self.toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"]) end

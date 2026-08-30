@@ -207,12 +207,12 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 ### 5. Draggable Goals HUD (`UI/Widgets/GoalsHUD.lua`)
 - Onscreen overlay frame displaying visual progress bars and dynamic bag counting on `BAG_UPDATE`.
 
-### 6. Dedicated Settings View (`UI/Tabs/TabSettings.lua`)
-- Card-based preferences interface accessible via title bar cog `[⚙]` or `/gsf settings`.
-- Provides two-way synchronized Goals HUD controls, independent audio alert toggles, auto-scan settings, and diagnostics.
+### 6. Dedicated Settings & Cache View (`UI/Tabs/TabSettings.lua`)
+- Symmetrical 2x2 card-based preferences interface accessible via title bar cog `[⚙]` or `/gsf settings`.
+- Provides General & Display controls, Notifications & Audio, Data & Cache Management (Guild Cache Rebuilder, Character Reset, Safe Ghost-Order-Preventing Factory Reset), and Diagnostics.
 
 ---
 
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`).
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`, `v1.2.6`, `v1.2.7`).
 - GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

@@ -15,31 +15,16 @@ local defaultSettings = {
 		minimapPos = 220,
 	},
 	mainCharacter = "",
-	myWishlist = {},
 	wishlistByChar = {},
+	goalsByChar = {},
+	characterProfessionsByChar = {},
 	myWorkOrders = {},
 	mySurplus = {},
-	myGoals = {},
-	goalsByChar = {},
 	myRoleTags = {},
-	characterProfessions = {},
-	characterProfessionsByChar = {},
 }
 
 local defaultCache = {
-	guildName = "",
-	realmName = "",
-	members = {},
-	workOrders = {},
-	bounties = {},
-	recentDrops = {},
-	alts = {},
-	revisions = {
-		recipes = 0,
-		orders = 0,
-		surplus = 0,
-		bounties = 0,
-	},
+	scopes = {},
 }
 
 function GSF.DB:CreateEmptyScope(scopeKey, isGuild, guildName, realmName)
@@ -73,76 +58,6 @@ function GSF.DB:GetActiveScopeKey()
 	end
 end
 
-function GSF.DB:MigrateLegacyCache()
-	if not GSFHubCache then GSFHubCache = {} end
-	if GSFHubCache.scopes then return end -- Already migrated to scoped schema
-
-	GSFHubCache.scopes = {}
-	local realm = GSFHubCache.realmName or GetRealmName() or "UnknownRealm"
-	local legacyGuild = GSFHubCache.guildName
-
-	if legacyGuild and legacyGuild ~= "" then
-		local guildScopeKey = string.format("Guild - %s - %s", legacyGuild, realm)
-		local guildScope = self:CreateEmptyScope(guildScopeKey, true, legacyGuild, realm)
-		
-		if GSFHubCache.members then
-			for k, v in pairs(GSFHubCache.members) do
-				guildScope.members[k] = v
-			end
-		end
-		if GSFHubCache.workOrders then
-			for k, v in pairs(GSFHubCache.workOrders) do
-				guildScope.workOrders[k] = v
-			end
-		end
-		if GSFHubCache.bounties then
-			for k, v in pairs(GSFHubCache.bounties) do
-				guildScope.bounties[k] = v
-			end
-		end
-		if GSFHubCache.alts then
-			for k, v in pairs(GSFHubCache.alts) do
-				guildScope.alts[k] = v
-			end
-		end
-		if GSFHubCache.recentDrops then
-			for _, v in ipairs(GSFHubCache.recentDrops) do
-				table.insert(guildScope.recentDrops, v)
-			end
-		end
-		if GSFHubCache.revisions then
-			guildScope.revisions = CopyTable(GSFHubCache.revisions)
-		end
-		GSFHubCache.scopes[guildScopeKey] = guildScope
-	elseif GSFHubCache.members and next(GSFHubCache.members) then
-		-- Legacy data was unguilded / solo
-		local myName = self:GetPlayerName()
-		local soloKey = string.format("Solo - %s - %s", myName, realm)
-		local soloScope = self:CreateEmptyScope(soloKey, false, "", realm)
-		if GSFHubCache.members then
-			for k, v in pairs(GSFHubCache.members) do
-				soloScope.members[k] = v
-			end
-		end
-		if GSFHubCache.workOrders then
-			for k, v in pairs(GSFHubCache.workOrders) do
-				soloScope.workOrders[k] = v
-			end
-		end
-		if GSFHubCache.bounties then
-			for k, v in pairs(GSFHubCache.bounties) do
-				soloScope.bounties[k] = v
-			end
-		end
-		if GSFHubCache.alts then
-			for k, v in pairs(GSFHubCache.alts) do
-				soloScope.alts[k] = v
-			end
-		end
-		GSFHubCache.scopes[soloKey] = soloScope
-	end
-end
-
 function GSF.DB:UpdateScope()
 	local scopeKey, isGuild, guildName, realm = self:GetActiveScopeKey()
 	if not GSFHubCache.scopes then
@@ -156,16 +71,6 @@ function GSF.DB:UpdateScope()
 	GSF.cache = GSFHubCache.scopes[scopeKey]
 	GSF.activeScopeKey = scopeKey
 	GSF.isGuildScope = isGuild
-
-	-- Mirror to legacy top-level keys for backward compatibility
-	GSFHubCache.guildName = GSF.cache.guildName
-	GSFHubCache.realmName = GSF.cache.realmName
-	GSFHubCache.members = GSF.cache.members
-	GSFHubCache.workOrders = GSF.cache.workOrders
-	GSFHubCache.bounties = GSF.cache.bounties
-	GSFHubCache.recentDrops = GSF.cache.recentDrops
-	GSFHubCache.alts = GSF.cache.alts
-	GSFHubCache.revisions = GSF.cache.revisions
 
 	-- Sync active character's professions, wishlist, and goals
 	self:SyncActiveCharacterProfessions()
@@ -256,6 +161,9 @@ end
 
 function GSF.DB:SyncActiveCharacterProfessions()
 	local myName = self:GetPlayerName()
+	if not myName or myName == "" or myName == "Unknown" then
+		return
+	end
 	local realm = GetRealmName() or "UnknownRealm"
 	local charKey = string.format("%s - %s", myName, realm)
 
@@ -263,7 +171,6 @@ function GSF.DB:SyncActiveCharacterProfessions()
 		GSFHubDB.characterProfessionsByChar = {}
 	end
 
-	-- If we have character-specific professions, point GSF.db.characterProfessions to it
 	if not GSFHubDB.characterProfessionsByChar[charKey] then
 		GSFHubDB.characterProfessionsByChar[charKey] = {}
 		-- If this character already has professions in active cache, copy over
@@ -274,11 +181,16 @@ function GSF.DB:SyncActiveCharacterProfessions()
 		end
 	end
 
-	GSFHubDB.characterProfessions = GSFHubDB.characterProfessionsByChar[charKey]
+	if GSF.db then
+		GSF.db.characterProfessions = GSFHubDB.characterProfessionsByChar[charKey]
+	end
 end
 
 function GSF.DB:SyncActiveCharacterWishlist()
 	local myName = self:GetPlayerName()
+	if not myName or myName == "" or myName == "Unknown" then
+		return
+	end
 	local realm = GetRealmName() or "UnknownRealm"
 	local charKey = string.format("%s - %s", myName, realm)
 
@@ -286,47 +198,10 @@ function GSF.DB:SyncActiveCharacterWishlist()
 		GSFHubDB.wishlistByChar = {}
 	end
 
-	-- Non-destructive migration of legacy flat GSFHubDB.myWishlist:
-	if not GSFHubDB.wishlistMigrated and GSFHubDB.myWishlist and next(GSFHubDB.myWishlist) then
-		local legacyOwner = nil
-		if GSFHubDB.mainCharacter and GSFHubDB.mainCharacter ~= "" then
-			legacyOwner = GSFHubDB.mainCharacter
-		elseif GSFHubDB.myWorkOrders and next(GSFHubDB.myWorkOrders) then
-			for _, order in pairs(GSFHubDB.myWorkOrders) do
-				if order.requester and order.requester ~= "" then
-					legacyOwner = order.requester
-					break
-				end
-			end
-		end
-
-		if legacyOwner and legacyOwner ~= "" then
-			local legacyCharKey = string.format("%s - %s", legacyOwner, realm)
-			if not GSFHubDB.wishlistByChar[legacyCharKey] then
-				GSFHubDB.wishlistByChar[legacyCharKey] = {}
-			end
-			for k, v in pairs(GSFHubDB.myWishlist) do
-				GSFHubDB.wishlistByChar[legacyCharKey][k] = (type(v) == "table" and CopyTable(v)) or v
-			end
-		else
-			if not GSFHubDB.wishlistByChar[charKey] then
-				GSFHubDB.wishlistByChar[charKey] = {}
-			end
-			for k, v in pairs(GSFHubDB.myWishlist) do
-				GSFHubDB.wishlistByChar[charKey][k] = (type(v) == "table" and CopyTable(v)) or v
-			end
-		end
-
-		GSFHubDB.wishlistMigrated = true
-	end
-
-	-- Ensure active character has its own wishlist table
 	if not GSFHubDB.wishlistByChar[charKey] then
 		GSFHubDB.wishlistByChar[charKey] = {}
 	end
 
-	-- Maintain backward-compatible references
-	GSFHubDB.myWishlist = GSFHubDB.wishlistByChar[charKey]
 	if GSF.db then
 		GSF.db.myWishlist = GSFHubDB.wishlistByChar[charKey]
 	end
@@ -334,6 +209,9 @@ end
 
 function GSF.DB:SyncActiveCharacterGoals()
 	local myName = self:GetPlayerName()
+	if not myName or myName == "" or myName == "Unknown" then
+		return
+	end
 	local realm = GetRealmName() or "UnknownRealm"
 	local charKey = string.format("%s - %s", myName, realm)
 
@@ -341,47 +219,10 @@ function GSF.DB:SyncActiveCharacterGoals()
 		GSFHubDB.goalsByChar = {}
 	end
 
-	-- Non-destructive migration of legacy flat GSFHubDB.myGoals:
-	if not GSFHubDB.goalsMigrated and GSFHubDB.myGoals and next(GSFHubDB.myGoals) then
-		local legacyOwner = nil
-		if GSFHubDB.mainCharacter and GSFHubDB.mainCharacter ~= "" then
-			legacyOwner = GSFHubDB.mainCharacter
-		elseif GSFHubDB.myWorkOrders and next(GSFHubDB.myWorkOrders) then
-			for _, order in pairs(GSFHubDB.myWorkOrders) do
-				if order.requester and order.requester ~= "" then
-					legacyOwner = order.requester
-					break
-				end
-			end
-		end
-
-		if legacyOwner and legacyOwner ~= "" then
-			local legacyCharKey = string.format("%s - %s", legacyOwner, realm)
-			if not GSFHubDB.goalsByChar[legacyCharKey] then
-				GSFHubDB.goalsByChar[legacyCharKey] = {}
-			end
-			for _, g in ipairs(GSFHubDB.myGoals) do
-				table.insert(GSFHubDB.goalsByChar[legacyCharKey], (type(g) == "table" and CopyTable(g)) or g)
-			end
-		else
-			if not GSFHubDB.goalsByChar[charKey] then
-				GSFHubDB.goalsByChar[charKey] = {}
-			end
-			for _, g in ipairs(GSFHubDB.myGoals) do
-				table.insert(GSFHubDB.goalsByChar[charKey], (type(g) == "table" and CopyTable(g)) or g)
-			end
-		end
-
-		GSFHubDB.goalsMigrated = true
-	end
-
-	-- Ensure active character has its own goals table
 	if not GSFHubDB.goalsByChar[charKey] then
 		GSFHubDB.goalsByChar[charKey] = {}
 	end
 
-	-- Maintain backward-compatible references
-	GSFHubDB.myGoals = GSFHubDB.goalsByChar[charKey]
 	if GSF.db then
 		GSF.db.myGoals = GSFHubDB.goalsByChar[charKey]
 	end
@@ -407,8 +248,10 @@ function GSF.DB:Initialize()
 		end
 	end
 
-	-- Migrate legacy flat cache to scoped architecture
-	self:MigrateLegacyCache()
+	-- Apply defaults for Cache
+	if not GSFHubCache.scopes then
+		GSFHubCache.scopes = {}
+	end
 
 	-- Bind GSF.db
 	GSF.db = GSFHubDB
@@ -459,7 +302,135 @@ function GSF.DB:EnsureMemberRecord(name)
 			lastSeen = time(),
 			professions = {},
 			surplus = {},
+			wishlist = {},
 		}
 	end
 	return GSF.cache.members[name]
+end
+
+function GSF.DB:RebuildGuildCache()
+	local myName = self:GetPlayerName()
+	if not GSF.cache then return end
+
+	-- Keep own member record intact
+	local myMember = GSF.cache.members and GSF.cache.members[myName]
+
+	-- Keep own active work orders
+	local myOrders = {}
+	if GSF.cache.workOrders then
+		for id, order in pairs(GSF.cache.workOrders) do
+			if order.requester == myName then
+				myOrders[id] = order
+			end
+		end
+	end
+
+	-- Keep own active bounties
+	local myBounties = {}
+	if GSF.cache.bounties then
+		for id, bounty in pairs(GSF.cache.bounties) do
+			if bounty.requester == myName then
+				myBounties[id] = bounty
+			end
+		end
+	end
+
+	-- Reset cache collections
+	GSF.cache.members = {}
+	if myMember then
+		GSF.cache.members[myName] = myMember
+	else
+		self:EnsureMemberRecord(myName)
+	end
+
+	GSF.cache.workOrders = myOrders
+	GSF.cache.bounties = myBounties
+	GSF.cache.recentDrops = {}
+	GSF.cache.revisions = {
+		recipes = 0,
+		orders = 0,
+		surplus = 0,
+		bounties = 0,
+	}
+
+	-- Request fresh full sync from online guild peers
+	if GSF.Sync and GSF.isGuildScope and GSF.Sync.BroadcastHello then
+		GSF.Sync:BroadcastHello(true)
+	end
+
+	-- Refresh active UI tab
+	if GSF.MainFrame and GSF.MainFrame:IsShown() then
+		GSF.MainFrame:RefreshCurrentTab()
+	end
+
+	if GSF.Addon then
+		GSF.Addon:Printf(GSF.L["CACHE_REBUILT_MSG"] or "|cff33ff99Guild cache cleared. Requesting fresh data from online members...|r")
+	end
+end
+
+function GSF.DB:ResetActiveCharacterData()
+	local myName = self:GetPlayerName()
+	local realm = GetRealmName() or "UnknownRealm"
+	local charKey = string.format("%s - %s", myName, realm)
+
+	if GSFHubDB and GSFHubDB.wishlistByChar then
+		GSFHubDB.wishlistByChar[charKey] = {}
+	end
+	if GSFHubDB and GSFHubDB.goalsByChar then
+		GSFHubDB.goalsByChar[charKey] = {}
+	end
+
+	if GSF.db then
+		GSF.db.myWishlist = (GSFHubDB and GSFHubDB.wishlistByChar and GSFHubDB.wishlistByChar[charKey]) or {}
+		GSF.db.myGoals = (GSFHubDB and GSFHubDB.goalsByChar and GSFHubDB.goalsByChar[charKey]) or {}
+	end
+
+	if GSF.GoalsHUD and GSF.GoalsHUD.Refresh then
+		GSF.GoalsHUD:Refresh()
+	end
+	if GSF.GoalsHUD and GSF.GoalsHUD.RefreshManagerDialog then
+		GSF.GoalsHUD:RefreshManagerDialog()
+	end
+
+	if GSF.MainFrame and GSF.MainFrame:IsShown() then
+		GSF.MainFrame:RefreshCurrentTab()
+	end
+
+	if GSF.Addon then
+		GSF.Addon:Printf(string.format(GSF.L["CHAR_RESET_MSG"] or "|cff33ff99Wishlist and Goals reset for %s.|r", myName))
+	end
+end
+
+function GSF.DB:FactoryReset()
+	local myName = self:GetPlayerName()
+
+	-- Broadcast cancellation for any open work orders created by this player
+	if GSF.cache and GSF.cache.workOrders and GSF.Sync and GSF.isGuildScope then
+		for orderId, order in pairs(GSF.cache.workOrders) do
+			if order.requester == myName and order.status == GSF.ORDER_STATUS.OPEN then
+				GSF.Sync:SendPacket(GSF.OPCODE.WORK_ORDER_STAT, {
+					orderId = orderId,
+					status = GSF.ORDER_STATUS.CANCELLED,
+				}, "GUILD")
+			end
+		end
+	end
+
+	-- Broadcast cancellation for any open bounties created by this player
+	if GSF.cache and GSF.cache.bounties and GSF.Sync and GSF.isGuildScope then
+		for bountyId, bounty in pairs(GSF.cache.bounties) do
+			if bounty.requester == myName and bounty.status == GSF.BOUNTY_STATUS.OPEN then
+				GSF.Sync:SendPacket(GSF.OPCODE.BOUNTY_CANCEL, {
+					bountyId = bountyId,
+				}, "GUILD")
+			end
+		end
+	end
+
+	-- Wipe SavedVariables
+	GSFHubDB = nil
+	GSFHubCache = nil
+
+	-- Reload UI
+	ReloadUI()
 end

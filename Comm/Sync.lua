@@ -38,6 +38,10 @@ function GSF.Sync:BroadcastHello(forceQueryAll)
 	self:SendPacket(GSF.OPCODE.HELLO, payload, "GUILD")
 end
 
+function GSF.Sync:RequestFullSync()
+	self:BroadcastHello(true)
+end
+
 function GSF.Sync:RequestMemberData(targetName)
 	if not targetName or targetName == GSF.DB:GetPlayerName() then return end
 	self:SendPacket(GSF.OPCODE.REQ_DATA, { target = targetName }, "WHISPER", targetName)

@@ -92,6 +92,11 @@ end
 function GSFHub:PLAYER_ENTERING_WORLD()
 	local scopeKey, isGuild, scopeChanged = GSF.DB:UpdateScope()
 
+	-- Refresh Goals HUD with verified character-scoped data
+	if GSF.GoalsHUD and GSF.GoalsHUD.Refresh then
+		GSF.GoalsHUD:Refresh()
+	end
+
 	if isGuild then
 		-- Request fresh guild roster from server
 		if C_GuildInfo and C_GuildInfo.GuildRoster then
