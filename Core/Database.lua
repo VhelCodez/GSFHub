@@ -16,11 +16,14 @@ local defaultSettings = {
 	},
 	mainCharacter = "",
 	myWishlist = {},
+	wishlistByChar = {},
 	myWorkOrders = {},
 	mySurplus = {},
 	myGoals = {},
+	goalsByChar = {},
 	myRoleTags = {},
 	characterProfessions = {},
+	characterProfessionsByChar = {},
 }
 
 local defaultCache = {
@@ -164,8 +167,10 @@ function GSF.DB:UpdateScope()
 	GSFHubCache.alts = GSF.cache.alts
 	GSFHubCache.revisions = GSF.cache.revisions
 
-	-- Sync active character's professions
+	-- Sync active character's professions, wishlist, and goals
 	self:SyncActiveCharacterProfessions()
+	self:SyncActiveCharacterWishlist()
+	self:SyncActiveCharacterGoals()
 
 	-- Clean expired work orders (> 7 days) in current scope
 	self:CleanupExpiredOrders()
@@ -270,6 +275,116 @@ function GSF.DB:SyncActiveCharacterProfessions()
 	end
 
 	GSFHubDB.characterProfessions = GSFHubDB.characterProfessionsByChar[charKey]
+end
+
+function GSF.DB:SyncActiveCharacterWishlist()
+	local myName = self:GetPlayerName()
+	local realm = GetRealmName() or "UnknownRealm"
+	local charKey = string.format("%s - %s", myName, realm)
+
+	if not GSFHubDB.wishlistByChar then
+		GSFHubDB.wishlistByChar = {}
+	end
+
+	-- Non-destructive migration of legacy flat GSFHubDB.myWishlist:
+	if not GSFHubDB.wishlistMigrated and GSFHubDB.myWishlist and next(GSFHubDB.myWishlist) then
+		local legacyOwner = nil
+		if GSFHubDB.mainCharacter and GSFHubDB.mainCharacter ~= "" then
+			legacyOwner = GSFHubDB.mainCharacter
+		elseif GSFHubDB.myWorkOrders and next(GSFHubDB.myWorkOrders) then
+			for _, order in pairs(GSFHubDB.myWorkOrders) do
+				if order.requester and order.requester ~= "" then
+					legacyOwner = order.requester
+					break
+				end
+			end
+		end
+
+		if legacyOwner and legacyOwner ~= "" then
+			local legacyCharKey = string.format("%s - %s", legacyOwner, realm)
+			if not GSFHubDB.wishlistByChar[legacyCharKey] then
+				GSFHubDB.wishlistByChar[legacyCharKey] = {}
+			end
+			for k, v in pairs(GSFHubDB.myWishlist) do
+				GSFHubDB.wishlistByChar[legacyCharKey][k] = (type(v) == "table" and CopyTable(v)) or v
+			end
+		else
+			if not GSFHubDB.wishlistByChar[charKey] then
+				GSFHubDB.wishlistByChar[charKey] = {}
+			end
+			for k, v in pairs(GSFHubDB.myWishlist) do
+				GSFHubDB.wishlistByChar[charKey][k] = (type(v) == "table" and CopyTable(v)) or v
+			end
+		end
+
+		GSFHubDB.wishlistMigrated = true
+	end
+
+	-- Ensure active character has its own wishlist table
+	if not GSFHubDB.wishlistByChar[charKey] then
+		GSFHubDB.wishlistByChar[charKey] = {}
+	end
+
+	-- Maintain backward-compatible references
+	GSFHubDB.myWishlist = GSFHubDB.wishlistByChar[charKey]
+	if GSF.db then
+		GSF.db.myWishlist = GSFHubDB.wishlistByChar[charKey]
+	end
+end
+
+function GSF.DB:SyncActiveCharacterGoals()
+	local myName = self:GetPlayerName()
+	local realm = GetRealmName() or "UnknownRealm"
+	local charKey = string.format("%s - %s", myName, realm)
+
+	if not GSFHubDB.goalsByChar then
+		GSFHubDB.goalsByChar = {}
+	end
+
+	-- Non-destructive migration of legacy flat GSFHubDB.myGoals:
+	if not GSFHubDB.goalsMigrated and GSFHubDB.myGoals and next(GSFHubDB.myGoals) then
+		local legacyOwner = nil
+		if GSFHubDB.mainCharacter and GSFHubDB.mainCharacter ~= "" then
+			legacyOwner = GSFHubDB.mainCharacter
+		elseif GSFHubDB.myWorkOrders and next(GSFHubDB.myWorkOrders) then
+			for _, order in pairs(GSFHubDB.myWorkOrders) do
+				if order.requester and order.requester ~= "" then
+					legacyOwner = order.requester
+					break
+				end
+			end
+		end
+
+		if legacyOwner and legacyOwner ~= "" then
+			local legacyCharKey = string.format("%s - %s", legacyOwner, realm)
+			if not GSFHubDB.goalsByChar[legacyCharKey] then
+				GSFHubDB.goalsByChar[legacyCharKey] = {}
+			end
+			for _, g in ipairs(GSFHubDB.myGoals) do
+				table.insert(GSFHubDB.goalsByChar[legacyCharKey], (type(g) == "table" and CopyTable(g)) or g)
+			end
+		else
+			if not GSFHubDB.goalsByChar[charKey] then
+				GSFHubDB.goalsByChar[charKey] = {}
+			end
+			for _, g in ipairs(GSFHubDB.myGoals) do
+				table.insert(GSFHubDB.goalsByChar[charKey], (type(g) == "table" and CopyTable(g)) or g)
+			end
+		end
+
+		GSFHubDB.goalsMigrated = true
+	end
+
+	-- Ensure active character has its own goals table
+	if not GSFHubDB.goalsByChar[charKey] then
+		GSFHubDB.goalsByChar[charKey] = {}
+	end
+
+	-- Maintain backward-compatible references
+	GSFHubDB.myGoals = GSFHubDB.goalsByChar[charKey]
+	if GSF.db then
+		GSF.db.myGoals = GSFHubDB.goalsByChar[charKey]
+	end
 end
 
 function GSF.DB:Initialize()

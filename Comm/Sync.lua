@@ -153,6 +153,7 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 		targetMember.lastSeen = time()
 		targetMember.professions = data.professions or {}
 		targetMember.surplus = data.surplus or {}
+		targetMember.wishlist = data.wishlist or {}
 
 		if data.main then
 			GSF.Alts:SetMain(data.name or sender, data.main)

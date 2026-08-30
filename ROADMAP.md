@@ -12,7 +12,8 @@ graph LR
     v11 --> v12["v1.2.3<br/><b>Gathering & Atlas</b><br/>(Released)"]
     v12 --> v124["v1.2.4<br/><b>UI Harmonization</b><br/>(Released)"]
     v124 --> v125["v1.2.5<br/><b>Scope Isolation</b><br/>(Released)"]
-    v125 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
+    v125 --> v126["v1.2.6<br/><b>Wishlist & Goals Scope</b><br/>(Released)"]
+    v126 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Next Up)"]
     v13 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Planned)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
@@ -22,6 +23,12 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.2.6 - Character Scope Isolation for Wishlists & Goals *(Released)*
+- [x] **Per-Character Recipe Wishlist Scoping (`wishlistByChar`):** Partitioned recipe wishlists by character key (`"<CharacterName> - <RealmName>"`). Pinned recipes on an engineering alt no longer bleed into newly created or other guild characters.
+- [x] **Smart Non-Destructive Wishlist Migration:** Automatically attributes legacy account-level wishlists to the character that originally created them (via work order requester history or designated main), granting new characters an immediate clean slate while preserving existing wishlists.
+- [x] **Per-Character Personal Goals Isolation (`goalsByChar`):** Partitioned `myGoals` by character so pinned Goals HUD trackers and bag counters remain isolated to each character's active inventory.
+- [x] **Peer Wishlist Loot Tracking (`RecipeDrops.lua` & `Sync.lua`):** Saved incoming member wishlists to guild cache records, enabling group recipe drop alerts to accurately flag any guild member who has the dropped recipe on their personal wishlist.
 
 ### ✅ v1.2.5 - Multi-Guild & Solo Scope Isolation Suite *(Released)*
 - [x] **Partitioned Scoped Cache (`GSFHubCache.scopes`):** Partitioned by `Guild - <GuildName> - <RealmName>` and `Solo - <PlayerName> - <RealmName>`, isolating guild data from foreign characters.

@@ -58,19 +58,26 @@ GSFHubDB = {
     goalsHUDPos = { point = "TOPRIGHT", x = -200, y = -150 },
     mainCharacter = "CharacterName",    -- Player's designated Main character
     myRoleTags = { "MINER", "HERBALIST" },
-    myGoals = {
-        ["<GoalId>"] = { id = "...", name = "Fel Iron Ore", itemID = 23424, current = 8, target = 20, icon = 134567 }
+    myGoals = { ... },                  -- Active character personal goals mirror
+    goalsByChar = {                     -- Character-scoped goals
+        ["<CharName> - <Realm>"] = { ... }
     },
     minimap = {
         hide = false,
         minimapPos = 220,               -- Angle around minimap in degrees
     },
-    myWishlist = {
+    myWishlist = {                      -- Active character recipe wishlist mirror
         ["<itemId or name>"] = { name = "...", link = "...", addedAt = 1700000000 }
+    },
+    wishlistByChar = {                  -- Character-scoped recipe wishlists
+        ["<CharName> - <Realm>"] = { ... }
     },
     myWorkOrders = { ... },
     mySurplus = { ... },
     characterProfessions = { ... },     -- Local character profession snapshots
+    characterProfessionsByChar = {      -- Character-scoped trade skill records
+        ["<CharName> - <Realm>"] = { ... }
+    },
 }
 ```
 

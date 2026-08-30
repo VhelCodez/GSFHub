@@ -246,10 +246,20 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 		end
 	end
 
-	-- Check wishlists
+	-- Check wishlists (local player and guild members)
 	local itemId = tonumber(itemLink:match("item:(%d+)") or 0)
-	if GSF.db.myWishlist and (GSF.db.myWishlist[tostring(itemId)] or GSF.db.myWishlist[itemName]) then
-		table.insert(wishlistedBy, GSF.DB:GetPlayerName())
+	local myName = GSF.DB:GetPlayerName()
+	if GSF.db and GSF.db.myWishlist and (GSF.db.myWishlist[tostring(itemId)] or GSF.db.myWishlist[itemName]) then
+		table.insert(wishlistedBy, myName)
+	end
+	if GSF.cache and GSF.cache.members then
+		for memberName, memberData in pairs(GSF.cache.members) do
+			if memberName ~= myName and memberData.wishlist then
+				if (itemId and itemId > 0 and memberData.wishlist[tostring(itemId)]) or memberData.wishlist[itemName] then
+					table.insert(wishlistedBy, memberName)
+				end
+			end
+		end
 	end
 
 	-- Record recent drop

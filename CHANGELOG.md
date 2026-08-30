@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.6] - 2026-08-30
+
+### Fixed
+- **Per-Character Recipe Wishlist Scoping (`wishlistByChar`):** Partitioned recipe wishlists by character key (`"<CharacterName> - <RealmName>"`). Pinned recipes on an engineering alt no longer bleed into newly created or other guild characters.
+- **Smart Non-Destructive Wishlist Migration:** Automatically attributes legacy account-level wishlists to the character that originally created them (via work order requester history or designated main), granting new characters an immediate clean slate while preserving existing wishlists.
+- **Per-Character Personal Goals Isolation (`goalsByChar`):** Partitioned `myGoals` by character so pinned Goals HUD trackers and bag counters remain isolated to each character's active inventory.
+- **Peer Wishlist Loot Tracking (`RecipeDrops.lua` & `Sync.lua`):** Saved incoming member wishlists to guild cache records, enabling group recipe drop alerts to accurately flag any guild member who has the dropped recipe on their personal wishlist.
+
+---
+
 ## [1.2.5] - 2026-08-30
 
 ### Added
