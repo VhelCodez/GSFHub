@@ -109,10 +109,27 @@ function Tab:BuildCreateModal(parent)
 	modal:SetSize(400, 310)
 	modal:SetPoint("CENTER", parent, "CENTER", 0, 0)
 	modal:SetFrameStrata("DIALOG")
+	modal:EnableMouse(true)
+	if BackdropTemplateMixin then Mixin(modal, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(modal, false)
-	modal:SetBackdropColor(0.06, 0.06, 0.08, 0.98)
+	modal:SetBackdropColor(0.08, 0.08, 0.12, 1.0)
 	modal:Hide()
 	self.modal = modal
+
+	local blocker = CreateFrame("Frame", nil, parent)
+	blocker:SetAllPoints(parent)
+	blocker:SetFrameStrata("DIALOG")
+	blocker:SetFrameLevel(parent:GetFrameLevel() + 50)
+	if BackdropTemplateMixin then Mixin(blocker, BackdropTemplateMixin) end
+	blocker:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	blocker:SetBackdropColor(0, 0, 0, 0.6)
+	blocker:EnableMouse(true)
+	blocker:Hide()
+	modal.blocker = blocker
+
+	modal:SetFrameLevel(blocker:GetFrameLevel() + 5)
+	modal:HookScript("OnShow", function() if modal.blocker then modal.blocker:Show() end end)
+	modal:HookScript("OnHide", function() if modal.blocker then modal.blocker:Hide() end end)
 
 	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	title:SetPoint("TOP", modal, "TOP", 0, -15)
@@ -339,34 +356,76 @@ function Tab:OpenCreateModal(prefillItem, prefillProf, prefillQty, prefillNotes,
 	self.modalItemBox.lastItemLink = nil
 	self.modalItemBox.lastItemID = nil
 
-	-- Trigger item resolution exactly like the create flow
-	local queryTarget = prefillLink or prefillId or (prefillItem and prefillItem:match("item:(%d+)") and tonumber(prefillItem:match("item:(%d+)"))) or prefillItem
-	if queryTarget and queryTarget ~= "" then
-		local numId = tonumber(prefillId) or tonumber(type(queryTarget) == "number" and queryTarget or (tostring(queryTarget):match("item:(%d+)")))
-		local name, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(queryTarget)
+	-- Trigger item/spell resolution
+	local spellId = tonumber(prefillId) or (prefillLink and tonumber(prefillLink:match("enchant:(%d+)") or prefillLink:match("spell:(%d+)"))) or (prefillItem and tonumber(prefillItem:match("enchant:(%d+)") or prefillItem:match("spell:(%d+)")))
+	local resolved = false
 
-		if name and texture then
-			self.modalItemSlot:SetItem(name, texture, itemLink or prefillLink, numId or (itemLink and tonumber(itemLink:match("item:(%d+)"))))
-			self.modalItemBox.lastItemName = name
-			self.modalItemBox.lastItemLink = itemLink or prefillLink
-			self.modalItemBox.lastItemID = numId or (itemLink and tonumber(itemLink:match("item:(%d+)")))
-		elseif numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID and Item and Item.CreateFromItemID then
-			C_Item.RequestLoadItemDataByID(numId)
-			local item = Item:CreateFromItemID(numId)
-			if item and not item:IsItemEmpty() and item:GetItemID() then
-				pcall(function()
-					item:ContinueOnItemLoad(function()
-						local n = item:GetItemName()
-						local icon = item:GetItemIcon()
-						local l = item:GetItemLink()
-						if icon and self.modalItemSlot then
-							self.modalItemSlot:SetItem(n or prefillItem, icon, l or prefillLink, numId)
-							self.modalItemBox.lastItemName = n or prefillItem
-							self.modalItemBox.lastItemLink = l or prefillLink
-							self.modalItemBox.lastItemID = numId
-						end
+	if spellId and GetSpellInfo then
+		local sName, _, sTexture = GetSpellInfo(spellId)
+		if sName and sTexture then
+			local sLink = (GetSpellLink and GetSpellLink(spellId)) or prefillLink or string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellId, sName)
+			self.modalItemSlot:SetItem(sName, sTexture, sLink, spellId)
+			self.modalItemBox.lastItemName = sName
+			self.modalItemBox.lastItemLink = sLink
+			self.modalItemBox.lastItemID = spellId
+			resolved = true
+		end
+	end
+
+	if not resolved then
+		local queryTarget = prefillLink or prefillId or (prefillItem and prefillItem:match("item:(%d+)") and tonumber(prefillItem:match("item:(%d+)"))) or prefillItem
+		if queryTarget and queryTarget ~= "" then
+			local numId = tonumber(prefillId) or tonumber(type(queryTarget) == "number" and queryTarget or (tostring(queryTarget):match("item:(%d+)")))
+			local name, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(queryTarget)
+
+			if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
+				local yd = AtlasJournal:GetItemDetails(numId)
+				if yd and yd.icon then
+					texture = yd.icon
+					name = name or yd.name or prefillItem
+					itemLink = itemLink or yd.link or prefillLink
+				end
+			end
+
+			if not texture and AtlasJournal and AtlasJournal.FindResource and type(queryTarget) == "string" then
+				local yd = AtlasJournal:FindResource(queryTarget)
+				if yd and yd.icon then
+					texture = yd.icon
+					name = name or yd.name or prefillItem
+					itemLink = itemLink or yd.link or prefillLink
+					numId = numId or yd.itemId
+				end
+			end
+
+			if name and texture then
+				self.modalItemSlot:SetItem(name, texture, itemLink or prefillLink, numId or (itemLink and tonumber(itemLink:match("item:(%d+)"))))
+				self.modalItemBox.lastItemName = name
+				self.modalItemBox.lastItemLink = itemLink or prefillLink
+				self.modalItemBox.lastItemID = numId or (itemLink and tonumber(itemLink:match("item:(%d+)")))
+			elseif numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID and Item and Item.CreateFromItemID then
+				C_Item.RequestLoadItemDataByID(numId)
+				local item = Item:CreateFromItemID(numId)
+				if item and not item:IsItemEmpty() and item:GetItemID() then
+					pcall(function()
+						item:ContinueOnItemLoad(function()
+							local n = item:GetItemName()
+							local icon = item:GetItemIcon()
+							local l = item:GetItemLink()
+							if icon and self.modalItemSlot then
+								self.modalItemSlot:SetItem(n or prefillItem, icon, l or prefillLink, numId)
+								self.modalItemBox.lastItemName = n or prefillItem
+								self.modalItemBox.lastItemLink = l or prefillLink
+								self.modalItemBox.lastItemID = numId
+							end
+						end)
 					end)
-				end)
+				end
+			elseif GetSpellInfo and prefillItem and prefillItem ~= "" then
+				local sName, _, sTexture = GetSpellInfo(prefillItem)
+				if sName and sTexture then
+					self.modalItemSlot:SetItem(sName, sTexture, prefillLink, nil)
+					self.modalItemBox.lastItemName = sName
+				end
 			end
 		end
 	end
@@ -481,13 +540,17 @@ function Tab:Refresh()
 			statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
 			card.statusText = statusText
 
-			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_ORDER"], 95, 22)
+			local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_ORDER"] or "Claim", 85, 22)
 			actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
 			card.actionBtn = actionBtn
 
-			local whisperBtn = GSF.UI:CreateButton(card, GSF.L["WHISPER"] or "Whisper", 95, 22)
-			whisperBtn:SetPoint("RIGHT", actionBtn, "LEFT", -8, 0)
+			local whisperBtn = GSF.UI:CreateButton(card, GSF.L["WHISPER"] or "Whisper", 80, 22)
+			whisperBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
 			card.whisperBtn = whisperBtn
+
+			local cancelBtn = GSF.UI:CreateButton(card, GSF.L["CANCEL_ORDER"] or "Cancel", 75, 22)
+			cancelBtn:SetPoint("RIGHT", whisperBtn, "LEFT", -6, 0)
+			card.cancelBtn = cancelBtn
 
 			table.insert(self.orderCards, card)
 		end
@@ -510,10 +573,38 @@ function Tab:Refresh()
 
 		-- Resolve icon texture and tooltip for the card
 		local _, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(order.itemLink or order.itemId or order.item)
+		if not texture and order.itemId and GetSpellInfo then
+			local sName, _, sTexture = GetSpellInfo(order.itemId)
+			if sTexture then
+				texture = sTexture
+			end
+		end
+		if not texture and order.itemId and AtlasJournal and AtlasJournal.GetItemDetails then
+			local yd = AtlasJournal:GetItemDetails(order.itemId)
+			if yd and yd.icon then
+				texture = yd.icon
+				itemLink = itemLink or yd.link
+			end
+		end
+		if not texture and order.item and AtlasJournal and AtlasJournal.FindResource then
+			local yd = AtlasJournal:FindResource(order.item)
+			if yd and yd.icon then
+				texture = yd.icon
+				itemLink = itemLink or yd.link
+			end
+		end
+		if not texture and order.item and GetSpellInfo then
+			local sName, _, sTexture = GetSpellInfo(order.item)
+			if sTexture then
+				texture = sTexture
+			end
+		end
+
 		if texture then
 			card.iconSlot:SetItem(order.item, texture, itemLink or order.itemLink, order.itemId)
 		else
-			local profInfo = order.profession and GSF.PROFESSIONS[order.profession]
+			local canon = GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(order.profession) or order.profession
+			local profInfo = canon and GSF.PROFESSIONS[canon]
 			local fallbackIcon = profInfo and profInfo.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
 			card.iconSlot:SetItem(order.item, fallbackIcon, order.itemLink, order.itemId)
 			if order.itemId and C_Item and C_Item.RequestLoadItemDataByID then
@@ -543,30 +634,37 @@ function Tab:Refresh()
 		card.details:SetText(string.format("%s %s  •  %s", GSF.L["REQUESTED_BY"] or "Requested by:", reqFormatted, matsStr))
 		card.notes:SetText(order.notes ~= "" and ((GSF.L["NOTE"] or "Note:") .. " " .. order.notes) or "")
 
+		card.cancelBtn:Hide()
+
 		if order.status == GSF.ORDER_STATUS.OPEN then
 			card.statusText:SetText("|cff00ff00" .. GSF.L["STATUS_OPEN"] .. "|r")
+			card.actionBtn:SetText(GSF.L["CLAIM_ORDER"] or "Claim")
+			card.actionBtn:SetScript("OnClick", function()
+				GSF.WorkOrders:ClaimOrder(order.id)
+				Tab:Refresh()
+			end)
+			card.actionBtn:Show()
+
 			if isMine then
-				card.actionBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
-				card.actionBtn:SetScript("OnClick", function()
-					GSF.WorkOrders:CancelOrder(order.id)
-					Tab:Refresh()
-				end)
 				card.whisperBtn:SetText(GSF.L["EDIT"] or "Edit")
 				card.whisperBtn:Show()
 				card.whisperBtn:SetScript("OnClick", function()
 					Tab:OpenCreateModal(order.item, order.profession, order.count, order.notes, order.matsProvided, order.id, order.itemLink, order.itemId)
 				end)
-			else
-				card.actionBtn:SetText(GSF.L["CLAIM_ORDER"] or "Claim")
-				card.actionBtn:SetScript("OnClick", function()
-					GSF.WorkOrders:ClaimOrder(order.id)
+
+				card.cancelBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
+				card.cancelBtn:Show()
+				card.cancelBtn:SetScript("OnClick", function()
+					GSF.WorkOrders:CancelOrder(order.id)
 					Tab:Refresh()
 				end)
+			else
 				card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
 				card.whisperBtn:Show()
 				card.whisperBtn:SetScript("OnClick", function()
 					ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
 				end)
+				card.cancelBtn:Hide()
 			end
 		elseif order.status == GSF.ORDER_STATUS.CLAIMED then
 			local crafterFormatted = GSF.Alts:GetFormattedName(order.crafter)
@@ -577,23 +675,42 @@ function Tab:Refresh()
 					GSF.WorkOrders:UnclaimOrder(order.id)
 					Tab:Refresh()
 				end)
+				card.actionBtn:Show()
+
+				if isMine then
+					card.whisperBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
+					card.whisperBtn:Show()
+					card.whisperBtn:SetScript("OnClick", function()
+						StaticPopup_Show("GSF_CONFIRM_COMPLETE_ORDER", nil, nil, { orderId = order.id })
+					end)
+				else
+					card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
+					card.whisperBtn:Show()
+					card.whisperBtn:SetScript("OnClick", function()
+						ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
+					end)
+				end
 			elseif isMine then
 				card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
 				card.actionBtn:SetScript("OnClick", function()
 					StaticPopup_Show("GSF_CONFIRM_COMPLETE_ORDER", nil, nil, { orderId = order.id })
 				end)
+				card.actionBtn:Show()
+
+				card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
+				card.whisperBtn:Show()
+				card.whisperBtn:SetScript("OnClick", function()
+					ChatFrame_OpenChat(string.format("/w %s Hi, regarding the GSF work order for [%s]...", order.crafter, order.item))
+				end)
 			else
 				card.actionBtn:SetText(GSF.L["STATUS_CLAIMED"])
 				card.actionBtn:SetScript("OnClick", nil)
-			end
+				card.actionBtn:Show()
 
-			card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
-			if isMine then
-				card.whisperBtn:Hide()
-			else
+				card.whisperBtn:SetText(GSF.L["WHISPER"] or "Whisper")
 				card.whisperBtn:Show()
 				card.whisperBtn:SetScript("OnClick", function()
-					ChatFrame_OpenChat(string.format("/w %s Hi, regarding your GSF work order for [%s]...", order.requester, order.item))
+					ChatFrame_OpenChat(string.format("/w %s Hi, regarding the GSF work order for [%s]...", order.requester, order.item))
 				end)
 			end
 		end

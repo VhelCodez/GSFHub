@@ -17,6 +17,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.2] - 2026-09-01
+
+### Added
+- **Two-Sided Bounty Confirmation Handshake:**
+  - Added full delivery lifecycle safeguards for in-person handoffs (`[Geliefert melden]` / `[Verschicken]`).
+  - Requesters verify receipt with `[Erhalt bestätigen]` or safely reject dishonest/unfulfilled deliveries with `[Nicht erhalten]`, which automatically reopens the bounty to the guild.
+- **Live Bag Progress Tracking & Insufficient Inventory Safeguards:**
+  - Claimed bounties dynamically display inventory counts (`In Taschen: X/Y`) updating in real-time via `BAG_UPDATE` events.
+  - Attempting to fulfill a bounty with incomplete bags triggers a confirmation safeguard dialog (`GSF_CONFIRM_FULFILL_BOUNTY_INSUFFICIENT`).
+- **Interactive Goals-to-Bounties Linking & Golden Card Glow:**
+  - Pinned bounty goals in the Atlas Goals list display requester info (`[Gilden-Auftrag] • Von: <Name>`) and a direct **[Auftrag]** button.
+  - Clicking **[Auftrag]** switches to the Bounties view, auto-scrolls to the target card with viewport clamping, and applies a radiant 3-second golden glow backdrop and border.
+- **Top-5 Prioritized Goals HUD Clamping:**
+  - The floating on-screen HUD displays only the top 5 prioritized goals, fully reorderable from the Goals list with a direct shortcut link (`+X weitere im Atlas verwalten`).
+- **Self-Claiming Support:**
+  - Allowed players to claim and fulfill their own open Work Orders and Material Bounties for streamlined alt/self-farming workflows.
+- **Multi-Toast Queue & Frame Pooling Architecture (`Toast.lua`):**
+  - Rebuilt the Toast engine with frame pooling, 3-card vertical stacking, automatic FIFO queueing, sound alert throttling (400ms cooldown), and click-to-dismiss reflow.
+
+### Changed
+- **Bounty Card Layout Redesign (3-Line Hierarchy):**
+  - Expanded card height to 72px (78px vertical pitch) with zero text/button collisions.
+  - Line 1: Item Title + Status Tag; Line 2: Requester + Notes (with mouseover tooltip for long notes); Line 3: Bag Progress (bottom-left) + Action Buttons (bottom-right).
+- **Button Label Disambiguation & Polish:**
+  - Shortened Bounty Claim button label from *"Auftrag annehmen"* to **`"Annehmen"`** (*"Claim"*).
+  - Disambiguated release vs. cancellation: **`"Freigeben"`** (*Release / Unclaim*) vs. **`"Abbrechen"`** (*Cancel*).
+- **Streamlined Atlas Request Modal:**
+  - Removed redundant manual title input for `BOUNTY` and `BOUNTY_EDIT` modes while permanently preserving full item metadata, IDs, links, and icons.
+- **Notification Deactivation by Default:**
+  - Deactivated toast and sound options by default in `Database.lua` and greyed out their checkboxes in Settings while the notification system undergoes design review.
+
+### Fixed
+- **Surgical Duplicate Material Goal Removal:**
+  - Bound claimed bounty goals to unique `bountyId` references so unclaiming one bounty of multiple identical materials (e.g. Copper Ore) never purges neighboring goals.
+- **Fixed `RemoveGoal` Argument Type Error:**
+  - Made `GoalsHUD:RemoveGoal(target)` polymorphic, safely supporting both numeric indices and unique string IDs.
+- **Fixed Note Tooltip Double Colon (`::`):**
+  - Cleaned up trailing colons in localized header formatting.
+- **Fixed Auto-Scroll Viewport Overshoot:**
+  - Clamped scroll position to `GetVerticalScrollRange()`, preventing list clipping when entries fit entirely within the 360px viewport.
+- **Fixed Highlight Auto-Fade Timer:**
+  - Corrected active view scoping so the 3.0s golden glow highlight timer reliably clears.
+
+---
+
 ## [1.3.1] - 2026-08-30
 
 ### Added

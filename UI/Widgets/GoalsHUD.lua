@@ -121,6 +121,30 @@ function GSF.GoalsHUD:Initialize()
 	content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -6, 6)
 	f.content = content
 
+	-- Footer button for extra goals (+X more in Atlas)
+	local moreBtn = CreateFrame("Button", nil, content)
+	moreBtn:SetSize(204, 16)
+	local moreText = moreBtn:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	moreText:SetAllPoints()
+	moreText:SetJustifyH("CENTER")
+	moreBtn.text = moreText
+	moreBtn:SetScript("OnClick", function()
+		if GSF.TabAtlas then
+			if GSF.MainFrame and not GSF.MainFrame:IsShown() then
+				GSF.UI:ToggleMainFrame()
+			end
+			GSF.TabAtlas:SwitchView("GOALS")
+		end
+	end)
+	moreBtn:SetScript("OnEnter", function()
+		moreText:SetTextColor(1, 0.82, 0)
+	end)
+	moreBtn:SetScript("OnLeave", function()
+		moreText:SetTextColor(0.6, 0.6, 0.6)
+	end)
+	moreBtn:Hide()
+	f.moreBtn = moreBtn
+
 	-- Empty state prompt
 	local emptyText = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	emptyText:SetPoint("CENTER", content, "CENTER", 0, 0)
@@ -219,7 +243,7 @@ function GSF.GoalsHUD:AddPersonalGoal(material, title, target, notes, icon, cate
 	return true, goal
 end
 
-function GSF.GoalsHUD:AddGoal(itemName, targetCount, category, bountyId)
+function GSF.GoalsHUD:AddGoal(itemName, targetCount, category, bountyId, icon, itemID)
 	if not itemName or itemName:trim() == "" then return end
 	if not GSF.db then return end
 	if not GSF.db.myGoals then GSF.db.myGoals = {} end
@@ -228,23 +252,29 @@ function GSF.GoalsHUD:AddGoal(itemName, targetCount, category, bountyId)
 	local target = tonumber(targetCount) or 20
 
 	if bountyId then
+		local bIdStr = tostring(bountyId)
+		local goalId = "bounty-" .. bIdStr
 		local exists = false
 		for _, g in ipairs(GSF.db.myGoals) do
-			if g.bountyId == bountyId then
+			if g.bountyId == bIdStr or g.id == goalId then
 				g.target = target
+				if icon then g.icon = icon end
+				if itemID then g.itemID = itemID end
 				exists = true
 				break
 			end
 		end
 		if not exists then
 			table.insert(GSF.db.myGoals, {
-				id = "bounty-" .. tostring(bountyId),
+				id = goalId,
 				material = cleanName,
 				title = cleanName,
 				name = cleanName,
 				target = target,
 				category = category or "Bounty",
-				bountyId = bountyId,
+				bountyId = bIdStr,
+				icon = icon or "Interface\\Icons\\INV_Misc_QuestionMark",
+				itemID = itemID,
 				notes = "",
 				created = time(),
 			})
@@ -256,7 +286,7 @@ function GSF.GoalsHUD:AddGoal(itemName, targetCount, category, bountyId)
 		return
 	end
 
-	self:AddPersonalGoal(cleanName, cleanName, target, "", nil, category)
+	self:AddPersonalGoal(cleanName, cleanName, target, "", icon, category, nil, itemID)
 end
 
 function GSF.GoalsHUD:MoveGoal(index, direction)
@@ -286,27 +316,51 @@ function GSF.GoalsHUD:ReorderGoal(sourceIndex, targetIndex)
 	end
 end
 
-function GSF.GoalsHUD:RemoveGoal(index)
-	if not GSF.db or not GSF.db.myGoals then return end
-	table.remove(GSF.db.myGoals, index)
-	self:Refresh()
-	if self.managerDialog and self.managerDialog:IsShown() then
-		self:RefreshManagerDialog()
-	end
-end
+function GSF.GoalsHUD:RemoveGoal(target)
+	if not GSF.db or not GSF.db.myGoals or not target then return end
+	if type(target) == "number" then
+		if target >= 1 and target <= #GSF.db.myGoals then
+			table.remove(GSF.db.myGoals, target)
+		end
+	elseif type(target) == "string" then
+		local targetStr = tostring(target)
+		local lower = targetStr:lower():trim()
+		local bountyGoalId = "bounty-" .. targetStr
+		local removedById = false
 
-function GSF.GoalsHUD:RemoveGoalByName(name)
-	if not GSF.db or not GSF.db.myGoals or not name then return end
-	local lower = name:lower():trim()
-	for i = #GSF.db.myGoals, 1, -1 do
-		if GSF.db.myGoals[i].name:lower():trim() == lower then
-			table.remove(GSF.db.myGoals, i)
+		-- Step 1: Exact ID or bountyId match (surgical removal of specific bounty)
+		for i = #GSF.db.myGoals, 1, -1 do
+			local g = GSF.db.myGoals[i]
+			if (g.id and (g.id == targetStr or g.id == bountyGoalId)) or (g.bountyId and (tostring(g.bountyId) == targetStr or tostring(g.bountyId) == lower)) then
+				table.remove(GSF.db.myGoals, i)
+				removedById = true
+			end
+		end
+
+		-- Step 2: Fallback to name match ONLY if no ID matched (removes only 1 instance to avoid wiping duplicates)
+		if not removedById then
+			for i = #GSF.db.myGoals, 1, -1 do
+				local g = GSF.db.myGoals[i]
+				if (g.name and g.name:lower():trim() == lower) or (g.material and g.material:lower():trim() == lower) then
+					table.remove(GSF.db.myGoals, i)
+					break
+				end
+			end
 		end
 	end
 	self:Refresh()
 	if self.managerDialog and self.managerDialog:IsShown() then
 		self:RefreshManagerDialog()
 	end
+end
+
+function GSF.GoalsHUD:RemoveGoalByBountyId(bountyId)
+	if not bountyId then return end
+	self:RemoveGoal(tostring(bountyId))
+end
+
+function GSF.GoalsHUD:RemoveGoalByName(name)
+	self:RemoveGoal(name)
 end
 
 function GSF.GoalsHUD:CountItemInBags(itemName, itemID)
@@ -374,79 +428,13 @@ function GSF.GoalsHUD:Refresh()
 
 	for _, r in ipairs(goalRows) do r:Hide() end
 
+	local maxHUDGoals = 5
 	local remainingCounts = {}
 	local yOffset = 0
+	local totalGoals = #GSF.db.myGoals
+
 	for i, goal in ipairs(GSF.db.myGoals) do
-		local row = goalRows[i]
-		if not row then
-			row = CreateFrame("Frame", nil, hudFrame.content)
-			row:SetSize(208, 32)
-
-			local bar = CreateFrame("StatusBar", nil, row)
-			bar:SetSize(204, 14)
-			bar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 2, 2)
-			bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-			bar:SetStatusBarColor(0.2, 0.8, 0.4, 0.9)
-
-			local barBg = bar:CreateTexture(nil, "BACKGROUND")
-			barBg:SetAllPoints()
-			barBg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
-
-			local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			label:SetPoint("TOPLEFT", row, "TOPLEFT", 2, 0)
-			label:SetJustifyH("LEFT")
-			label:SetWordWrap(false)
-			row.label = label
-
-			local noteIcon = CreateFrame("Button", nil, row)
-			noteIcon:SetSize(12, 12)
-			local noteTex = noteIcon:CreateTexture(nil, "ARTWORK")
-			noteTex:SetAllPoints()
-			noteTex:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
-			noteIcon.tex = noteTex
-			noteIcon:Hide()
-			row.noteIcon = noteIcon
-
-			local barText = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			barText:SetPoint("CENTER", bar, "CENTER", 0, 0)
-			row.barText = barText
-
-			local removeBtn = CreateFrame("Button", nil, row)
-			removeBtn:SetSize(14, 14)
-			removeBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, 1)
-			removeBtn:SetAlpha(0.35)
-			local rmTex = removeBtn:CreateTexture(nil, "ARTWORK")
-			rmTex:SetAllPoints()
-			rmTex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-			removeBtn:SetScript("OnEnter", function(btn)
-				btn:SetAlpha(1.0)
-				GameTooltip:SetOwner(btn, "ANCHOR_TOP")
-				GameTooltip:SetText(GSF.L["REMOVE_GOAL_TOOLTIP"])
-				GameTooltip:Show()
-			end)
-			removeBtn:SetScript("OnLeave", function(btn)
-				btn:SetAlpha(0.35)
-				GameTooltip:Hide()
-			end)
-			row.removeBtn = removeBtn
-
-			row.bar = bar
-			table.insert(goalRows, row)
-		end
-
-		row:SetPoint("TOPLEFT", hudFrame.content, "TOPLEFT", 0, -yOffset)
-
-		local gIdx = i
-		local gData = goal
-		row.removeBtn:SetScript("OnClick", function()
-			if gData.bountyId or gData.category == "Bounty" then
-				StaticPopup_Show("GSF_CONFIRM_UNCLAIM_BOUNTY", nil, nil, { index = gIdx, bountyId = gData.bountyId, itemName = gData.name })
-			else
-				GSF.GoalsHUD:RemoveGoal(gIdx)
-			end
-		end)
-
-		-- FIFO Waterfall Inventory Allocation
+		-- FIFO Waterfall Inventory Allocation (computes across all goals in sequence)
 		local matKey = (goal.material or goal.name):lower():trim()
 		if remainingCounts[matKey] == nil then
 			remainingCounts[matKey] = self:CountItemInBags(goal.material or goal.name, goal.itemID)
@@ -456,59 +444,138 @@ function GSF.GoalsHUD:Refresh()
 		local target = goal.target or 1
 		local allocated = math.min(avail, target)
 		remainingCounts[matKey] = avail - allocated
-
 		local pct = math.min(math.floor((allocated / target) * 100), 100)
 
-		local isBounty = (goal.bountyId or goal.category == "Bounty")
-		local tag = isBounty and ("|cffffd100" .. (GSF.L["BOUNTY_TAG"] or "[Bounty]") .. " |r") or ""
-		local dispTitle = goal.title or goal.name
-		row.label:SetText(string.format("%s|cffffffff%s|r", tag, dispTitle))
+		if i <= maxHUDGoals then
+			local row = goalRows[i]
+			if not row then
+				row = CreateFrame("Frame", nil, hudFrame.content)
+				row:SetSize(208, 32)
 
-		local hasNotes = goal.notes and goal.notes:trim() ~= ""
-		local maxTextWidth = hasNotes and 170 or 185
-		row.label:SetWidth(0)
-		local strWidth = row.label:GetStringWidth()
-		if strWidth > maxTextWidth then
-			row.label:SetWidth(maxTextWidth)
-			strWidth = maxTextWidth
-		else
-			row.label:SetWidth(strWidth)
-		end
+				local bar = CreateFrame("StatusBar", nil, row)
+				bar:SetSize(204, 14)
+				bar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 2, 2)
+				bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+				bar:SetStatusBarColor(0.2, 0.8, 0.4, 0.9)
 
-		-- Note icon immediately following text
-		if hasNotes then
-			row.noteIcon:ClearAllPoints()
-			row.noteIcon:SetPoint("LEFT", row.label, "RIGHT", 4, 0)
-			row.noteIcon:Show()
-			row.noteIcon:SetScript("OnEnter", function(selfIcon)
-				GameTooltip:SetOwner(selfIcon, "ANCHOR_RIGHT")
-				GameTooltip:AddLine(dispTitle, 1, 0.82, 0)
-				GameTooltip:AddLine(GSF.L["NOTE_TOOLTIP_HEADER"] or "Goal Note:", 0.7, 0.7, 0.7)
-				GameTooltip:AddLine(goal.notes, 1, 1, 1, true)
-				GameTooltip:Show()
+				local barBg = bar:CreateTexture(nil, "BACKGROUND")
+				barBg:SetAllPoints()
+				barBg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+
+				local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				label:SetPoint("TOPLEFT", row, "TOPLEFT", 2, 0)
+				label:SetJustifyH("LEFT")
+				label:SetWordWrap(false)
+				row.label = label
+
+				local noteIcon = CreateFrame("Button", nil, row)
+				noteIcon:SetSize(12, 12)
+				local noteTex = noteIcon:CreateTexture(nil, "ARTWORK")
+				noteTex:SetAllPoints()
+				noteTex:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
+				noteIcon.tex = noteTex
+				noteIcon:Hide()
+				row.noteIcon = noteIcon
+
+				local barText = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				barText:SetPoint("CENTER", bar, "CENTER", 0, 0)
+				row.barText = barText
+
+				local removeBtn = CreateFrame("Button", nil, row)
+				removeBtn:SetSize(14, 14)
+				removeBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, 1)
+				removeBtn:SetAlpha(0.35)
+				local rmTex = removeBtn:CreateTexture(nil, "ARTWORK")
+				rmTex:SetAllPoints()
+				rmTex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+				removeBtn:SetScript("OnEnter", function(btn)
+					btn:SetAlpha(1.0)
+					GameTooltip:SetOwner(btn, "ANCHOR_TOP")
+					GameTooltip:SetText(GSF.L["REMOVE_GOAL_TOOLTIP"])
+					GameTooltip:Show()
+				end)
+				removeBtn:SetScript("OnLeave", function(btn)
+					btn:SetAlpha(0.35)
+					GameTooltip:Hide()
+				end)
+				row.removeBtn = removeBtn
+
+				row.bar = bar
+				table.insert(goalRows, row)
+			end
+
+			row:SetPoint("TOPLEFT", hudFrame.content, "TOPLEFT", 0, -yOffset)
+
+			local gIdx = i
+			local gData = goal
+			row.removeBtn:SetScript("OnClick", function()
+				if gData.bountyId or gData.category == "Bounty" then
+					StaticPopup_Show("GSF_CONFIRM_UNCLAIM_BOUNTY", nil, nil, { index = gIdx, bountyId = gData.bountyId, itemName = gData.name })
+				else
+					GSF.GoalsHUD:RemoveGoal(gIdx)
+				end
 			end)
-			row.noteIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
-		else
-			row.noteIcon:Hide()
+
+			local isBounty = (goal.bountyId or goal.category == "Bounty")
+			local tag = isBounty and ("|cffffd100" .. (GSF.L["BOUNTY_TAG"] or "[Bounty]") .. " |r") or ""
+			local dispTitle = goal.title or goal.name
+			row.label:SetText(string.format("%s|cffffffff%s|r", tag, dispTitle))
+
+			local hasNotes = goal.notes and goal.notes:trim() ~= ""
+			local maxTextWidth = hasNotes and 170 or 185
+			row.label:SetWidth(0)
+			local strWidth = row.label:GetStringWidth()
+			if strWidth > maxTextWidth then
+				row.label:SetWidth(maxTextWidth)
+				strWidth = maxTextWidth
+			else
+				row.label:SetWidth(strWidth)
+			end
+
+			-- Note icon immediately following text
+			if hasNotes then
+				row.noteIcon:ClearAllPoints()
+				row.noteIcon:SetPoint("LEFT", row.label, "RIGHT", 4, 0)
+				row.noteIcon:Show()
+				row.noteIcon:SetScript("OnEnter", function(selfIcon)
+					GameTooltip:SetOwner(selfIcon, "ANCHOR_RIGHT")
+					GameTooltip:AddLine(dispTitle, 1, 0.82, 0)
+					GameTooltip:AddLine(GSF.L["NOTE_TOOLTIP_HEADER"] or "Goal Note:", 0.7, 0.7, 0.7)
+					GameTooltip:AddLine(goal.notes, 1, 1, 1, true)
+					GameTooltip:Show()
+				end)
+				row.noteIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			else
+				row.noteIcon:Hide()
+			end
+
+			row.bar:SetMinMaxValues(0, target)
+			row.bar:SetValue(allocated)
+
+			if allocated >= target then
+				row.bar:SetStatusBarColor(0.0, 1.0, 0.3, 0.9)
+				row.barText:SetText(string.format("|cff00ff00%d / %d (100%%)|r", allocated, target))
+			else
+				row.bar:SetStatusBarColor(0.2, 0.9, 0.6, 0.9)
+				row.barText:SetText(string.format("%d / %d (%d%%)", allocated, target, pct))
+			end
+
+			row:Show()
+			yOffset = yOffset + 34
 		end
-
-		row.bar:SetMinMaxValues(0, target)
-		row.bar:SetValue(allocated)
-
-		if allocated >= target then
-			row.bar:SetStatusBarColor(0.0, 1.0, 0.3, 0.9)
-			row.barText:SetText(string.format("|cff00ff00%d / %d (100%%)|r", allocated, target))
-		else
-			row.bar:SetStatusBarColor(0.2, 0.9, 0.6, 0.9)
-			row.barText:SetText(string.format("%d / %d (%d%%)", allocated, target, pct))
-		end
-
-		row:Show()
-		yOffset = yOffset + 34
 	end
 
-	local count = GSF.db.myGoals and #GSF.db.myGoals or 0
-	if count == 0 then
+	if totalGoals > maxHUDGoals and hudFrame.moreBtn then
+		local extra = totalGoals - maxHUDGoals
+		hudFrame.moreBtn:SetPoint("TOPLEFT", hudFrame.content, "TOPLEFT", 0, -yOffset)
+		hudFrame.moreBtn.text:SetText(string.format(GSF.L["HUD_MORE_GOALS"] or "+%d more in Atlas Goals", extra))
+		hudFrame.moreBtn:Show()
+		yOffset = yOffset + 18
+	elseif hudFrame.moreBtn then
+		hudFrame.moreBtn:Hide()
+	end
+
+	if totalGoals == 0 then
 		if hudFrame.emptyText then
 			hudFrame.emptyText:SetText(GSF.L["HUD_EMPTY_PROMPT"] or "No active goals. Pin a resource from the Atlas!")
 			hudFrame.emptyText:Show()

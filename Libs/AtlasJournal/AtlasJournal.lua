@@ -1,9 +1,9 @@
 --[[--------------------------------------------------------------------------
   AtlasJournal
   Standalone Classic & TBC Resource & Gathering Compendium Library
-  Version: 1.1.0
+  Version: 1.1.1
 ----------------------------------------------------------------------------]]
-local MAJOR, MINOR = "LibAtlasJournal-1.1", 1
+local MAJOR, MINOR = "LibAtlasJournal-1.1", 2
 local lib = LibStub and LibStub:NewLibrary(MAJOR, MINOR)
 
 -- If LibStub created a new table, preserve anything already attached to AtlasJournal (like Data or Categories)
@@ -22,7 +22,7 @@ end
 
 local Journal = AtlasJournal
 
-Journal.version = "1.1.0"
+Journal.version = "1.1.1"
 
 -- ============================================================================
 -- 1. Callback System (Event-Driven Reactive Decoupling)
@@ -621,29 +621,35 @@ end
 -- 3. Category Info Resolution
 -- ============================================================================
 function Journal:GetCategoryInfo(catKey)
-	if not self.Categories then
-		return catKey, "Interface\\Icons\\INV_Misc_QuestionMark"
+	if not self.Categories or not catKey then
+		return catKey or "", "Interface\\Icons\\INV_Misc_QuestionMark"
 	end
 	local cat = nil
-	for _, c in ipairs(self.Categories) do
-		if c.key == catKey then cat = c; break end
+	if type(self.Categories) == "table" then
+		if self.Categories[catKey] and type(self.Categories[catKey]) == "table" then
+			cat = self.Categories[catKey]
+		else
+			for _, c in ipairs(self.Categories) do
+				if c.key == catKey then cat = c; break end
+			end
+		end
 	end
 	if not cat then
-		return catKey, "Interface\\Icons\\INV_Misc_QuestionMark"
+		return self:GetLocaleText("CAT_" .. tostring(catKey)) or tostring(catKey), "Interface\\Icons\\INV_Misc_QuestionMark"
 	end
 
 	local name = nil
-	if cat.spellID then
+	if cat.spellID and GetSpellInfo then
 		name = GetSpellInfo(cat.spellID)
-	elseif cat.itemClass and cat.itemSubClass then
+	elseif cat.itemClass and cat.itemSubClass and GetItemSubClassInfo then
 		name = GetItemSubClassInfo(cat.itemClass, cat.itemSubClass)
 	end
 
-	if not name then
-		name = self:GetLocaleText("CAT_" .. catKey) or catKey
+	if not name or name == "" then
+		name = self:GetLocaleText("CAT_" .. tostring(catKey)) or cat.name or catKey
 	end
 
-	return name, cat.icon
+	return name, cat.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
 end
 
 -- ============================================================================

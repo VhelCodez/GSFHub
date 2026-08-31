@@ -215,27 +215,23 @@ function Tab:Create(parent)
 
 	local toastCheck = CreateFrame("CheckButton", nil, notifCard, "UICheckButtonTemplate")
 	toastCheck:SetPoint("TOPLEFT", notifTitle, "BOTTOMLEFT", 0, -8)
-	toastCheck.text:SetText(GSF.L["ENABLE_TOASTS"])
+	toastCheck.text:SetText((GSF.L["ENABLE_TOASTS"] or "Enable Toast Notifications") .. " |cff888888(Deaktiviert)|r")
 	toastCheck.text:SetFontObject("GameFontHighlightSmall")
 	toastCheck.text:SetPoint("LEFT", toastCheck, "RIGHT", 2, 1)
-	toastCheck:SetChecked(GSF.db and GSF.db.enableToasts)
+	toastCheck:SetChecked(false)
+	toastCheck:Disable()
+	toastCheck:SetAlpha(0.4)
 	self.toastCheck = toastCheck
-
-	toastCheck:SetScript("OnClick", function(cb)
-		if GSF.db then GSF.db.enableToasts = cb:GetChecked() end
-	end)
 
 	local soundCheck = CreateFrame("CheckButton", nil, notifCard, "UICheckButtonTemplate")
 	soundCheck:SetPoint("TOPLEFT", toastCheck, "BOTTOMLEFT", 0, -4)
-	soundCheck.text:SetText(GSF.L["ENABLE_SOUNDS"])
+	soundCheck.text:SetText((GSF.L["ENABLE_SOUNDS"] or "Enable Audio Alerts") .. " |cff888888(Deaktiviert)|r")
 	soundCheck.text:SetFontObject("GameFontHighlightSmall")
 	soundCheck.text:SetPoint("LEFT", soundCheck, "RIGHT", 2, 1)
-	soundCheck:SetChecked(GSF.db and GSF.db.enableSounds)
+	soundCheck:SetChecked(false)
+	soundCheck:Disable()
+	soundCheck:SetAlpha(0.4)
 	self.soundCheck = soundCheck
-
-	soundCheck:SetScript("OnClick", function(cb)
-		if GSF.db then GSF.db.enableSounds = cb:GetChecked() end
-	end)
 
 	local dropAnnounceCheck = CreateFrame("CheckButton", nil, notifCard, "UICheckButtonTemplate")
 	dropAnnounceCheck:SetPoint("TOPLEFT", soundCheck, "BOTTOMLEFT", 0, -4)
@@ -377,11 +373,15 @@ function Tab:Refresh()
 	end
 
 	if self.toastCheck then
-		self.toastCheck:SetChecked(GSF.db and GSF.db.enableToasts)
+		self.toastCheck:SetChecked(false)
+		self.toastCheck:Disable()
+		self.toastCheck:SetAlpha(0.4)
 	end
 
 	if self.soundCheck then
-		self.soundCheck:SetChecked(GSF.db and GSF.db.enableSounds)
+		self.soundCheck:SetChecked(false)
+		self.soundCheck:Disable()
+		self.soundCheck:SetAlpha(0.4)
 	end
 
 	if self.dropAnnounceCheck then

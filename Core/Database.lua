@@ -4,8 +4,8 @@ GSF.DB = {}
 
 local defaultSettings = {
 	selectedLocale = "auto",
-	enableToasts = true,
-	enableSounds = true,
+	enableToasts = false,
+	enableSounds = false,
 	announceDropsToParty = true,
 	autoScanOnOpen = true,
 	showGoalsHUD = true,
@@ -255,6 +255,8 @@ function GSF.DB:Initialize()
 
 	-- Bind GSF.db
 	GSF.db = GSFHubDB
+	GSF.db.enableToasts = false
+	GSF.db.enableSounds = false
 
 	-- Bind GSF.cache to active scope
 	self:UpdateScope()

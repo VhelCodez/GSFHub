@@ -22,12 +22,12 @@ function GSF.TradeSkillHook:HookTradeSkill()
 	if not TradeSkillFrame or TradeSkillFrame.gsfBtn then return end
 
 	local btn = CreateFrame("Button", "TradeSkillFrameGSFButton", TradeSkillFrame, "UIPanelButtonTemplate")
-	btn:SetSize(90, 20)
-	btn:SetPoint("TOPRIGHT", TradeSkillFrame, "TOPRIGHT", -30, -38)
-	btn:SetText("GSF Sync")
+	btn:SetSize(76, 18)
+	btn:SetPoint("TOPRIGHT", TradeSkillFrame, "TOPRIGHT", -36, -14)
+	btn:SetText("GSF Hub")
 	btn:SetScript("OnClick", function()
 		if GSF.Scanner then
-			GSF.Scanner:ScanTradeSkill()
+			GSF.Scanner:ScanTradeSkill(true)
 		end
 		if GSF.MainFrame then
 			GSF.MainFrame:Show()
@@ -42,12 +42,12 @@ function GSF.TradeSkillHook:HookCraft()
 	if not CraftFrame or CraftFrame.gsfBtn then return end
 
 	local btn = CreateFrame("Button", "CraftFrameGSFButton", CraftFrame, "UIPanelButtonTemplate")
-	btn:SetSize(90, 20)
-	btn:SetPoint("TOPRIGHT", CraftFrame, "TOPRIGHT", -30, -38)
-	btn:SetText("GSF Sync")
+	btn:SetSize(76, 18)
+	btn:SetPoint("TOPRIGHT", CraftFrame, "TOPRIGHT", -36, -14)
+	btn:SetText("GSF Hub")
 	btn:SetScript("OnClick", function()
 		if GSF.Scanner then
-			GSF.Scanner:ScanCraft()
+			GSF.Scanner:ScanCraft(true)
 		end
 		if GSF.MainFrame then
 			GSF.MainFrame:Show()

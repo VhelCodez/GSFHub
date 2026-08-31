@@ -15,27 +15,55 @@ function GSF.Scanner:Initialize()
 	self:ScanSkillLines()
 end
 
+local scanTimers = {}
+
+function GSF.Scanner:ScheduleTradeSkillScan(isManual)
+	if scanTimers["TradeSkill"] then
+		scanTimers["TradeSkill"]:Cancel()
+		scanTimers["TradeSkill"] = nil
+	end
+	scanTimers["TradeSkill"] = C_Timer.NewTimer(0.3, function()
+		scanTimers["TradeSkill"] = nil
+		if TradeSkillFrame and TradeSkillFrame:IsShown() then
+			GSF.Scanner:ScanTradeSkill(isManual)
+		end
+	end)
+end
+
+function GSF.Scanner:ScheduleCraftScan(isManual)
+	if scanTimers["Craft"] then
+		scanTimers["Craft"]:Cancel()
+		scanTimers["Craft"] = nil
+	end
+	scanTimers["Craft"] = C_Timer.NewTimer(0.3, function()
+		scanTimers["Craft"] = nil
+		if CraftFrame and CraftFrame:IsShown() then
+			GSF.Scanner:ScanCraft(isManual)
+		end
+	end)
+end
+
 function GSF.Scanner:OnTradeSkillShow()
 	if GSF.db and GSF.db.autoScanOnOpen then
-		self:ScanTradeSkill()
+		self:ScheduleTradeSkillScan(false)
 	end
 end
 
 function GSF.Scanner:OnTradeSkillUpdate()
 	if TradeSkillFrame and TradeSkillFrame:IsShown() and GSF.db and GSF.db.autoScanOnOpen then
-		self:ScanTradeSkill()
+		self:ScheduleTradeSkillScan(false)
 	end
 end
 
 function GSF.Scanner:OnCraftShow()
 	if GSF.db and GSF.db.autoScanOnOpen then
-		self:ScanCraft()
+		self:ScheduleCraftScan(false)
 	end
 end
 
 function GSF.Scanner:OnCraftUpdate()
 	if CraftFrame and CraftFrame:IsShown() and GSF.db and GSF.db.autoScanOnOpen then
-		self:ScanCraft()
+		self:ScheduleCraftScan(false)
 	end
 end
 
@@ -45,16 +73,16 @@ end
 
 function GSF.Scanner:ScanCurrentWindow()
 	if TradeSkillFrame and TradeSkillFrame:IsShown() then
-		self:ScanTradeSkill()
+		self:ScanTradeSkill(true)
 	elseif CraftFrame and CraftFrame:IsShown() then
-		self:ScanCraft()
+		self:ScanCraft(true)
 	else
 		self:ScanSkillLines()
 		GSF.Addon:Print("Scanned character skill lines. Open a Trade Skill window to scan full recipes.")
 	end
 end
 
-function GSF.Scanner:ScanTradeSkill()
+function GSF.Scanner:ScanTradeSkill(isManual)
 	local profName, curRank, maxRank = GetTradeSkillLine()
 	if not profName or profName == "UNKNOWN" or profName == "" then return end
 
@@ -64,6 +92,12 @@ function GSF.Scanner:ScanTradeSkill()
 
 	local numSkills = GetNumTradeSkills()
 	if numSkills == 0 then return end
+
+	local existing = member.professions[profName]
+	local existingCount = 0
+	if existing and existing.recipes then
+		for _ in pairs(existing.recipes) do existingCount = existingCount + 1 end
+	end
 
 	local recipes = {}
 	local scannedCount = 0
@@ -106,6 +140,20 @@ function GSF.Scanner:ScanTradeSkill()
 		end
 	end
 
+	local hasChanges = false
+	if not existing or not existing.recipes then
+		hasChanges = true
+	elseif (existing.curRank ~= curRank) or (existing.maxRank ~= maxRank) or (existingCount ~= scannedCount) then
+		hasChanges = true
+	else
+		for k in pairs(recipes) do
+			if not existing.recipes[k] then
+				hasChanges = true
+				break
+			end
+		end
+	end
+
 	member.professions[profName] = {
 		name = profName,
 		curRank = curRank,
@@ -119,17 +167,18 @@ function GSF.Scanner:ScanTradeSkill()
 	elseif GSF.db and GSF.db.characterProfessions then
 		GSF.db.characterProfessions[profName] = member.professions[profName]
 	end
-	GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
 
-	GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, profName, curRank, maxRank)
+	if hasChanges or isManual then
+		GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
+		GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, profName, curRank, maxRank)
 
-	-- Sync to guild
-	if GSF.Sync then
-		GSF.Sync:SendMyData()
+		if GSF.Sync then
+			GSF.Sync:SendMyData()
+		end
 	end
 end
 
-function GSF.Scanner:ScanCraft()
+function GSF.Scanner:ScanCraft(isManual)
 	local craftName, curRank, maxRank = GetCraftDisplaySkillLine()
 	if not craftName or craftName == "" then
 		craftName = "Enchanting"
@@ -141,6 +190,12 @@ function GSF.Scanner:ScanCraft()
 
 	local numCrafts = GetNumCrafts()
 	if numCrafts == 0 then return end
+
+	local existing = member.professions[craftName]
+	local existingCount = 0
+	if existing and existing.recipes then
+		for _ in pairs(existing.recipes) do existingCount = existingCount + 1 end
+	end
 
 	local recipes = {}
 	local scannedCount = 0
@@ -178,6 +233,20 @@ function GSF.Scanner:ScanCraft()
 		end
 	end
 
+	local hasChanges = false
+	if not existing or not existing.recipes then
+		hasChanges = true
+	elseif ((existing.curRank or 0) ~= (curRank or 0)) or ((existing.maxRank or 0) ~= (maxRank or 375)) or (existingCount ~= scannedCount) then
+		hasChanges = true
+	else
+		for k in pairs(recipes) do
+			if not existing.recipes[k] then
+				hasChanges = true
+				break
+			end
+		end
+	end
+
 	member.professions[craftName] = {
 		name = craftName,
 		curRank = curRank or 0,
@@ -191,12 +260,14 @@ function GSF.Scanner:ScanCraft()
 	elseif GSF.db and GSF.db.characterProfessions then
 		GSF.db.characterProfessions[craftName] = member.professions[craftName]
 	end
-	GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
 
-	GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, craftName, curRank or 0, maxRank or 375)
+	if hasChanges or isManual then
+		GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
+		GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, craftName, curRank or 0, maxRank or 375)
 
-	if GSF.Sync then
-		GSF.Sync:SendMyData()
+		if GSF.Sync then
+			GSF.Sync:SendMyData()
+		end
 	end
 end
 

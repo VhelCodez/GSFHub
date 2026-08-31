@@ -11,12 +11,14 @@ function GSF.RecipeBook:Search(searchText, profFilter, onlineOnly)
 		return results
 	end
 
+	local isAll = (not profFilter) or (profFilter == "") or (profFilter:upper() == "ALL") or (GSF.L and profFilter == GSF.L["FILTER_ALL_PROFESSIONS"])
+	local canonFilter = (not isAll) and GSF:GetCanonicalProfession(profFilter) or nil
+
 	for memberName, memberData in pairs(GSF.cache.members) do
 		local isOnline = (time() - (memberData.lastSeen or 0)) < 900 -- 15 mins considered online
 		if not onlineOnly or isOnline then
 			if memberData.professions then
 				for profName, profData in pairs(memberData.professions) do
-					local canonFilter = (profFilter and profFilter ~= "" and profFilter ~= GSF.L["FILTER_ALL_PROFESSIONS"] and profFilter ~= "All") and GSF:GetCanonicalProfession(profFilter)
 					local canonProf = GSF:GetCanonicalProfession(profName)
 					if not canonFilter or canonProf == canonFilter then
 						if profData.recipes then

@@ -16,7 +16,8 @@ graph LR
     v126 --> v127["v1.2.7<br/><b>Cache Suite</b><br/>(Released)"]
     v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Released)"]
     v13 --> v131["v1.3.1<br/><b>Master Expansion & CRAFT</b><br/>(Released)"]
-    v131 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
+    v131 --> v132["v1.3.2<br/><b>Supply Chain & Goals</b><br/>(Released)"]
+    v132 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -25,6 +26,16 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.3.2 - Guild Supply Chain, Two-Sided Bounties & Goal Management Suite *(Released)*
+- [x] **Two-Sided Delivery Verification Handshake:** In-person handoffs marked with `[Geliefert melden]` / `[Verschicken]` require explicit confirmation `[Erhalt bestätigen]` by the requester, with `[Nicht erhalten]` rejection to protect against dishonest completions.
+- [x] **Real-Time Bag Inventory Tracking:** Dynamic `In Taschen: X/Y` inventory tracking on claimed bounties backed by `BAG_UPDATE` events, with `GSF_CONFIRM_FULFILL_BOUNTY_INSUFFICIENT` confirmation safeguards.
+- [x] **Atlas Goals ➔ Bounties Interactive Linking:** Pinned bounty goals feature requester tags (`[Gilden-Auftrag] • Von: <Name>`) and a direct **[Auftrag]** button that auto-scrolls to the card with viewport bounds checking and a 3-second radiant golden glow highlight.
+- [x] **Top-5 Prioritized Goals HUD Clamping:** The floating screen HUD displays only your top 5 prioritized goals, reorderable via drag-and-drop or arrows with a `+X weitere im Atlas verwalten` quick-access footer.
+- [x] **Multi-Toast Queue & Frame Pooling Architecture (`Toast.lua`):** Upgraded toast engine with frame pooling, 3-card vertical stacking, automatic FIFO queueing, sound alert throttling, and default silent mode.
+- [x] **3-Line Bounty Card Layout Overhaul:** Expanded card height to 72px (78px vertical pitch) with zero text/button collisions, clean note truncation with hover tooltips, and shortened **`Annehmen`** button labels.
+- [x] **Surgical Multi-Bounty HUD Isolation:** Pinned goals bound to unique `bountyId` references so unclaiming one bounty of multiple identical materials never purges neighboring goals.
+- [x] **Self-Claiming Support:** Allowed players to claim and fulfill their own open Work Orders and Material Bounties for streamlined alt/self-farming workflows.
 
 ### ✅ v1.3.1 - AtlasJournal Master Catalog Audit, Bugfix & CRAFT Architecture *(Released)*
 - [x] **Master Catalog Expansion (147 ➔ 236 Items):** Full coverage across Mining (50), Herbalism (40), Skinning (29), Cloth (11), Elemental (31), Enchanting (30), Cooking (18), and Fishing (27).

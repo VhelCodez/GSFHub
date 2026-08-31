@@ -2,7 +2,7 @@
 ## Title: AtlasJournal
 ## Notes: Standalone Classic & TBC Resource & Gathering Compendium Library
 ## Author: VhelCodez
-## Version: 1.1.0
+## Version: 1.1.1
 
 AtlasJournal.lua
 AtlasJournalData.lua

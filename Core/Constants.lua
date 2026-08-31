@@ -1,7 +1,7 @@
 local ADDON_NAME, GSF = ...
 
 GSF.COMM_PREFIX = "GSFHUB"
-GSF.VERSION = "1.3.1"
+GSF.VERSION = "1.3.2"
 GSF.PROTOCOL_VERSION = 2
 
 -- Download & Issue Tracker URLs (CurseForge ready)
@@ -200,4 +200,3 @@ function GSF:GetLocalizedProfession(name)
 	local key = "PROF_" .. canon:upper():gsub("%s+", "_")
 	return (GSF.L and GSF.L[key]) or canon
 end
-

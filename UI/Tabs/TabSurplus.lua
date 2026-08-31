@@ -54,10 +54,27 @@ function Tab:BuildOfferModal(parent)
 	modal:SetSize(420, 360)
 	modal:SetPoint("CENTER", parent, "CENTER", 0, 0)
 	modal:SetFrameStrata("DIALOG")
+	modal:EnableMouse(true)
+	if BackdropTemplateMixin then Mixin(modal, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(modal, false)
-	modal:SetBackdropColor(0.06, 0.06, 0.08, 0.98)
+	modal:SetBackdropColor(0.08, 0.08, 0.12, 1.0)
 	modal:Hide()
 	self.modal = modal
+
+	local blocker = CreateFrame("Frame", nil, parent)
+	blocker:SetAllPoints(parent)
+	blocker:SetFrameStrata("DIALOG")
+	blocker:SetFrameLevel(parent:GetFrameLevel() + 50)
+	if BackdropTemplateMixin then Mixin(blocker, BackdropTemplateMixin) end
+	blocker:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	blocker:SetBackdropColor(0, 0, 0, 0.6)
+	blocker:EnableMouse(true)
+	blocker:Hide()
+	modal.blocker = blocker
+
+	modal:SetFrameLevel(blocker:GetFrameLevel() + 5)
+	modal:HookScript("OnShow", function() if modal.blocker then modal.blocker:Show() end end)
+	modal:HookScript("OnHide", function() if modal.blocker then modal.blocker:Hide() end end)
 
 	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	title:SetPoint("TOP", modal, "TOP", 0, -15)

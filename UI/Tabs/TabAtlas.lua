@@ -295,20 +295,63 @@ function Tab:Create(parent)
 	-- Build Unified Resource Setup Modal
 	self:BuildSetupModal(frame)
 
+	frame:RegisterEvent("BAG_UPDATE")
+	frame:SetScript("OnEvent", function(self, event, ...)
+		if event == "BAG_UPDATE" and self:IsShown() and activeView == "BOUNTIES" then
+			Tab:RefreshBounties()
+		end
+	end)
+
 	return frame
 end
+
+StaticPopupDialogs["GSF_CONFIRM_FULFILL_BOUNTY_INSUFFICIENT"] = {
+	text = "%s",
+	button1 = GSF.L["YES"] or "Yes",
+	button2 = GSF.L["CANCEL"] or "Cancel",
+	OnAccept = function(dialog, data)
+		if data and data.bountyId then
+			if data.isDeliver then
+				GSF.SupplyBounties:MarkBountyDelivered(data.bountyId, "TRADE")
+			else
+				GSF.SupplyBounties:FulfillBounty(data.bountyId)
+			end
+			Tab:Refresh()
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
 
 function Tab:BuildSetupModal(parent)
 	local modal = CreateFrame("Frame", "GSFAtlasResourceSetupModal", parent)
 	modal:SetSize(400, 280)
 	modal:SetPoint("CENTER", parent, "CENTER", 0, 0)
 	modal:SetFrameStrata("DIALOG")
+	modal:EnableMouse(true)
 	if BackdropTemplateMixin then Mixin(modal, BackdropTemplateMixin) end
 	GSF.UI:CreateBackdrop(modal, false)
-	modal:SetBackdropColor(0.06, 0.06, 0.08, 0.98)
+	modal:SetBackdropColor(0.08, 0.08, 0.12, 1.0)
 	modal:Hide()
 	self.setupModal = modal
 	self.bountyModal = modal
+
+	local blocker = CreateFrame("Frame", nil, parent)
+	blocker:SetAllPoints(parent)
+	blocker:SetFrameStrata("DIALOG")
+	blocker:SetFrameLevel(parent:GetFrameLevel() + 50)
+	if BackdropTemplateMixin then Mixin(blocker, BackdropTemplateMixin) end
+	blocker:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	blocker:SetBackdropColor(0, 0, 0, 0.6)
+	blocker:EnableMouse(true)
+	blocker:Hide()
+	modal.blocker = blocker
+
+	modal:SetFrameLevel(blocker:GetFrameLevel() + 5)
+	modal:HookScript("OnShow", function() if modal.blocker then modal.blocker:Show() end end)
+	modal:HookScript("OnHide", function() if modal.blocker then modal.blocker:Hide() end end)
 
 	local title = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	title:SetPoint("TOP", modal, "TOP", 0, -15)
@@ -388,25 +431,25 @@ function Tab:BuildSetupModal(parent)
 			return
 		end
 
-		local userTitle = titleBox:GetText():trim()
-		if userTitle == "" then userTitle = modal.materialName end
 		local notes = noteBox:GetText():trim()
 
 		if modal.mode == "GOAL" then
+			local userTitle = titleBox:GetText():trim()
+			if userTitle == "" then userTitle = modal.materialName end
 			if GSF.GoalsHUD then
 				GSF.GoalsHUD:AddPersonalGoal(modal.materialName, userTitle, count, notes, modal.icon, modal.category, modal.editGoalId, modal.itemID)
 			end
 			modal:Hide()
 		elseif modal.mode == "BOUNTY" then
 			if GSF.SupplyBounties then
-				GSF.SupplyBounties:CreateBounty(userTitle, count, modal.category or "General", notes)
+				GSF.SupplyBounties:CreateBounty(modal.materialName, count, modal.category or "General", notes, nil, modal.itemID, modal.itemLink, modal.icon)
 			end
 			modal:Hide()
 			activeView = "BOUNTIES"
 			Tab:Refresh()
 		elseif modal.mode == "BOUNTY_EDIT" then
 			if GSF.SupplyBounties then
-				GSF.SupplyBounties:UpdateBounty(modal.editBountyId, userTitle, count, modal.category or "General", notes)
+				GSF.SupplyBounties:UpdateBounty(modal.editBountyId, nil, count, nil, notes)
 			end
 			modal:Hide()
 			activeView = "BOUNTIES"
@@ -433,12 +476,39 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 
 	if mode == "BOUNTY_EDIT" and target then
 		dispName = target.item or ""
+		local targetID = target.itemId or (target.itemLink and tonumber(target.itemLink:match("item:(%d+)"))) or (target.item and tonumber(target.item:match("item:(%d+)")))
+		modal.itemID = targetID
+
 		local itemIcon = target.icon
-		if IsPlaceholderIcon(itemIcon) then
+		if not itemIcon or IsPlaceholderIcon(itemIcon) then
+			local qTarget = target.itemLink or targetID or target.item
+			local n, l, _, _, _, _, _, _, _, t = GetItemInfo(qTarget)
+			if t then
+				itemIcon = t
+				dispName = n or dispName
+				target.itemLink = target.itemLink or l
+				modal.itemID = modal.itemID or (l and tonumber(l:match("item:(%d+)")))
+			end
+		end
+		if not itemIcon or IsPlaceholderIcon(itemIcon) then
+			if targetID and AtlasJournal and AtlasJournal.GetItemDetails then
+				local d = AtlasJournal:GetItemDetails(targetID)
+				if d and d.icon then
+					itemIcon = d.icon
+					dispName = (dispName ~= "" and dispName) or d.name
+					target.itemLink = target.itemLink or d.link
+				end
+			end
+		end
+		if not itemIcon or IsPlaceholderIcon(itemIcon) then
 			local res = AtlasJournal and AtlasJournal:FindResource(target.item)
 			if res then
 				local d = AtlasJournal:GetItemDetails(res.id)
-				if d and d.icon then itemIcon = d.icon end
+				if d and d.icon then
+					itemIcon = d.icon
+					target.itemLink = target.itemLink or d.link
+					modal.itemID = modal.itemID or res.id
+				end
 			end
 		end
 		icon = itemIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -446,6 +516,24 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 		initTitle = target.item or ""
 		initQty = tostring(target.count or "")
 		initNotes = target.notes or ""
+
+		if IsPlaceholderIcon(icon) and modal.itemID and modal.itemID >= 100 and C_Item and C_Item.RequestLoadItemDataByID then
+			C_Item.RequestLoadItemDataByID(modal.itemID)
+			local itm = Item and Item:CreateFromItemID(modal.itemID)
+			if itm and not itm:IsItemEmpty() then
+				pcall(function()
+					itm:ContinueOnItemLoad(function()
+						local t = itm:GetItemIcon()
+						local n = itm:GetItemName()
+						local l = itm:GetItemLink()
+						if t and modal.slot then
+							modal.slot:SetItem(n or dispName, t, l or target.itemLink, modal.itemID)
+							modal.icon = t
+						end
+					end)
+				end)
+			end
+		end
 	elseif editGoalId and target then
 		dispName = target.material or target.name or ""
 		icon = target.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -476,11 +564,36 @@ function Tab:OpenSetupModal(target, mode, editGoalId, editBountyId)
 	modal.icon = icon
 	modal.category = cat
 
-	modal.nameLabel:SetText(string.format("|cffffd100%s|r", dispName))
-	modal.slot:SetItem(dispName, icon, nil, modal.itemID)
+	local _, _, quality = GetItemInfo(target and (target.itemLink or target.itemId or target.item) or dispName)
+	local qColor = quality and ITEM_QUALITY_COLORS[quality]
+	local hex = qColor and qColor.hex or "|cffffd100"
+	if not hex:find("^|c") then hex = "|c" .. hex end
+
+	modal.nameLabel:SetText(string.format("%s%s|r", hex, dispName))
+	modal.slot:SetItem(dispName, icon, target and target.itemLink, modal.itemID)
 	modal.titleBox:SetText(initTitle)
 	modal.qtyBox:SetText(initQty)
 	modal.noteBox:SetText(initNotes)
+
+	if modal.mode == "BOUNTY" or modal.mode == "BOUNTY_EDIT" then
+		modal.titleLabel:Hide()
+		modal.titleBox:Hide()
+		modal:SetSize(400, 235)
+		modal.qtyLabel:ClearAllPoints()
+		modal.qtyLabel:SetPoint("TOPLEFT", modal.slot, "BOTTOMLEFT", 0, -14)
+		modal.noteLabel:ClearAllPoints()
+		modal.noteLabel:SetPoint("TOPLEFT", modal.qtyLabel, "BOTTOMLEFT", 0, -12)
+	else -- "GOAL"
+		modal.titleLabel:Show()
+		modal.titleBox:Show()
+		modal:SetSize(400, 290)
+		modal.titleLabel:ClearAllPoints()
+		modal.titleLabel:SetPoint("TOPLEFT", modal.slot, "BOTTOMLEFT", 0, -12)
+		modal.qtyLabel:ClearAllPoints()
+		modal.qtyLabel:SetPoint("TOPLEFT", modal.titleBox, "BOTTOMLEFT", 0, -10)
+		modal.noteLabel:ClearAllPoints()
+		modal.noteLabel:SetPoint("TOPLEFT", modal.qtyLabel, "BOTTOMLEFT", 0, -10)
+	end
 
 	if modal.mode == "GOAL" then
 		if editGoalId then
@@ -631,7 +744,12 @@ function Tab:SelectResource(res)
 
 	-- Reset interactive buttons and headers
 	for _, btn in ipairs(self.sourceButtons or {}) do btn:Hide() end
-	for _, hdr in ipairs(self.sourceHeaders or {}) do hdr:Hide() end
+	for _, hdr in ipairs(self.sourceHeaders or {}) do
+		hdr:Hide()
+		if hdr.prefix then hdr.prefix:Hide() end
+		if hdr.spellBtn then hdr.spellBtn:Hide() end
+		if hdr.suffix then hdr.suffix:Hide() end
+	end
 	for _, btn in ipairs(self.yieldButtons or {}) do btn:Hide() end
 
 	-- 1. Format Polymorphic Sources
@@ -669,9 +787,17 @@ function Tab:SelectResource(res)
 				local zStr = #zones > 0 and table.concat(zones, ", ") or "Waters"
 				table.insert(textSources, string.format("|cffffd100• %s|r (Skill %d, %s):\n   %s", AtlasJournal:GetLocaleText("SRC_FISH") or "Fishing", src.skill or 1, src.school or "Open Water", zStr))
 			elseif src.type == "DISENCHANT" then
-				local spellName = GetSpellInfo(13262) or "Disenchant"
+				local spellID = 13262
+				local spellName, _, spellIcon = GetSpellInfo(spellID)
 				local qName = src.itemQuality == 4 and "|cffa335eeEpic|r" or (src.itemQuality == 3 and "|cff0070ddRare|r" or "|cff1eff00Uncommon|r")
-				table.insert(textSources, string.format("|cffffd100• %s|r (%s):\n   %s (%s, iLvl %s)", AtlasJournal:GetLocaleText("SRC_DISENCHANT") or "Disenchanting", spellName, AtlasJournal:GetLocaleText("DISENCHANTED_FROM") or "Disenchanted from items", qName, src.itemLevels or "1+"))
+				table.insert(itemSources, {
+					prefix = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_DISENCHANT") or "Disenchanting"),
+					spellID = spellID,
+					spellName = spellName or "Disenchant",
+					spellIcon = spellIcon or "Interface\\Icons\\Spell_Holy_RemoveCurse",
+					suffix = string.format("(%s, iLvl %s)", qName, src.itemLevels or "1+"),
+					items = {},
+				})
 			elseif src.type == "INSTANCE" then
 				table.insert(textSources, string.format("|cffffd100• %s|r: %s %s", AtlasJournal:GetLocaleText("SRC_INSTANCE") or "Instance Drop", src.dungeon or "", src.raid or ""))
 			elseif src.type == "VENDOR" then
@@ -682,21 +808,37 @@ function Tab:SelectResource(res)
 					items = src.fromItems or {},
 				})
 			elseif src.type == "PROSPECT" then
-				local spellName = GetSpellInfo(31252) or "Prospecting"
+				local spellID = src.spellID or 31252
+				local spellName, _, spellIcon = GetSpellInfo(spellID)
 				table.insert(itemSources, {
-					title = string.format("|cffffd100• %s|r (%s, Skill %d, 5x):", AtlasJournal:GetLocaleText("SRC_PROSPECT") or "Prospecting", spellName, src.skill or 20),
+					prefix = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_PROSPECT") or "Prospecting"),
+					spellID = spellID,
+					spellName = spellName or "Prospecting",
+					spellIcon = spellIcon or "Interface\\Icons\\INV_Misc_Gem_Bloodstone_02",
+					suffix = string.format("(Skill %d, 5x)", src.skill or 20),
 					items = src.fromItems or {},
 				})
 			elseif src.type == "SMELT" then
-				local spellName = GetSpellInfo(2656) or "Smelt"
+				local spellID = src.spellID or 2656
+				local spellName, _, spellIcon = GetSpellInfo(spellID)
 				table.insert(itemSources, {
-					title = string.format("|cffffd100• %s|r (%s, Skill %d):", AtlasJournal:GetLocaleText("SRC_SMELT") or "Smelting", spellName, src.skill or 1),
+					prefix = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_SMELT") or "Smelting"),
+					spellID = spellID,
+					spellName = spellName or "Smelting",
+					spellIcon = spellIcon or "Interface\\Icons\\Spell_Fire_FlameBlades",
+					suffix = string.format("(Skill %d)", src.skill or 1),
 					items = src.fromItems or {},
 				})
 			elseif src.type == "TRANSMUTE" then
-				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or "Transmute"
+				local spellID = src.spellID or 28566
+				local spellName, _, spellIcon = GetSpellInfo(spellID)
+				local suffix = src.cooldown and string.format("(%s CD)", src.cooldown) or nil
 				table.insert(itemSources, {
-					title = string.format("|cffffd100• %s|r (%s, %s CD):", AtlasJournal:GetLocaleText("SRC_TRANSMUTE") or "Transmutation", spellName, src.cooldown or "20h"),
+					prefix = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_TRANSMUTE") or "Transmutation"),
+					spellID = spellID,
+					spellName = spellName or "Transmute",
+					spellIcon = spellIcon or "Interface\\Icons\\Spell_Holy_GreaterHeal",
+					suffix = suffix,
 					items = src.fromItems or {},
 				})
 			elseif src.type == "COMBINE" then
@@ -712,20 +854,47 @@ function Tab:SelectResource(res)
 					itemCount = src.count,
 				})
 			elseif src.type == "CRAFT" then
-				local spellName = (src.spellID and GetSpellInfo(src.spellID)) or src.profession or "Craft"
-				local titleText
+				local spellID = src.spellID
+				local spellName, _, spellIcon
+				if spellID then
+					spellName, _, spellIcon = GetSpellInfo(spellID)
+				end
 				local countPrefix = src.count and string.format("%dx ", src.count) or ""
 				local yieldSuffix = (src.yieldCount and src.yieldCount > 1) and string.format(" -> %dx", src.yieldCount) or ""
-				if src.skill then
-					titleText = string.format("|cffffd100• %s|r (%s%s%s, Skill %d):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, spellName, yieldSuffix, src.skill)
-				else
-					titleText = string.format("|cffffd100• %s|r (%s%s%s):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, spellName, yieldSuffix)
+				local skillStr = src.skill and string.format("Skill %d", src.skill) or nil
+
+				local suffixParts = {}
+				if countPrefix ~= "" or yieldSuffix ~= "" then
+					table.insert(suffixParts, string.format("%s%s", countPrefix, yieldSuffix))
 				end
-				table.insert(itemSources, {
-					title = titleText,
-					items = src.fromItems or (src.fromItem and { src.fromItem }) or {},
-					itemCount = src.count,
-				})
+				if skillStr then
+					table.insert(suffixParts, skillStr)
+				end
+				local suffix = #suffixParts > 0 and string.format("(%s)", table.concat(suffixParts, ", ")) or nil
+
+				if spellID then
+					table.insert(itemSources, {
+						prefix = string.format("|cffffd100• %s:|r", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting"),
+						spellID = spellID,
+						spellName = spellName or src.profession or "Craft",
+						spellIcon = spellIcon or "Interface\\Icons\\Trade_Leatherworking",
+						suffix = suffix,
+						items = src.fromItems or (src.fromItem and { src.fromItem }) or {},
+						itemCount = src.count,
+					})
+				else
+					local titleText
+					if src.skill then
+						titleText = string.format("|cffffd100• %s|r (%s%s%s, Skill %d):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, src.profession or "Craft", yieldSuffix, src.skill)
+					else
+						titleText = string.format("|cffffd100• %s|r (%s%s%s):", AtlasJournal:GetLocaleText("SRC_CRAFT") or "Crafting", countPrefix, src.profession or "Craft", yieldSuffix)
+					end
+					table.insert(itemSources, {
+						title = titleText,
+						items = src.fromItems or (src.fromItem and { src.fromItem }) or {},
+						itemCount = src.count,
+					})
+				end
 			end
 		end
 	end
@@ -758,88 +927,180 @@ function Tab:SelectResource(res)
 		for gIdx, group in ipairs(itemSources) do
 			local hdr = self.sourceHeaders[gIdx]
 			if not hdr then
-				hdr = self.sourceContainer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-				hdr:SetJustifyH("LEFT")
-				hdr:SetWidth(320)
+				hdr = CreateFrame("Frame", nil, self.sourceContainer)
+				hdr:SetHeight(18)
+				hdr:SetWidth(330)
+
+				local prefix = hdr:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				prefix:SetJustifyH("LEFT")
+				hdr.prefix = prefix
+
+				local spellBtn = CreateFrame("Button", nil, hdr)
+				spellBtn:SetHeight(16)
+				local sIcon = spellBtn:CreateTexture(nil, "ARTWORK")
+				sIcon:SetSize(14, 14)
+				sIcon:SetPoint("LEFT", spellBtn, "LEFT", 0, 0)
+				spellBtn.icon = sIcon
+
+				local sText = spellBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				sText:SetPoint("LEFT", sIcon, "RIGHT", 4, 0)
+				sText:SetJustifyH("LEFT")
+				spellBtn.text = sText
+
+				spellBtn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+				spellBtn:RegisterForClicks("LeftButtonUp")
+				hdr.spellBtn = spellBtn
+
+				local suffix = hdr:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+				suffix:SetJustifyH("LEFT")
+				hdr.suffix = suffix
+
 				table.insert(self.sourceHeaders, hdr)
 			end
+
 			hdr:ClearAllPoints()
 			hdr:SetPoint("TOPLEFT", self.sourceContainer, "TOPLEFT", 0, -curSourceY)
-			hdr:SetText(group.title)
 			hdr:Show()
-			curSourceY = curSourceY + hdr:GetStringHeight() + 4
 
-			for i, itemId in ipairs(group.items) do
-				local btn = self.sourceButtons[nextBadgeIdx]
-				if not btn then
-					btn = CreateFrame("Button", nil, self.sourceContainer)
-					btn:SetHeight(badgeH)
-					local icon = btn:CreateTexture(nil, "ARTWORK")
-					icon:SetSize(16, 16)
-					icon:SetPoint("LEFT", btn, "LEFT", 0, 0)
-					btn.icon = icon
+			if group.spellID then
+				local sID = group.spellID
+				hdr.prefix:ClearAllPoints()
+				hdr.prefix:SetPoint("LEFT", hdr, "LEFT", 0, 0)
+				hdr.prefix:SetText(group.prefix or "")
+				hdr.prefix:Show()
 
-					local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-					text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
-					text:SetPoint("RIGHT", btn, "RIGHT", -2, 0)
-					text:SetJustifyH("LEFT")
-					text:SetWordWrap(false)
-					btn.text = text
+				hdr.spellBtn:ClearAllPoints()
+				hdr.spellBtn:SetPoint("LEFT", hdr.prefix, "RIGHT", 4, 0)
+				hdr.spellBtn.icon:SetTexture(group.spellIcon or "Interface\\Icons\\INV_Misc_QuestionMark")
+				hdr.spellBtn.text:SetText(string.format("|cff71d5ff[%s]|r", group.spellName or "Spell"))
+				local btnWidth = 14 + 4 + hdr.spellBtn.text:GetStringWidth() + 2
+				hdr.spellBtn:SetSize(btnWidth, 16)
+				hdr.spellBtn:Show()
 
-					btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-					btn:RegisterForClicks("LeftButtonUp")
-					table.insert(self.sourceButtons, btn)
-				end
-
-				local yd = AtlasJournal:GetItemDetails(itemId)
-				local q = yd.quality or 1
-				local color = ITEM_QUALITY_COLORS[q]
-				local hex = color and color.hex or "|cffffffff"
-				if not hex:find("^|c") then hex = "|c" .. hex end
-				local cleanName = yd.name or string.format("Item #%d", itemId)
-				local badgeLabel
-				if group.itemCount and #group.items == 1 and group.itemCount > 1 then
-					badgeLabel = string.format("%dx [%s%s|r]", group.itemCount, hex, cleanName)
-				else
-					badgeLabel = string.format("[%s%s|r]", hex, cleanName)
-				end
-
-				btn.icon:SetTexture(yd.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-				btn.text:SetText(badgeLabel)
-
-				local col = (i - 1) % 2
-				local row = math.floor((i - 1) / 2)
-				btn:ClearAllPoints()
-				btn:SetPoint("TOPLEFT", self.sourceContainer, "TOPLEFT", col * (badgeW + colSpacing), -(curSourceY + row * (badgeH + 4)))
-				btn:SetSize(badgeW, badgeH)
-				btn:Show()
-
-				btn:SetScript("OnEnter", function(b)
+				hdr.spellBtn:SetScript("OnEnter", function(b)
 					GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
-					if yd.link then
-						GameTooltip:SetHyperlink(yd.link)
-					else
-						GameTooltip:SetItemByID(itemId)
+					local link = (GetSpellLink and GetSpellLink(sID))
+					if link then
+						GameTooltip:SetHyperlink(link)
+					elseif GameTooltip.SetSpellByID then
+						GameTooltip:SetSpellByID(sID)
+					elseif GameTooltip.SetHyperlink then
+						GameTooltip:SetHyperlink("spell:" .. sID)
 					end
 					GameTooltip:Show()
 				end)
-				btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-				btn:SetScript("OnClick", function(b)
-					if IsModifiedClick("CHATLINK") and yd.link then
-						ChatEdit_InsertLink(yd.link)
-					else
-						local targetRes = AtlasJournal:FindResource(itemId)
-						if targetRes then
-							Tab:SelectResource(targetRes)
+				hdr.spellBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+				hdr.spellBtn:SetScript("OnClick", function(b)
+					if IsModifiedClick("CHATLINK") then
+						local link = (GetSpellLink and GetSpellLink(sID))
+						if not link then
+							local sName = GetSpellInfo(sID)
+							if sName then
+								link = string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", sID, sName)
+							end
+						end
+						if link then
+							ChatEdit_InsertLink(link)
 						end
 					end
 				end)
 
-				nextBadgeIdx = nextBadgeIdx + 1
+				if group.suffix and group.suffix ~= "" then
+					hdr.suffix:ClearAllPoints()
+					hdr.suffix:SetPoint("LEFT", hdr.spellBtn, "RIGHT", 4, 0)
+					hdr.suffix:SetText(group.suffix)
+					hdr.suffix:Show()
+				else
+					hdr.suffix:Hide()
+				end
+
+				curSourceY = curSourceY + 18 + 4
+			else
+				hdr.prefix:ClearAllPoints()
+				hdr.prefix:SetPoint("LEFT", hdr, "LEFT", 0, 0)
+				hdr.prefix:SetText(group.title or group.prefix or "")
+				hdr.prefix:Show()
+				hdr.spellBtn:Hide()
+				hdr.suffix:Hide()
+
+				curSourceY = curSourceY + hdr.prefix:GetStringHeight() + 4
 			end
 
-			local totalRows = math.ceil(#group.items / 2)
-			curSourceY = curSourceY + totalRows * (badgeH + 4) + 6
+			if group.items and #group.items > 0 then
+				for i, itemId in ipairs(group.items) do
+					local btn = self.sourceButtons[nextBadgeIdx]
+					if not btn then
+						btn = CreateFrame("Button", nil, self.sourceContainer)
+						btn:SetHeight(badgeH)
+						local icon = btn:CreateTexture(nil, "ARTWORK")
+						icon:SetSize(16, 16)
+						icon:SetPoint("LEFT", btn, "LEFT", 0, 0)
+						btn.icon = icon
+
+						local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+						text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
+						text:SetPoint("RIGHT", btn, "RIGHT", -2, 0)
+						text:SetJustifyH("LEFT")
+						text:SetWordWrap(false)
+						btn.text = text
+
+						btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+						btn:RegisterForClicks("LeftButtonUp")
+						table.insert(self.sourceButtons, btn)
+					end
+
+					local yd = AtlasJournal:GetItemDetails(itemId)
+					local q = yd.quality or 1
+					local color = ITEM_QUALITY_COLORS[q]
+					local hex = color and color.hex or "|cffffffff"
+					if not hex:find("^|c") then hex = "|c" .. hex end
+					local cleanName = yd.name or string.format("Item #%d", itemId)
+					local badgeLabel
+					if group.itemCount and #group.items == 1 and group.itemCount > 1 then
+						badgeLabel = string.format("%dx [%s%s|r]", group.itemCount, hex, cleanName)
+					else
+						badgeLabel = string.format("[%s%s|r]", hex, cleanName)
+					end
+
+					btn.icon:SetTexture(yd.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+					btn.text:SetText(badgeLabel)
+
+					local col = (i - 1) % 2
+					local row = math.floor((i - 1) / 2)
+					btn:ClearAllPoints()
+					btn:SetPoint("TOPLEFT", self.sourceContainer, "TOPLEFT", col * (badgeW + colSpacing), -(curSourceY + row * (badgeH + 4)))
+					btn:SetSize(badgeW, badgeH)
+					btn:Show()
+
+					btn:SetScript("OnEnter", function(b)
+						GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+						if yd.link then
+							GameTooltip:SetHyperlink(yd.link)
+						else
+							GameTooltip:SetItemByID(itemId)
+						end
+						GameTooltip:Show()
+					end)
+					btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+					btn:SetScript("OnClick", function(b)
+						if IsModifiedClick("CHATLINK") and yd.link then
+							ChatEdit_InsertLink(yd.link)
+						else
+							local targetRes = AtlasJournal:FindResource(itemId)
+							if targetRes then
+								Tab:SelectResource(targetRes)
+							end
+						end
+					end)
+
+					nextBadgeIdx = nextBadgeIdx + 1
+				end
+
+				local totalRows = math.ceil(#group.items / 2)
+				curSourceY = curSourceY + totalRows * (badgeH + 4) + 6
+			else
+				curSourceY = curSourceY + 2
+			end
 		end
 		self.sourceContainer:SetHeight(curSourceY)
 	else
@@ -1222,82 +1483,218 @@ function Tab:RefreshBounties()
 			local card = self.bountyCards[visibleIndex]
 			if not card then
 				card = CreateFrame("Frame", nil, self.bountyContent)
-				card:SetSize(660, 56)
+				card:SetSize(660, 72)
 				if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
 				GSF.UI:CreateBackdrop(card, false)
 				card:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
+				card:EnableMouse(true)
+
+				local iconSlot = GSF.UI:CreateItemSlot(card, 36)
+				iconSlot:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -10)
+				iconSlot:SetScript("OnReceiveDrag", nil)
+				iconSlot:SetScript("OnClick", nil)
+				iconSlot.noDropHint = true
+				card.iconSlot = iconSlot
+
+				local statusText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -10)
+				statusText:SetJustifyH("RIGHT")
+				card.statusText = statusText
 
 				local itemText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-				itemText:SetPoint("TOPLEFT", card, "TOPLEFT", 12, -8)
+				itemText:SetPoint("TOPLEFT", iconSlot, "TOPRIGHT", 10, -1)
+				itemText:SetPoint("RIGHT", statusText, "LEFT", -10, 0)
+				itemText:SetJustifyH("LEFT")
+				itemText:SetWordWrap(false)
 				card.itemText = itemText
 
 				local details = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-				details:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -4)
+				details:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -3)
+				details:SetPoint("RIGHT", card, "RIGHT", -12, 0)
+				details:SetJustifyH("LEFT")
+				details:SetWordWrap(false)
 				card.details = details
 
-				local statusText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-				statusText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -8)
-				card.statusText = statusText
+				local bagText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				bagText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 56, 12)
+				bagText:SetJustifyH("LEFT")
+				card.bagText = bagText
 
-				local actionBtn = GSF.UI:CreateButton(card, "Claim", 95, 20)
+				local actionBtn = GSF.UI:CreateButton(card, GSF.L["CLAIM_BOUNTY"] or "Claim", 80, 22)
 				actionBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -12, 8)
 				card.actionBtn = actionBtn
 
-				local editBtn = GSF.UI:CreateButton(card, GSF.L["EDIT"] or "Edit", 75, 20)
+				local editBtn = GSF.UI:CreateButton(card, GSF.L["EDIT"] or "Edit", 75, 22)
 				editBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
 				card.editBtn = editBtn
 
-				local mailBtn = GSF.UI:CreateButton(card, GSF.L["MAIL"] or "Mail", 65, 20)
+				local cancelBtn = GSF.UI:CreateButton(card, GSF.L["CANCEL_ORDER"] or "Cancel", 75, 22)
+				cancelBtn:SetPoint("RIGHT", editBtn, "LEFT", -6, 0)
+				card.cancelBtn = cancelBtn
+
+				local mailBtn = GSF.UI:CreateButton(card, GSF.L["MAIL"] or "Mail", 65, 22)
 				mailBtn:SetPoint("RIGHT", actionBtn, "LEFT", -6, 0)
 				card.mailBtn = mailBtn
 
-				local unclaimBtn = GSF.UI:CreateButton(card, GSF.L["BOUNTY_UNCLAIM"] or "Unclaim", 75, 20)
+				local unclaimBtn = GSF.UI:CreateButton(card, GSF.L["UNCLAIM_ORDER"] or "Release", 75, 22)
 				unclaimBtn:SetPoint("RIGHT", mailBtn, "LEFT", -6, 0)
 				card.unclaimBtn = unclaimBtn
+
+				card:SetScript("OnEnter", function(self)
+					if self.bountyData and self.bountyData.notes and self.bountyData.notes ~= "" then
+						local noteHdr = (GSF.L["NOTE"] or "Note"):gsub("[:%s]+$", "")
+						GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+						GameTooltip:AddLine(self.bountyData.item, 1, 0.82, 0)
+						GameTooltip:AddLine(string.format("%s: %s", noteHdr, self.bountyData.notes), 1, 1, 1, true)
+						GameTooltip:Show()
+					end
+				end)
+				card:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 				table.insert(self.bountyCards, card)
 			end
 
 			card:SetPoint("TOPLEFT", self.bountyContent, "TOPLEFT", 0, -yOffset)
 
+			local isHighlighted = (self.highlightedBountyId and tostring(self.highlightedBountyId) == tostring(b.id))
+			if isHighlighted then
+				card:SetBackdropBorderColor(1.0, 0.82, 0.0, 1.0)
+				card:SetBackdropColor(0.24, 0.18, 0.06, 0.92)
+				if not card.highlightGlow then
+					local glow = card:CreateTexture(nil, "OVERLAY", nil, 6)
+					glow:SetAllPoints()
+					glow:SetColorTexture(1.0, 0.82, 0.0, 0.12)
+					card.highlightGlow = glow
+				end
+				card.highlightGlow:Show()
+
+				if self.bountyScroll then
+					local cardPos = yOffset
+					C_Timer.After(0.02, function()
+						local maxRange = self.bountyScroll:GetVerticalScrollRange() or 0
+						if maxRange > 0 then
+							local currentScroll = self.bountyScroll:GetVerticalScroll() or 0
+							local viewHeight = self.bountyScroll:GetHeight() or 360
+							local cardTop = cardPos
+							local cardBottom = cardPos + 72
+
+							-- Only scroll if not already comfortably visible inside viewport
+							if cardTop < currentScroll or cardBottom > (currentScroll + viewHeight) then
+								local targetScroll = math.min(math.max(0, cardTop - 12), maxRange)
+								self.bountyScroll:SetVerticalScroll(targetScroll)
+								if self.bountyScroll.ScrollBar and self.bountyScroll.ScrollBar.SetValue then
+									self.bountyScroll.ScrollBar:SetValue(targetScroll)
+								end
+							end
+						else
+							-- List fits entirely without scrolling; keep scroll at top
+							self.bountyScroll:SetVerticalScroll(0)
+							if self.bountyScroll.ScrollBar and self.bountyScroll.ScrollBar.SetValue then
+								self.bountyScroll.ScrollBar:SetValue(0)
+							end
+						end
+					end)
+				end
+			else
+				card:SetBackdropBorderColor(0.25, 0.25, 0.35, 0.6)
+				card:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
+				if card.highlightGlow then
+					card.highlightGlow:Hide()
+				end
+			end
+
 			local isMine = (b.requester == myName)
 			local isClaimer = (b.claimer == myName)
 			local reqFormatted = GSF.Alts:GetFormattedName(b.requester)
-			local catLoc = GSF.L["CAT_" .. (b.category or "GENERAL"):upper()] or b.category or "General"
-			card.itemText:SetText(string.format("|cff%s%s|r x%d (|cffffd100%s|r)", GSF.COLORS.PRIMARY, b.item, b.count or 1, catLoc))
+			local catKey = (b.category or "GENERAL"):upper()
+			local catLoc = (AtlasJournal and AtlasJournal:GetCategoryInfo(b.category)) or (GSF.L and GSF.L["CAT_" .. catKey]) or (GSF.GetLocalizedProfession and GSF:GetLocalizedProfession(b.category)) or b.category or "General"
 			
+			local numId = b.itemId or (b.itemLink and tonumber(b.itemLink:match("item:(%d+)"))) or (b.item and tonumber(b.item:match("item:(%d+)")))
+			local _, itemLink, quality, _, _, _, _, _, _, texture = GetItemInfo(b.itemLink or numId or b.item)
+
+			if not texture and b.icon and not IsPlaceholderIcon(b.icon) then
+				texture = b.icon
+			end
+			if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
+				local d = AtlasJournal:GetItemDetails(numId)
+				if d and d.icon then
+					texture = d.icon
+					itemLink = itemLink or d.link
+					quality = quality or d.quality
+				end
+			end
+			if not texture and AtlasJournal and AtlasJournal.FindResource then
+				local res = AtlasJournal:FindResource(b.item)
+				if res then
+					local d = AtlasJournal:GetItemDetails(res.id)
+					if d and d.icon then
+						texture = d.icon
+						itemLink = itemLink or d.link
+						quality = quality or d.quality
+					end
+				end
+			end
+
+			local fallbackIcon = texture or "Interface\\Icons\\INV_Misc_QuestionMark"
+			card.iconSlot:SetItem(b.item, fallbackIcon, itemLink or b.itemLink, numId)
+
+			if (not texture or IsPlaceholderIcon(fallbackIcon)) and numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID then
+				C_Item.RequestLoadItemDataByID(numId)
+				local itm = Item and Item:CreateFromItemID(numId)
+				if itm and not itm:IsItemEmpty() then
+					pcall(function()
+						itm:ContinueOnItemLoad(function()
+							local t = itm:GetItemIcon()
+							local l = itm:GetItemLink()
+							if t and card.iconSlot then
+								card.iconSlot:SetItem(b.item, t, l or b.itemLink, numId)
+							end
+						end)
+					end)
+				end
+			end
+
+			local qColor = quality and ITEM_QUALITY_COLORS[quality]
+			local hex = qColor and qColor.hex or ("|cff" .. GSF.COLORS.PRIMARY)
+			if not hex:find("^|c") then hex = "|c" .. hex end
+
+			card.itemText:SetText(string.format("%s%s|r x%d (|cffffd100%s|r)", hex, b.item, b.count or 1, catLoc))
+			
+			card.bountyData = b
 			local noteStr = (b.notes and b.notes ~= "") and b.notes or (GSF.L["NONE"] or "None")
 			local reqPrefix = GSF.L["REQUESTED_BY_LABEL"] and string.format(GSF.L["REQUESTED_BY_LABEL"], reqFormatted) or ("Requested by: " .. reqFormatted)
 			local notePrefix = GSF.L["NOTE_LABEL"] and string.format(GSF.L["NOTE_LABEL"], noteStr) or ("Note: " .. noteStr)
 			card.details:SetText(string.format("%s  •  %s", reqPrefix, notePrefix))
 
-			card.unclaimBtn:Hide()
-			card.mailBtn:Hide()
+			card.bagText:Hide()
+			card.actionBtn:Hide()
 			card.editBtn:Hide()
+			card.cancelBtn:Hide()
+			card.mailBtn:Hide()
+			card.unclaimBtn:Hide()
 
 			if b.status == GSF.ORDER_STATUS.OPEN then
 				card.statusText:SetText("|cff00ff00" .. (GSF.L["STATUS_OPEN"] or "OPEN") .. "|r")
-				if isMine then
-					card.actionBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
-					card.actionBtn:SetScript("OnClick", function()
-						GSF.SupplyBounties:CancelBounty(b.id)
-						Tab:Refresh()
-					end)
-					card.actionBtn:Show()
+				card.actionBtn:SetText(GSF.L["CLAIM_BOUNTY"] or "Claim")
+				card.actionBtn:SetScript("OnClick", function()
+					GSF.SupplyBounties:ClaimBounty(b.id)
+					Tab:Refresh()
+				end)
+				card.actionBtn:Show()
 
+				if isMine then
 					card.editBtn:SetText(GSF.L["EDIT"] or "Edit")
 					card.editBtn:SetScript("OnClick", function()
 						Tab:OpenBountyEditModal(b)
 					end)
 					card.editBtn:Show()
-				else
-					card.editBtn:Hide()
-					card.actionBtn:SetText(GSF.L["CLAIM_BOUNTY"] or "Claim")
-					card.actionBtn:SetScript("OnClick", function()
-						GSF.SupplyBounties:ClaimBounty(b.id)
+
+					card.cancelBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
+					card.cancelBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:CancelBounty(b.id)
 						Tab:Refresh()
 					end)
-					card.actionBtn:Show()
+					card.cancelBtn:Show()
 				end
 
 			elseif b.status == GSF.ORDER_STATUS.CLAIMED then
@@ -1305,33 +1702,76 @@ function Tab:RefreshBounties()
 				card.statusText:SetText(string.format("|cffffd100" .. (GSF.L["STATUS_CLAIMED"] or "CLAIMED") .. "|r (%s)", claimerFormatted))
 
 				if isClaimer then
-					card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
-					card.actionBtn:SetScript("OnClick", function()
-						GSF.SupplyBounties:FulfillBounty(b.id)
-						Tab:Refresh()
-					end)
-					card.actionBtn:Show()
+					local reqCount = b.count or 1
+					local myBagCount = 0
+					if GSF.GoalsHUD and GSF.GoalsHUD.CountItemInBags then
+						myBagCount = GSF.GoalsHUD:CountItemInBags(b.item, numId)
+					else
+						myBagCount = GetItemCount(numId or b.item) or 0
+					end
+					local bagColor = (myBagCount >= reqCount) and "|cff00ff00" or "|cffff7f00"
+					card.bagText:SetText(string.format(GSF.L["IN_BAGS_PROGRESS"] or "In Bags: %s%d/%d|r", bagColor, myBagCount, reqCount))
+					card.bagText:Show()
 
-					card.mailBtn:SetText(GSF.L["MAIL"] or "Mail")
-					card.mailBtn:Show()
-					card.mailBtn:SetScript("OnClick", function()
-						if GSF.MailHelper then
-							GSF.MailHelper:PrepareBountyMail(b.requester, b.id, b.item, b.count)
-						end
-					end)
+					if isMine then
+						-- Self-Claimed Bounty (User is both requester & gatherer)
+						card.actionBtn:SetText(GSF.L["COMPLETE_ORDER"] or "Complete")
+						card.actionBtn:SetScript("OnClick", function()
+							if myBagCount < reqCount then
+								local warnText = string.format(GSF.L["CONFIRM_FULFILL_INSUFFICIENT"] or "You only have %s%d of %d|r %s in your bags.\n\nDo you still want to mark this bounty as completed?", bagColor, myBagCount, reqCount, b.item)
+								StaticPopup_Show("GSF_CONFIRM_FULFILL_BOUNTY_INSUFFICIENT", warnText, nil, { bountyId = b.id, isDeliver = false })
+							else
+								GSF.SupplyBounties:FulfillBounty(b.id)
+								Tab:Refresh()
+							end
+						end)
+						card.actionBtn:Show()
+					else
+						-- Third-Party Gatherer fulfilling someone else's bounty
+						card.actionBtn:SetText(GSF.L["MARK_DELIVERED"] or "Delivered")
+						card.actionBtn:SetScript("OnClick", function()
+							if myBagCount < reqCount then
+								local warnText = string.format(GSF.L["CONFIRM_FULFILL_INSUFFICIENT"] or "You only have %s%d of %d|r %s in your bags.\n\nDo you still want to mark this bounty as completed?", bagColor, myBagCount, reqCount, b.item)
+								StaticPopup_Show("GSF_CONFIRM_FULFILL_BOUNTY_INSUFFICIENT", warnText, nil, { bountyId = b.id, isDeliver = true })
+							else
+								GSF.SupplyBounties:MarkBountyDelivered(b.id, "TRADE")
+								Tab:Refresh()
+							end
+						end)
+						card.actionBtn:Show()
 
-					card.unclaimBtn:Show()
+						card.mailBtn:SetText(GSF.L["MAIL"] or "Mail")
+						card.mailBtn:SetScript("OnClick", function()
+							if GSF.MailHelper then
+								GSF.MailHelper:PrepareBountyMail(b.requester, b.id, b.item, b.count)
+							end
+						end)
+						card.mailBtn:Show()
+					end
+
+					card.unclaimBtn:SetText(GSF.L["UNCLAIM_ORDER"] or "Release")
 					card.unclaimBtn:SetScript("OnClick", function()
 						GSF.SupplyBounties:UnclaimBounty(b.id)
 						Tab:Refresh()
 					end)
-				else
-					card.actionBtn:Hide()
+					card.unclaimBtn:Show()
+				elseif isMine then
+					card.actionBtn:SetText(GSF.L["CANCEL_ORDER"] or "Cancel")
+					card.actionBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:CancelBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.actionBtn:Show()
 				end
 
 			elseif b.status == GSF.ORDER_STATUS.IN_TRANSIT then
 				local mins = math.floor((time() - (b.mailedAt or time())) / 60)
-				card.statusText:SetText(string.format("|cff00ccff[Mail] %s (%dm)|r", GSF.L["STATUS_IN_TRANSIT"] or "IN TRANSIT", mins))
+				local isTrade = (b.deliveryType == "TRADE" or b.deliveryType == "DIRECT")
+				if isTrade then
+					card.statusText:SetText(string.format("|cff00ccff[%s]|r (%s)", GSF.L["DELIVERY_TRADE"] or "Geliefert", GSF.Alts:GetFormattedName(b.claimer or "?")))
+				else
+					card.statusText:SetText(string.format("|cff00ccff[Mail] %s (%dm)|r", GSF.L["STATUS_IN_TRANSIT"] or "IN TRANSIT", mins))
+				end
 
 				if isMine then
 					card.actionBtn:SetText(GSF.L["CONFIRM_RECEIVED"] or "Confirm Received")
@@ -1340,8 +1780,20 @@ function Tab:RefreshBounties()
 						Tab:Refresh()
 					end)
 					card.actionBtn:Show()
-				else
-					card.actionBtn:Hide()
+
+					card.cancelBtn:SetText(GSF.L["NOT_RECEIVED"] or "Not Received")
+					card.cancelBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:RejectBountyDelivery(b.id)
+						Tab:Refresh()
+					end)
+					card.cancelBtn:Show()
+				elseif isClaimer then
+					card.unclaimBtn:SetText(GSF.L["UNCLAIM_ORDER"] or "Release")
+					card.unclaimBtn:SetScript("OnClick", function()
+						GSF.SupplyBounties:UnclaimBounty(b.id)
+						Tab:Refresh()
+					end)
+					card.unclaimBtn:Show()
 				end
 
 			elseif b.status == GSF.ORDER_STATUS.COMPLETED then
@@ -1353,15 +1805,11 @@ function Tab:RefreshBounties()
 						Tab:Refresh()
 					end)
 					card.actionBtn:Show()
-				else
-					card.actionBtn:Hide()
 				end
-			else
-				card.actionBtn:Hide()
 			end
 
 			card:Show()
-			yOffset = yOffset + 60
+			yOffset = yOffset + 78
 		end
 	end
 
@@ -1591,8 +2039,40 @@ function Tab:StopDraggingGoal()
 	end
 end
 
+function Tab:HighlightBounty(bountyId)
+	if not bountyId then return end
+	self.highlightedBountyId = tostring(bountyId)
+	self:SwitchView("BOUNTIES")
+
+	-- Clear search and reset category so the bounty is always visible
+	if self.searchBox and self.searchBox:GetText() ~= "" then
+		self.searchBox:SetText("")
+	end
+	if self.selectedCategory and self.selectedCategory ~= "ALL" and self.catDropdown then
+		self.selectedCategory = "ALL"
+		UIDropDownMenu_SetText(self.catDropdown, GSF.L["CAT_ALL"] or "All Categories")
+	end
+
+	self:RefreshBounties()
+
+	if self.highlightTimer then
+		self.highlightTimer:Cancel()
+		self.highlightTimer = nil
+	end
+	self.highlightTimer = C_Timer.NewTimer(3.0, function()
+		self.highlightedBountyId = nil
+		self.highlightTimer = nil
+		if activeView == "BOUNTIES" and self.frame and self.frame:IsShown() then
+			self:RefreshBounties()
+		end
+	end)
+end
+
 function Tab:RefreshGoals()
-	local goals = GSF.db and GSF.db.myGoals or {}
+	if not self.goalContent then return end
+	if not GSF.db or not GSF.db.myGoals then return end
+
+	local goals = GSF.db.myGoals
 	for _, r in ipairs(self.goalRows) do r:Hide() end
 
 	if #goals == 0 then
@@ -1644,7 +2124,7 @@ function Tab:RefreshGoals()
 			grip:SetScript("OnLeave", function() gripText:SetText("|cff888888::|r") end)
 			row.grip = grip
 
-			-- Up / Down Buttons (Noticeably larger: 22x16)
+			-- Up / Down Buttons
 			local upBtn = CreateFrame("Button", nil, row)
 			upBtn:SetSize(22, 16)
 			upBtn:SetPoint("LEFT", grip, "RIGHT", 4, 9)
@@ -1663,7 +2143,7 @@ function Tab:RefreshGoals()
 			downBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Highlight")
 			row.downBtn = downBtn
 
-			-- Item Icon (36x36)
+			-- Item Icon
 			local iconBtn = CreateFrame("Button", nil, row)
 			iconBtn:SetSize(36, 36)
 			iconBtn:SetPoint("LEFT", upBtn, "RIGHT", 8, -9)
@@ -1672,7 +2152,7 @@ function Tab:RefreshGoals()
 			row.icon = icon
 			row.iconBtn = iconBtn
 
-			-- Action Buttons (anchored to the right)
+			-- Action Buttons
 			local removeBtn = GSF.UI:CreateButton(row, GSF.L["REMOVE"] or "Entfernen", 75, 22)
 			removeBtn:SetPoint("RIGHT", row, "RIGHT", -10, 0)
 			row.removeBtn = removeBtn
@@ -1681,7 +2161,7 @@ function Tab:RefreshGoals()
 			editBtn:SetPoint("RIGHT", removeBtn, "LEFT", -8, 0)
 			row.editBtn = editBtn
 
-			-- Progress Bar (140x16) anchored directly to the left of editBtn
+			-- Progress Bar
 			local bar = CreateFrame("StatusBar", nil, row)
 			bar:SetSize(140, 16)
 			bar:SetPoint("RIGHT", editBtn, "LEFT", -14, 0)
@@ -1695,14 +2175,14 @@ function Tab:RefreshGoals()
 			row.bar = bar
 			row.barLabel = barLabel
 
-			-- Title (wide and non-truncating)
+			-- Title
 			local titleText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
 			titleText:SetPoint("TOPLEFT", iconBtn, "TOPRIGHT", 12, -2)
 			titleText:SetJustifyH("LEFT")
 			titleText:SetWordWrap(false)
 			row.titleText = titleText
 
-			-- Note Icon beside title
+			-- Note Icon
 			local noteIcon = CreateFrame("Button", nil, row)
 			noteIcon:SetSize(16, 16)
 			noteIcon:SetPoint("LEFT", titleText, "RIGHT", 6, 0)
@@ -1711,7 +2191,7 @@ function Tab:RefreshGoals()
 			noteTex:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
 			row.noteIcon = noteIcon
 
-			-- Subtitle below title
+			-- Subtitle
 			local subText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 			subText:SetPoint("BOTTOMLEFT", iconBtn, "BOTTOMRIGHT", 12, 2)
 			subText:SetWidth(250)
@@ -1725,31 +2205,13 @@ function Tab:RefreshGoals()
 		row:SetPoint("TOPLEFT", self.goalContent, "TOPLEFT", 0, -yOffset)
 		row.goalIndex = i
 
-		-- Up / Down Clicks
-		row.upBtn:SetScript("OnClick", function()
-			GSF.GoalsHUD:MoveGoal(i, -1)
-			Tab:RefreshGoals()
-		end)
-		row.downBtn:SetScript("OnClick", function()
-			GSF.GoalsHUD:MoveGoal(i, 1)
-			Tab:RefreshGoals()
-		end)
-		if i == 1 then
-			row.upBtn:Disable()
-			row.upBtn:SetAlpha(0.15)
-		else
-			row.upBtn:Enable()
-			row.upBtn:SetAlpha(0.85)
-		end
-		if i == #goals then
-			row.downBtn:Disable()
-			row.downBtn:SetAlpha(0.15)
-		else
-			row.downBtn:Enable()
-			row.downBtn:SetAlpha(0.85)
-		end
+		row.upBtn:SetScript("OnClick", function() GSF.GoalsHUD:MoveGoal(i, -1); Tab:RefreshGoals() end)
+		row.downBtn:SetScript("OnClick", function() GSF.GoalsHUD:MoveGoal(i, 1); Tab:RefreshGoals() end)
+		row.upBtn:SetEnabled(i > 1)
+		row.upBtn:SetAlpha(i > 1 and 0.85 or 0.15)
+		row.downBtn:SetEnabled(i < #goals)
+		row.downBtn:SetAlpha(i < #goals and 0.85 or 0.15)
 
-		-- Icon resolution
 		local iconTex = goal.icon
 		if IsPlaceholderIcon(iconTex) and (goal.itemID or goal.material or goal.name) then
 			if goal.itemID then
@@ -1772,12 +2234,26 @@ function Tab:RefreshGoals()
 		end)
 		row.iconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-		-- Titles
+		-- Titles & Subtitles
+		local isBounty = (goal.bountyId or goal.category == "Bounty")
+		local bountyData = goal.bountyId and GSF.cache and GSF.cache.bounties and GSF.cache.bounties[goal.bountyId]
+
 		local dispTitle = goal.title or goal.name
 		row.titleText:SetText(dispTitle)
 		local titleWidth = math.min(row.titleText:GetStringWidth() or 180, 230)
 		row.titleText:SetWidth(titleWidth)
-		if goal.material and goal.material ~= dispTitle then
+
+		if isBounty then
+			local bTag = GSF.L["BOUNTY_TAG_SHORT"] or "Gilden-Auftrag"
+			if bountyData then
+				local req = GSF.Alts:GetFormattedName(bountyData.requester)
+				local byPrefix = GSF.L["REQUESTED_BY_SHORT"] or "Von"
+				row.subText:SetText(string.format("|cff00ccff[%s]|r • %s: %s", bTag, byPrefix, req))
+			else
+				row.subText:SetText(string.format("|cff00ccff[%s]|r", bTag))
+			end
+			row.subText:Show()
+		elseif goal.material and goal.material ~= dispTitle then
 			row.subText:SetText(goal.material)
 			row.subText:Show()
 		else
@@ -1806,13 +2282,14 @@ function Tab:RefreshGoals()
 		end
 
 		-- Note
-		if goal.notes and goal.notes:trim() ~= "" then
+		local goalNote = (goal.notes and goal.notes:trim() ~= "") and goal.notes or (bountyData and bountyData.notes and bountyData.notes:trim() ~= "" and bountyData.notes)
+		if goalNote and goalNote:trim() ~= "" then
 			row.noteIcon:Show()
 			row.noteIcon:SetScript("OnEnter", function(noteBtn)
 				GameTooltip:SetOwner(noteBtn, "ANCHOR_RIGHT")
 				GameTooltip:AddLine(dispTitle, 1, 0.82, 0)
 				GameTooltip:AddLine(GSF.L["NOTE_TOOLTIP_HEADER"] or "Goal Note:", 0.7, 0.7, 0.7)
-				GameTooltip:AddLine(goal.notes, 1, 1, 1, true)
+				GameTooltip:AddLine(goalNote, 1, 1, 1, true)
 				GameTooltip:Show()
 			end)
 			row.noteIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1820,21 +2297,20 @@ function Tab:RefreshGoals()
 			row.noteIcon:Hide()
 		end
 
-		-- Edit Button
-		if goal.bountyId or goal.category == "Bounty" then
-			row.editBtn:Hide()
+		-- Edit / View Bounty
+		if isBounty then
+			row.editBtn:Show()
+			row.editBtn:SetText(GSF.L["VIEW_BOUNTY"] or "Auftrag")
+			row.editBtn:SetScript("OnClick", function() Tab:HighlightBounty(goal.bountyId) end)
 		else
 			row.editBtn:Show()
 			row.editBtn:SetText(GSF.L["EDIT"] or "Bearbeiten")
-			row.editBtn:SetScript("OnClick", function()
-				Tab:OpenGoalModal(goal)
-			end)
+			row.editBtn:SetScript("OnClick", function() Tab:OpenGoalModal(goal) end)
 		end
 
 		-- Remove Button
-		local gIdx = i
-		local gData = goal
-		row.removeBtn:SetText(GSF.L["REMOVE"] or "Entfernen")
+		local gIdx, gData = i, goal
+		row.removeBtn:SetText(isBounty and (GSF.L["BOUNTY_UNCLAIM"] or "Freigeben") or (GSF.L["REMOVE"] or "Entfernen"))
 		row.removeBtn:SetScript("OnClick", function()
 			if gData.bountyId or gData.category == "Bounty" then
 				StaticPopup_Show("GSF_CONFIRM_UNCLAIM_BOUNTY", nil, nil, { index = gIdx, bountyId = gData.bountyId, itemName = gData.name })

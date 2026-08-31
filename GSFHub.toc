@@ -2,7 +2,7 @@
 ## Title: GSFHub |cff33ff99(Guild Self-Found Hub)|r
 ## Notes: Decentralized profession manager, crafting work orders, surplus exchange, recipe drops coordinator, 1-375 resource farming atlas, and guild supply chain for SSF/GSF guilds.
 ## Author: VhelCodez
-## Version: 1.3.1
+## Version: 1.3.2
 ## SavedVariables: GSFHubDB, GSFHubCache
 ## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate
 ## DefaultState: enabled

@@ -1,23 +1,29 @@
-local AddonName, Addon = ...
-
-local AtlasJournal = LibStub("AceAddon-3.0"):GetAddon("GSFHub"):GetModule("AtlasJournal")
-if not AtlasJournal then return end
+local MAJOR = "LibAtlasJournal-1.1"
+local AtlasJournal = (LibStub and LibStub(MAJOR, true)) or AtlasJournal
+if not AtlasJournal then
+	AtlasJournal = {}
+	if _G then _G.AtlasJournal = AtlasJournal end
+end
 
 -- ============================================================================
 -- ATLAS JOURNAL MASTER RESOURCE DATA
 -- Categorized trade goods, materials, gathering nodes, and acquisition data.
 -- ============================================================================
 AtlasJournal.Categories = {
-	ALL        = { name = "All Categories",        icon = "Interface\\Icons\\INV_Misc_Book_09" },
-	MINING     = { name = "Mining & Gems",         icon = "Interface\\Icons\\Trade_Mining",          spellID = 2575 },
-	HERBALISM  = { name = "Herbalism",             icon = "Interface\\Icons\\Trade_Herbalism",       spellID = 2366 },
-	SKINNING   = { name = "Skinning & Leather",    icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01", spellID = 8613 },
-	CLOTH      = { name = "Cloth",                 icon = "Interface\\Icons\\INV_Fabric_Silk_02",    itemClass = 7, itemSubClass = 0 },
-	ELEMENTAL  = { name = "Elemental & Primals",   icon = "Interface\\Icons\\Spell_Fire_ElementalDevastation" },
-	ENCHANTING = { name = "Enchanting Materials",  icon = "Interface\\Icons\\Trade_Engraving",       spellID = 7411 },
-	COOKING    = { name = "Cooking & Meats",       icon = "Interface\\Icons\\INV_Misc_Food_15",      spellID = 2550 },
-	FISHING    = { name = "Fishing",               icon = "Interface\\Icons\\Trade_Fishing",         spellID = 7620 },
+	{ key = "ALL",        name = "All Categories",        icon = "Interface\\Icons\\INV_Misc_Book_09" },
+	{ key = "MINING",     name = "Mining & Gems",         icon = "Interface\\Icons\\Trade_Mining",          spellID = 2575 },
+	{ key = "HERBALISM",  name = "Herbalism",             icon = "Interface\\Icons\\Trade_Herbalism",       spellID = 2366 },
+	{ key = "SKINNING",   name = "Skinning & Leather",    icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01", spellID = 8613 },
+	{ key = "CLOTH",      name = "Cloth",                 icon = "Interface\\Icons\\INV_Fabric_Silk_02" },
+	{ key = "ELEMENTAL",  name = "Elemental & Primals",   icon = "Interface\\Icons\\Spell_Fire_ElementalDevastation" },
+	{ key = "ENCHANTING", name = "Enchanting Materials",  icon = "Interface\\Icons\\Trade_Engraving",       spellID = 7411 },
+	{ key = "COOKING",    name = "Cooking & Meats",       icon = "Interface\\Icons\\INV_Misc_Food_15",      spellID = 2550 },
+	{ key = "FISHING",    name = "Fishing",               icon = "Interface\\Icons\\Trade_Fishing",         spellID = 7620 },
 }
+
+for _, cat in ipairs(AtlasJournal.Categories) do
+	AtlasJournal.Categories[cat.key] = cat
+end
 
 AtlasJournal.Data = {
 	-- ========================================================================
@@ -1098,7 +1104,7 @@ AtlasJournal.Data = {
 		id = 14342, -- Mooncloth
 		category = "CLOTH",
 		sources = {
-			{ type = "TRANSMUTE", spellID = 18608, cooldown = "4d", fromItems = { 14256 } },
+			{ type = "TRANSMUTE", spellID = 18560, cooldown = "4d", fromItems = { 14256 } },
 		},
 		tipKey = "ATLAS_TIP_14342",
 	},
@@ -1114,7 +1120,7 @@ AtlasJournal.Data = {
 		id = 21845, -- Primal Mooncloth
 		category = "CLOTH",
 		sources = {
-			{ type = "TRANSMUTE", spellID = 26751, cooldown = "92h", fromItems = { 21877, 21885, 22457 } },
+			{ type = "TRANSMUTE", spellID = 26751, cooldown = "3d 20h", fromItems = { 21877, 21885, 21886 } },
 		},
 		tipKey = "ATLAS_TIP_21845",
 	},
@@ -1122,7 +1128,7 @@ AtlasJournal.Data = {
 		id = 24271, -- Spellcloth
 		category = "CLOTH",
 		sources = {
-			{ type = "TRANSMUTE", spellID = 31373, cooldown = "92h", fromItems = { 21877, 21884, 22456 } },
+			{ type = "TRANSMUTE", spellID = 31373, cooldown = "3d 20h", fromItems = { 21877, 21884, 22457 } },
 		},
 		tipKey = "ATLAS_TIP_24271",
 	},
@@ -1130,7 +1136,7 @@ AtlasJournal.Data = {
 		id = 24272, -- Shadowcloth
 		category = "CLOTH",
 		sources = {
-			{ type = "TRANSMUTE", spellID = 36686, cooldown = "92h", fromItems = { 21877, 21886, 22457 } },
+			{ type = "TRANSMUTE", spellID = 36686, cooldown = "3d 20h", fromItems = { 21877, 21884, 22456 } },
 		},
 		tipKey = "ATLAS_TIP_24272",
 	},

@@ -272,7 +272,18 @@ function GSF.UI:CreateItemSlot(parent, size)
 			GameTooltip:Show()
 		elseif self.itemID then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetItemByID(self.itemID)
+			if GetSpellInfo and GetSpellInfo(self.itemID) and not (GetItemInfo and GetItemInfo(self.itemID)) then
+				local sLink = GetSpellLink and GetSpellLink(self.itemID)
+				if sLink then
+					GameTooltip:SetHyperlink(sLink)
+				elseif GameTooltip.SetSpellByID then
+					GameTooltip:SetSpellByID(self.itemID)
+				else
+					GameTooltip:SetHyperlink("spell:" .. self.itemID)
+				end
+			else
+				GameTooltip:SetItemByID(self.itemID)
+			end
 			GameTooltip:Show()
 		elseif self.itemName then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -339,17 +350,38 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 			return
 		end
 
-		-- 1. Check if text is a raw numeric itemID with at least 3 digits (e.g. "4411", "28277")
+		-- 1. Check if link or text has a spell/enchant reference
+		local spellId = tonumber(itemID) or tonumber(text:match("enchant:(%d+)") or text:match("spell:(%d+)")) or (link and tonumber(link:match("enchant:(%d+)") or link:match("spell:(%d+)")))
+		if spellId and GetSpellInfo then
+			local sName, _, sTexture = GetSpellInfo(spellId)
+			if sName and sTexture then
+				local sLink = (GetSpellLink and GetSpellLink(spellId)) or link or string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellId, sName)
+				itemSlot:SetItem(sName, sTexture, sLink, spellId)
+				editBox.lastItemName = sName
+				editBox.lastItemLink = sLink
+				editBox.lastItemID = spellId
+				if callback then callback(sName, sLink, sTexture, spellId) end
+				return
+			end
+		end
+
+		-- 2. Check if text is a raw numeric itemID with at least 3 digits (e.g. "4411", "28277")
 		local rawId = (text:match("^%d+$") and #text >= 3) and tonumber(text) or nil
-		-- 2. Check if text is a WoWHead script or hyperlink containing item:ID
+		-- 3. Check if text is a WoWHead script or hyperlink containing item:ID
 		local scriptId = tonumber(text:match("item:(%d+)"))
 
 		local target = link or itemID or rawId or scriptId
 		if not target then
-			-- 3. Check our dynamic chat/session link cache (captures whispers, guild, loot, etc.)
+			-- 4. Check our dynamic chat/session link cache (captures whispers, guild, loot, etc.)
 			if GSF.ChatLinks and GSF.ChatLinks[text:lower()] then
 				target = GSF.ChatLinks[text:lower()].link or GSF.ChatLinks[text:lower()].id
-			-- 4. Fallback to raw text for items already in native RAM
+			-- 5. Check AtlasJournal catalog by item name
+			elseif AtlasJournal and AtlasJournal.FindResource and AtlasJournal:FindResource(text) then
+				local yd = AtlasJournal:FindResource(text)
+				if yd then
+					target = yd.itemId or yd.link or text
+				end
+			-- 6. Fallback to raw text for items already in native RAM
 			else
 				target = text
 			end
@@ -357,6 +389,15 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 
 		local name, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(target)
 		local numId = tonumber(type(target) == "number" and target or (tostring(target):match("item:(%d+)"))) or rawId or scriptId
+
+		if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
+			local yd = AtlasJournal:GetItemDetails(numId)
+			if yd and yd.icon then
+				texture = yd.icon
+				name = name or yd.name or text
+				itemLink = itemLink or yd.link
+			end
+		end
 
 		if name and texture then
 			itemSlot:SetItem(name, texture, itemLink or link, numId or itemID)
@@ -391,19 +432,17 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 						end
 					end)
 				end)
-			else
-				itemSlot:Clear()
-				editBox.lastItemName = nil
-				editBox.lastItemLink = nil
-				editBox.lastItemID = nil
-				if callback then callback(nil) end
 			end
 		else
-			itemSlot:Clear()
-			editBox.lastItemName = nil
-			editBox.lastItemLink = nil
-			editBox.lastItemID = nil
-			if callback then callback(nil) end
+			-- Check if text matches a spell name
+			if GetSpellInfo and text and text ~= "" then
+				local sName, _, sTexture = GetSpellInfo(text)
+				if sName and sTexture then
+					itemSlot:SetItem(sName, sTexture, nil, nil)
+					editBox.lastItemName = sName
+					if callback then callback(sName, nil, sTexture, nil) end
+				end
+			end
 		end
 	end
 
