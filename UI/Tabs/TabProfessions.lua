@@ -167,9 +167,13 @@ function Tab:Create(parent)
 		if selectedRecipe and GSF.TabWorkOrders then
 			GSF.MainFrame:SelectTab(2)
 			local link = selectedRecipe.itemLink or selectedRecipe.recipeLink
-			local id = selectedRecipe.spellId
-			if link and link:match("item:(%d+)") then
+			local id
+			if selectedRecipe.itemLink and selectedRecipe.itemLink:match("item:(%d+)") then
+				id = tonumber(selectedRecipe.itemLink:match("item:(%d+)"))
+			elseif link and link:match("item:(%d+)") then
 				id = tonumber(link:match("item:(%d+)"))
+			elseif selectedRecipe.spellId then
+				id = tonumber(selectedRecipe.spellId)
 			end
 			GSF.TabWorkOrders:OpenCreateModal(selectedRecipe.name, selectedRecipe.profession, 1, nil, true, nil, link, id)
 		end

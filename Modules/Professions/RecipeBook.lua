@@ -50,6 +50,7 @@ function GSF.RecipeBook:Search(searchText, profFilter, onlineOnly)
 											profession = profName,
 											itemLink = recipe.itemLink,
 											recipeLink = recipe.recipeLink,
+											spellId = recipe.spellId,
 											reagents = recipe.reagents or {},
 											crafters = {},
 										}

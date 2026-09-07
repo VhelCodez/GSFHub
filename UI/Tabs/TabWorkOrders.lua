@@ -357,75 +357,91 @@ function Tab:OpenCreateModal(prefillItem, prefillProf, prefillQty, prefillNotes,
 	self.modalItemBox.lastItemID = nil
 
 	-- Trigger item/spell resolution
-	local spellId = tonumber(prefillId) or (prefillLink and tonumber(prefillLink:match("enchant:(%d+)") or prefillLink:match("spell:(%d+)"))) or (prefillItem and tonumber(prefillItem:match("enchant:(%d+)") or prefillItem:match("spell:(%d+)")))
+	local isExplicitSpell = (prefillLink and (prefillLink:match("enchant:") or prefillLink:match("spell:"))) or (prefillItem and (prefillItem:match("enchant:") or prefillItem:match("spell:")))
+	local spellId = (isExplicitSpell and (tonumber(prefillId) or tonumber(prefillLink and (prefillLink:match("enchant:(%d+)") or prefillLink:match("spell:(%d+)"))) or tonumber(prefillItem and (prefillItem:match("enchant:(%d+)") or prefillItem:match("spell:(%d+)"))))) or nil
 	local resolved = false
 
-	if spellId and GetSpellInfo then
-		local sName, _, sTexture = GetSpellInfo(spellId)
-		if sName and sTexture then
-			local sLink = (GetSpellLink and GetSpellLink(spellId)) or prefillLink or string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellId, sName)
-			self.modalItemSlot:SetItem(sName, sTexture, sLink, spellId)
-			self.modalItemBox.lastItemName = sName
-			self.modalItemBox.lastItemLink = sLink
-			self.modalItemBox.lastItemID = spellId
+	-- 1. Try item lookup first if prefillItem / prefillLink / prefillId is provided
+	local queryTarget = prefillLink or prefillId or (prefillItem and prefillItem:match("item:(%d+)") and tonumber(prefillItem:match("item:(%d+)"))) or prefillItem
+	if queryTarget and queryTarget ~= "" then
+		local numId = tonumber(prefillId) or tonumber(type(queryTarget) == "number" and queryTarget or (tostring(queryTarget):match("item:(%d+)")))
+		local name, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(queryTarget)
+
+		if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
+			local yd = AtlasJournal:GetItemDetails(numId)
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
+				texture = yd.icon
+				name = name or yd.name or prefillItem
+				itemLink = itemLink or yd.link or prefillLink
+			end
+		end
+
+		if not texture and AtlasJournal and AtlasJournal.FindResource and type(queryTarget) == "string" then
+			local yd = AtlasJournal:FindResource(queryTarget)
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
+				texture = yd.icon
+				name = name or yd.name or prefillItem
+				itemLink = itemLink or yd.link or prefillLink
+				numId = numId or yd.itemId
+			end
+		end
+
+		if name and texture then
+			self.modalItemSlot:SetItem(name, texture, itemLink or prefillLink, numId or (itemLink and tonumber(itemLink:match("item:(%d+)"))))
+			self.modalItemBox.lastItemName = name
+			self.modalItemBox.lastItemLink = itemLink or prefillLink
+			self.modalItemBox.lastItemID = numId or (itemLink and tonumber(itemLink:match("item:(%d+)")))
 			resolved = true
+		elseif numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID and Item and Item.CreateFromItemID then
+			C_Item.RequestLoadItemDataByID(numId)
+			local item = Item:CreateFromItemID(numId)
+			if item and not item:IsItemEmpty() and item:GetItemID() then
+				pcall(function()
+					item:ContinueOnItemLoad(function()
+						local n = item:GetItemName()
+						local icon = item:GetItemIcon()
+						local l = item:GetItemLink()
+						if icon and self.modalItemSlot then
+							self.modalItemSlot:SetItem(n or prefillItem, icon, l or prefillLink, numId)
+							self.modalItemBox.lastItemName = n or prefillItem
+							self.modalItemBox.lastItemLink = l or prefillLink
+							self.modalItemBox.lastItemID = numId
+						end
+					end)
+				end)
+				resolved = true
+			end
 		end
 	end
 
-	if not resolved then
-		local queryTarget = prefillLink or prefillId or (prefillItem and prefillItem:match("item:(%d+)") and tonumber(prefillItem:match("item:(%d+)"))) or prefillItem
-		if queryTarget and queryTarget ~= "" then
-			local numId = tonumber(prefillId) or tonumber(type(queryTarget) == "number" and queryTarget or (tostring(queryTarget):match("item:(%d+)")))
-			local name, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(queryTarget)
-
-			if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
-				local yd = AtlasJournal:GetItemDetails(numId)
-				if yd and yd.icon then
-					texture = yd.icon
-					name = name or yd.name or prefillItem
-					itemLink = itemLink or yd.link or prefillLink
-				end
+	-- 2. If not resolved as an item, try spell resolution (verifying spell name matches prefillItem)
+	if not resolved and (spellId or (prefillItem and prefillItem ~= "")) and GetSpellInfo then
+		local sId = spellId or tonumber(prefillId)
+		local sName, _, sTexture
+		if sId then
+			sName, _, sTexture = GetSpellInfo(sId)
+		end
+		-- Verify spell name matches prefillItem if prefillItem is provided
+		local matchValid = false
+		if sName and sTexture then
+			if not prefillItem or prefillItem == "" or sName:lower() == prefillItem:lower() or prefillItem:lower():find(sName:lower(), 1, true) or sName:lower():find(prefillItem:lower(), 1, true) then
+				matchValid = true
 			end
+		end
 
-			if not texture and AtlasJournal and AtlasJournal.FindResource and type(queryTarget) == "string" then
-				local yd = AtlasJournal:FindResource(queryTarget)
-				if yd and yd.icon then
-					texture = yd.icon
-					name = name or yd.name or prefillItem
-					itemLink = itemLink or yd.link or prefillLink
-					numId = numId or yd.itemId
-				end
-			end
-
-			if name and texture then
-				self.modalItemSlot:SetItem(name, texture, itemLink or prefillLink, numId or (itemLink and tonumber(itemLink:match("item:(%d+)"))))
-				self.modalItemBox.lastItemName = name
-				self.modalItemBox.lastItemLink = itemLink or prefillLink
-				self.modalItemBox.lastItemID = numId or (itemLink and tonumber(itemLink:match("item:(%d+)")))
-			elseif numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID and Item and Item.CreateFromItemID then
-				C_Item.RequestLoadItemDataByID(numId)
-				local item = Item:CreateFromItemID(numId)
-				if item and not item:IsItemEmpty() and item:GetItemID() then
-					pcall(function()
-						item:ContinueOnItemLoad(function()
-							local n = item:GetItemName()
-							local icon = item:GetItemIcon()
-							local l = item:GetItemLink()
-							if icon and self.modalItemSlot then
-								self.modalItemSlot:SetItem(n or prefillItem, icon, l or prefillLink, numId)
-								self.modalItemBox.lastItemName = n or prefillItem
-								self.modalItemBox.lastItemLink = l or prefillLink
-								self.modalItemBox.lastItemID = numId
-							end
-						end)
-					end)
-				end
-			elseif GetSpellInfo and prefillItem and prefillItem ~= "" then
-				local sName, _, sTexture = GetSpellInfo(prefillItem)
-				if sName and sTexture then
-					self.modalItemSlot:SetItem(sName, sTexture, prefillLink, nil)
-					self.modalItemBox.lastItemName = sName
-				end
+		if matchValid then
+			local sLink = (sId and GetSpellLink and GetSpellLink(sId)) or prefillLink or string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", sId or 0, sName)
+			self.modalItemSlot:SetItem(sName, sTexture, sLink, sId)
+			self.modalItemBox.lastItemName = sName
+			self.modalItemBox.lastItemLink = sLink
+			self.modalItemBox.lastItemID = sId
+			resolved = true
+		elseif prefillItem and prefillItem ~= "" then
+			local spName, _, spTexture = GetSpellInfo(prefillItem)
+			if spName and spTexture then
+				self.modalItemSlot:SetItem(spName, spTexture, prefillLink, nil)
+				self.modalItemBox.lastItemName = spName
+				resolved = true
 			end
 		end
 	end
@@ -581,14 +597,14 @@ function Tab:Refresh()
 		end
 		if not texture and order.itemId and AtlasJournal and AtlasJournal.GetItemDetails then
 			local yd = AtlasJournal:GetItemDetails(order.itemId)
-			if yd and yd.icon then
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
 				texture = yd.icon
 				itemLink = itemLink or yd.link
 			end
 		end
 		if not texture and order.item and AtlasJournal and AtlasJournal.FindResource then
 			local yd = AtlasJournal:FindResource(order.item)
-			if yd and yd.icon then
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
 				texture = yd.icon
 				itemLink = itemLink or yd.link
 			end
