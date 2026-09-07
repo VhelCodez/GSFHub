@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.3.3] - 2026-09-07
+
+### Added
+- **Recipe Drops Card UI & Interactive Controls (`TabDrops.lua`):**
+  - Converted the raw font-string list into modern 64px cards matching Work Orders and Bounties: 36x36px item slots with rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and individual `[X]` dismiss buttons.
+  - Automatic 24-hour expiration timeout (`GSF.RECIPE_DROP_TIMEOUT = 86400`) and auto-pruning on initialization, login, and tab refresh.
+- **Standardized Time Display Format (`Core/Constants.lua`, `TabDrops.lua`, `TabRoster.lua`):**
+  - Implemented centralized `GSF:FormatTime(seconds)` and `GSF:FormatTimeAgo(timestamp)` formatting relative timestamps into days, hours, and minutes (e.g. `"1d 2h 34m"`, `"2h 15m"`, `"45m"`, or `"Just now"` / `"Gerade eben"`).
+  - Applied across Recipe Drops cards and Guild Roster last seen column.
+
 ### Fixed
 - **Unlearned Profession Pruning & Non-English Client Persistence (`Scanner.lua`, `Database.lua`):**
   - Resolved an issue on localized clients (e.g. German `deDE`) where `GetSkillLineInfo()` returns localized profession names (e.g. *"Bergbau"*, *"Juwelenschleifen"*), which previously caused the pruning loop to consider active skills as unlearned and wipe all professions on `/reload` or login.

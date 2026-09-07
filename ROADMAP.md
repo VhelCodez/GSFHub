@@ -17,7 +17,8 @@ graph LR
     v127 --> v13["v1.3.0<br/><b>Phase 3: Universal Atlas</b><br/>(Released)"]
     v13 --> v131["v1.3.1<br/><b>Master Expansion & CRAFT</b><br/>(Released)"]
     v131 --> v132["v1.3.2<br/><b>Supply Chain & Goals</b><br/>(Released)"]
-    v132 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
+    v132 --> v133["v1.3.3<br/><b>Drops Revamp & Persistence</b><br/>(Released)"]
+    v133 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -26,6 +27,17 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.3.3 - Recipe Drops Revamp, Robust Profession Persistence & Reactive Item Resolution Suite *(Released)*
+- [x] **Modern 64px Recipe Drops Architecture:** Converted raw drop text list into modern 64px cards matching Work Orders and Bounties, featuring 36x36px item slots with Blizzard rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and individual `[X]` dismiss buttons.
+- [x] **Automatic 24-Hour Expiration & Auto-Pruning:** Implemented `GSF.RECIPE_DROP_TIMEOUT = 86400` with automated pruning on initialization, login, and tab refresh.
+- [x] **Precision "Needed By" Crafter Detection:** Cleaned recipe prefixes, normalized canonical professions, and verified crafters with active professions have not already learned the recipe before displaying under "Needed By".
+- [x] **Standardized Relative Time Display ("1d 2h 34m"):** Centralized `GSF:FormatTime` and `GSF:FormatTimeAgo` into days, hours, and minutes across Recipe Drops and Guild Roster last seen column.
+- [x] **Localized Client Profession Persistence & Pruning Fix:** Fixed unlearning detection on localized clients (`deDE`), preventing active professions from being wiped on `/reload` or login, with dual-key database restoration.
+- [x] **Suppressed Bulk Crafting Notification Spam:** Silenced chat spam during incremental skill point gains when bulk crafting items (e.g. smelting copper bars).
+- [x] **Work Order Spell Collision Bugfix ("Feiner Kupferdraht" / "Schattenblitz"):** Item lookups now take strict precedence over spell IDs in create modals, preventing craft ID overlaps with global spells.
+- [x] **Reactive Uncached Item Preview Resolution:** Entering uncached item IDs (e.g. `4411`) shows a loading indicator and dynamically updates preview slots, editboxes, and databases upon server data receipt via `GET_ITEM_INFO_RECEIVED` and `ContinueOnItemLoad`.
+- [x] **Wishlist Tooltip Hyperlink Crash Protection:** Wrapped all tooltip hyperlink calls in validation and `pcall`, preventing `GameTooltip:SetHyperlink: Unknown link type` crashes on plain-text wishlist entries.
 
 ### ✅ v1.3.2 - Guild Supply Chain, Two-Sided Bounties & Goal Management Suite *(Released)*
 - [x] **Two-Sided Delivery Verification Handshake:** In-person handoffs marked with `[Geliefert melden]` / `[Verschicken]` require explicit confirmation `[Erhalt bestätigen]` by the requester, with `[Nicht erhalten]` rejection to protect against dishonest completions.
