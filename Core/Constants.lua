@@ -198,5 +198,41 @@ end
 function GSF:GetLocalizedProfession(name)
 	local canon = self:GetCanonicalProfession(name) or name
 	local key = "PROF_" .. canon:upper():gsub("%s+", "_")
-	return (GSF.L and GSF.L[key]) or canon
+	if GSF.L and GSF.L[key] and GSF.L[key] ~= key then
+		return GSF.L[key]
+	end
+	return canon
 end
+
+function GSF:FormatTime(seconds)
+	if not seconds or seconds < 60 then
+		return (GSF.L and GSF.L["JUST_NOW"]) or "Just now"
+	end
+
+	local totalMins = math.floor(seconds / 60)
+	local days = math.floor(totalMins / 1440)
+	local hours = math.floor((totalMins % 1440) / 60)
+	local mins = totalMins % 60
+
+	local parts = {}
+	if days > 0 then
+		table.insert(parts, days .. "d")
+	end
+	if hours > 0 then
+		table.insert(parts, hours .. "h")
+	end
+	if mins > 0 or #parts == 0 then
+		table.insert(parts, mins .. "m")
+	end
+
+	return table.concat(parts, " ")
+end
+
+function GSF:FormatTimeAgo(timestamp)
+	if not timestamp then
+		return (GSF.L and GSF.L["JUST_NOW"]) or "Just now"
+	end
+	local diff = math.max(0, time() - timestamp)
+	return self:FormatTime(diff)
+end
+

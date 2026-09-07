@@ -308,15 +308,10 @@ function Tab:Refresh()
 		end
 		row.profs:SetText(#profList > 0 and table.concat(profList, ", ") or (GSF.L["NONE"] or "None"))
 
-		local mins = math.floor((time() - (member.lastSeen or time())) / 60)
 		if isMe or isOnline then
 			row.lastSeen:SetText("|cff00ff00Online|r")
-		elseif mins < 60 then
-			row.lastSeen:SetText(string.format(GSF.L["MINS_AGO"] or "%dm ago", mins))
-		elseif mins < 1440 then
-			row.lastSeen:SetText(math.floor(mins / 60) .. "h")
 		else
-			row.lastSeen:SetText(math.floor(mins / 1440) .. "d")
+			row.lastSeen:SetText(GSF:FormatTimeAgo(member.lastSeen))
 		end
 
 		row:Show()
