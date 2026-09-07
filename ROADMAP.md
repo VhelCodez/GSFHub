@@ -38,6 +38,7 @@ graph LR
 - [x] **Work Order Spell Collision Bugfix ("Feiner Kupferdraht" / "Schattenblitz"):** Item lookups now take strict precedence over spell IDs in create modals, preventing craft ID overlaps with global spells.
 - [x] **Reactive Uncached Item Preview Resolution:** Entering uncached item IDs (e.g. `4411`) shows a loading indicator and dynamically updates preview slots, editboxes, and databases upon server data receipt via `GET_ITEM_INFO_RECEIVED` and `ContinueOnItemLoad`.
 - [x] **Wishlist Tooltip Hyperlink Crash Protection:** Wrapped all tooltip hyperlink calls in validation and `pcall`, preventing `GameTooltip:SetHyperlink: Unknown link type` crashes on plain-text wishlist entries.
+- [x] **Generic `AttachTooltip` UI Helper & Nil Call Protection:** Implemented `GSF.UI:AttachTooltip` in `Backdrop.lua` with automatic `OnHide` dismissal, resolving `TabDrops.lua:316` nil function calls on tab selection and search filtering.
 
 ### ✅ v1.3.2 - Guild Supply Chain, Two-Sided Bounties & Goal Management Suite *(Released)*
 - [x] **Two-Sided Delivery Verification Handshake:** In-person handoffs marked with `[Geliefert melden]` / `[Verschicken]` require explicit confirmation `[Erhalt bestätigen]` by the requester, with `[Nicht erhalten]` rejection to protect against dishonest completions.

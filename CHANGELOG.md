@@ -52,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed a Lua error (`GameTooltip:SetHyperlink(): Unknown link type`) when hovering over wishlist entries that contain plain text or bracketed item names (e.g. `"[Rezept: Goldfischstäbchen]"`).
   - Hardened tooltip handlers across `CreateItemSlot`, `AttachItemTooltip`, and `wishRows` to strictly validate hyperlinks (`|H.-|h`, `item:`, `spell:`) and wrap calls in `pcall`, gracefully falling back to `SetItemByID` and `SetText`.
   - Sanitized wishlist database entries so non-hyperlink strings are never persisted as `item.link`.
+- **Recipe Drops Tab Refresh Nil Function Error (`Backdrop.lua`, `TabDrops.lua`, `Locales/`):**
+  - Fixed a Lua runtime error (`TabDrops.lua:316: attempt to call a nil value`) triggered on tab selection, search query input, and background sync events due to a missing `GSF.UI:AttachTooltip` widget helper.
+  - Implemented generic `GSF.UI:AttachTooltip(frame, text, anchor)` in `Backdrop.lua` supporting static text strings and dynamic evaluator functions.
+  - Added automatic `OnHide` hooks to both `AttachTooltip` and `AttachItemTooltip` so tooltips reliably dismiss when cards or rows are hidden or re-rendered.
+  - Added localized `REMOVE_FROM_WISHLIST` tooltip to wishlist delete buttons.
 
 
 ### Planned (Phase 4 - v1.4.0)
