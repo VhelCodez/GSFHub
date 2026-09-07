@@ -121,3 +121,12 @@ Check out our full **[ROADMAP.md](ROADMAP.md)** for detailed milestone plans.
 
 - **Target Engine:** Modern WoW Classic TBC (`Interface: 20506`, compatible with modern Classic Lua/FrameXML).
 - **Libraries Embedded:** `LibStub`, `CallbackHandler-1.0`, `AceAddon-3.0`, `AceEvent-3.0`, `AceComm-3.0`, `AceSerializer-3.0`, `AceTimer-3.0`, `AceConsole-3.0`, `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibDeflate`.
+
+---
+
+## 📜 Credits & License
+
+- **Author:** VhelCodez
+- **Project Icon / Logo:** Created with AI assistance
+- **License:** MIT License (see [LICENSE](LICENSE))
+
