@@ -360,6 +360,7 @@ function Tab:Refresh()
 
 		-- Dismiss Action
 		card.dismissBtn:SetScript("OnClick", function()
+			GameTooltip:Hide()
 			GSF.RecipeDrops:DismissDrop(originalIdx)
 			Tab:Refresh()
 		end)
@@ -414,6 +415,7 @@ function Tab:Refresh()
 
 			local delBtn = GSF.UI:CreateButton(row, "X", 24, 20)
 			delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+			GSF.UI:AttachTooltip(delBtn, GSF.L["REMOVE_FROM_WISHLIST"] or GSF.L["REMOVE"] or "Remove")
 			row.delBtn = delBtn
 
 			row:EnableMouse(true)
@@ -544,6 +546,7 @@ function Tab:Refresh()
 		end
 
 		row.delBtn:SetScript("OnClick", function()
+			GameTooltip:Hide()
 			GSF.RecipeDrops:RemoveFromWishlist(key)
 			Tab:Refresh()
 		end)

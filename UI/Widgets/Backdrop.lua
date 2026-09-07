@@ -562,8 +562,9 @@ end
 
 -- Generic tooltip attacher for item icon buttons
 function GSF.UI:AttachItemTooltip(frame, getItemLinkFunc)
+	if not frame then return end
 	frame:EnableMouse(true)
-	frame:HookScript("OnEnter", function(self)
+	local function showTip(self)
 		local link = getItemLinkFunc and getItemLinkFunc(self)
 		if link then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -576,8 +577,46 @@ function GSF.UI:AttachItemTooltip(frame, getItemLinkFunc)
 			end
 			GameTooltip:Show()
 		end
-	end)
-	frame:HookScript("OnLeave", function()
+	end
+	local function hideTip()
 		GameTooltip:Hide()
-	end)
+	end
+
+	if frame.HookScript then
+		frame:HookScript("OnEnter", showTip)
+		frame:HookScript("OnLeave", hideTip)
+		frame:HookScript("OnHide", hideTip)
+	else
+		frame:SetScript("OnEnter", showTip)
+		frame:SetScript("OnLeave", hideTip)
+		frame:SetScript("OnHide", hideTip)
+	end
 end
+
+-- Generic text tooltip attacher for buttons and UI elements
+function GSF.UI:AttachTooltip(frame, text, anchor)
+	if not frame then return end
+	frame:EnableMouse(true)
+	local function showTip(self)
+		local tipText = (type(text) == "function") and text(self) or text
+		if tipText and tipText ~= "" then
+			GameTooltip:SetOwner(self, anchor or "ANCHOR_RIGHT")
+			GameTooltip:SetText(tipText, 1, 1, 1)
+			GameTooltip:Show()
+		end
+	end
+	local function hideTip()
+		GameTooltip:Hide()
+	end
+
+	if frame.HookScript then
+		frame:HookScript("OnEnter", showTip)
+		frame:HookScript("OnLeave", hideTip)
+		frame:HookScript("OnHide", hideTip)
+	else
+		frame:SetScript("OnEnter", showTip)
+		frame:SetScript("OnLeave", hideTip)
+		frame:SetScript("OnHide", hideTip)
+	end
+end
+

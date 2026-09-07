@@ -131,6 +131,7 @@ L["REMOVED_FROM_WISHLIST"] = "%s von der Wunschliste entfernt."
 L["NEEDED_BY"] = "Benötigt von: %s"
 L["DISMISS_DROP"] = "Eintrag entfernen"
 L["DISMISS"] = "Entfernen"
+L["REMOVE_FROM_WISHLIST"] = "Von Wunschliste entfernen"
 
 -- Resource Atlas & Bounties Tab
 L["SEARCH_ATLAS"] = "Materialien suchen..."
