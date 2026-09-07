@@ -9,20 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned (Phase 4 - v1.4.0)
+- **Navigation Overhaul:** Hybrid Pinned + Overflow `[ ⋯ More ▼ ]` tab architecture with responsive horizontal wrapping.
+- **Cross-Character Account Cooldown Alarms:** Account-wide tracking and alarms for Alchemy transmutations, Tailoring cloth weaves, and Salt Shakers.
+- **Active Gatherer Radar:** Real-time presence broadcasts when guild members are farming specific zones.
+- **Universal Global Search:** Omni-search bar indexing recipes, materials, crafters, bounties, and surplus.
+
 ---
 
 ## [1.3.3] - 2026-09-07
 
 ### Added
-- **Recipe Drops Card UI & Interactive Controls (`TabDrops.lua`):**
-  - Converted the raw font-string list into modern 64px cards matching Work Orders and Bounties: 36x36px item slots with rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and individual `[X]` dismiss buttons.
+- **Recipe Drops 64px Card UI & Interactive Controls (`TabDrops.lua`):**
+  - Converted the raw font-string list into modern 64px cards matching Work Orders and Bounties: 36x36px item slots with Blizzard rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and individual `[X]` dismiss buttons.
   - Automatic 24-hour expiration timeout (`GSF.RECIPE_DROP_TIMEOUT = 86400`) and auto-pruning on initialization, login, and tab refresh.
-- **Standardized Time Display Format (`Core/Constants.lua`, `TabDrops.lua`, `TabRoster.lua`):**
+- **Standardized Relative Time Display Format (`Core/Constants.lua`, `TabDrops.lua`, `TabRoster.lua`):**
   - Implemented centralized `GSF:FormatTime(seconds)` and `GSF:FormatTimeAgo(timestamp)` formatting relative timestamps into days, hours, and minutes (e.g. `"1d 2h 34m"`, `"2h 15m"`, `"45m"`, or `"Just now"` / `"Gerade eben"`).
   - Applied across Recipe Drops cards and Guild Roster last seen column.
+- **Generic `AttachTooltip` UI Helper Widget (`Backdrop.lua`):**
+  - Implemented `GSF.UI:AttachTooltip(frame, text, anchor)` supporting static text strings or dynamic evaluator functions, with automatic `OnHide` hooks to prevent stuck tooltips.
 
 ### Fixed
-- **Unlearned Profession Pruning & Non-English Client Persistence (`Scanner.lua`, `Database.lua`):**
+- **Unlearned Profession Pruning & Localized Client Persistence (`Scanner.lua`, `Database.lua`):**
   - Resolved an issue on localized clients (e.g. German `deDE`) where `GetSkillLineInfo()` returns localized profession names (e.g. *"Bergbau"*, *"Juwelenschleifen"*), which previously caused the pruning loop to consider active skills as unlearned and wipe all professions on `/reload` or login.
   - Implemented full canonical profession normalization (`GSF:GetCanonicalProfession`) across `ScanSkillLines()`, `ScanTradeSkill()`, and `ScanCraft()`, ensuring seamless recognition and dual-key safety.
   - Added two-way database cache restoration in `GSF.DB:SyncActiveCharacterProfessions()` to protect SavedVariables across scope changes and reload events.
@@ -37,13 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed an issue where ordering recipes such as *"Feiner Kupferdraht"* (Delicate Copper Wire, craft spell ID `25255`) caused the work order modal item preview and tooltip to mistakenly display *"Schattenblitz"* (Shadow Bolt) due to an ID overlap in WoW's global spell database.
   - Guarded spell resolution in `OpenCreateModal` and `AttachItemPreview` so `GetSpellInfo` is only accepted if the resolved name matches the craft item requested; item lookup (`GetItemInfo`) now takes proper precedence.
   - Preserved `spellId` in `RecipeBook:Search` and prioritized `itemLink` and item ID when creating orders from the Professions tab.
-- **Recipe Drops & Wishlist Revamp (`RecipeDrops.lua`, `TabDrops.lua`, `Locales/`):**
-  - Modernized the Recent Drops list with 64px card architecture matching Work Orders and Bounties: 36x36px item slots with rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and a manual `[X]` dismiss button.
-  - Implemented automatic 24-hour expiration timeout (`GSF.RECIPE_DROP_TIMEOUT`) and auto-pruning on initialization and refresh.
+- **Precision "Needed By" Crafter Detection (`RecipeDrops.lua`):**
   - Fixed false-positive "Needed By" crafter detection by normalizing canonical professions, stripping recipe prefixes (*"Pattern: "*, *"Rezept: "*, etc.), and verifying that crafters with active professions have not already learned the recipe.
-- **Standardized Time Display Format (`Core/Constants.lua`, `TabDrops.lua`, `TabRoster.lua`):**
-  - Implemented centralized `GSF:FormatTime(seconds)` and `GSF:FormatTimeAgo(timestamp)` formatting relative timestamps into days, hours, and minutes (e.g. `"1d 2h 34m"`, `"2h 15m"`, `"45m"`, or `"Just now"` / `"Gerade eben"`).
-  - Applied across Recipe Drops cards and Guild Roster last seen column.
 - **Uncached Item Loading in Wishlist & Item Previews (`Backdrop.lua`, `TabDrops.lua`, `RecipeDrops.lua`, `TabWorkOrders.lua`):**
   - Fixed an issue where entering an uncached item ID (such as `4411`) in the Wishlist modal resulted in a stuck `"Gegenstand #4411 (Wird geladen...)"` state that never updated once server item info was received.
   - Guarded `AtlasJournal:GetItemDetails` so dummy fallback tables (`link = nil`) are not falsely treated as cached items.
@@ -52,10 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed a Lua error (`GameTooltip:SetHyperlink(): Unknown link type`) when hovering over wishlist entries that contain plain text or bracketed item names (e.g. `"[Rezept: Goldfischstäbchen]"`).
   - Hardened tooltip handlers across `CreateItemSlot`, `AttachItemTooltip`, and `wishRows` to strictly validate hyperlinks (`|H.-|h`, `item:`, `spell:`) and wrap calls in `pcall`, gracefully falling back to `SetItemByID` and `SetText`.
   - Sanitized wishlist database entries so non-hyperlink strings are never persisted as `item.link`.
-- **Recipe Drops Tab Refresh Nil Function Error (`Backdrop.lua`, `TabDrops.lua`, `Locales/`):**
-  - Fixed a Lua runtime error (`TabDrops.lua:316: attempt to call a nil value`) triggered on tab selection, search query input, and background sync events due to a missing `GSF.UI:AttachTooltip` widget helper.
-  - Implemented generic `GSF.UI:AttachTooltip(frame, text, anchor)` in `Backdrop.lua` supporting static text strings and dynamic evaluator functions.
-  - Added automatic `OnHide` hooks to both `AttachTooltip` and `AttachItemTooltip` so tooltips reliably dismiss when cards or rows are hidden or re-rendered.
+- **Recipe Drops Tab Refresh Nil Function Error (`Backdrop.lua`, `TabDrops.lua`):**
+  - Fixed a Lua runtime error (`TabDrops.lua:316: attempt to call a nil value`) triggered on tab selection, search query input, and background sync events by hooking the newly implemented `GSF.UI:AttachTooltip` widget helper.
   - Added localized `REMOVE_FROM_WISHLIST` tooltip to wishlist delete buttons.
 - **Recipe Drops Layout Misplacement & Missing `NO_CRAFTERS_NEED` Localization (`TabDrops.lua`, `Locales/`):**
   - Fixed an issue where `NO_CRAFTERS_NEED` appeared as a raw untranslated string key and overflowed past the bottom border of recipe drop cards.
@@ -66,13 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Explicitly re-anchored `scrollBar` inside the rightmost 24px gutter of `scrollFrame` (`-2, -18` to `-2, 18`) with elevated frame level.
   - Symmetrically anchored `leftScroll` in the Professions tab to `BOTTOMLEFT, frame, BOTTOMLEFT, 15, 15`, aligning bottom margins with the details pane.
   - Dynamically calculated scrollbar visibility thresholds using `scrollFrame:GetHeight()`.
-
-
-### Planned (Phase 4 - v1.4.0)
-- **Navigation Overhaul:** Hybrid Pinned + Overflow `[ ⋯ More ▼ ]` tab architecture with responsive horizontal wrapping.
-- **Cross-Character Account Cooldown Alarms:** Account-wide tracking and alarms for Alchemy transmutations, Tailoring cloth weaves, and Salt Shakers.
-- **Active Gatherer Radar:** Real-time presence broadcasts when guild members are farming specific zones.
-- **Universal Global Search:** Omni-search bar indexing recipes, materials, crafters, bounties, and surplus.
 
 ---
 
@@ -348,7 +342,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decentralized P2P Networking Mesh:** Peer-to-peer sync with `LibDeflate` compression over the hidden `GUILD` channel.
 - **Presentation Layer:** 5-tab parchment/slate main frame with draggable Minimap icon and toast popup alerts.
 
-[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.2.5...HEAD
+[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/VhelCodez/GSFHub/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/VhelCodez/GSFHub/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/VhelCodez/GSFHub/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/VhelCodez/GSFHub/compare/v1.2.7...v1.3.0
+[1.2.7]: https://github.com/VhelCodez/GSFHub/compare/v1.2.6...v1.2.7
+[1.2.6]: https://github.com/VhelCodez/GSFHub/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/VhelCodez/GSFHub/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/VhelCodez/GSFHub/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/VhelCodez/GSFHub/compare/v1.2.2...v1.2.3
