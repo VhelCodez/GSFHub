@@ -57,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented generic `GSF.UI:AttachTooltip(frame, text, anchor)` in `Backdrop.lua` supporting static text strings and dynamic evaluator functions.
   - Added automatic `OnHide` hooks to both `AttachTooltip` and `AttachItemTooltip` so tooltips reliably dismiss when cards or rows are hidden or re-rendered.
   - Added localized `REMOVE_FROM_WISHLIST` tooltip to wishlist delete buttons.
+- **Recipe Drops Layout Misplacement & Missing `NO_CRAFTERS_NEED` Localization (`TabDrops.lua`, `Locales/`):**
+  - Fixed an issue where `NO_CRAFTERS_NEED` appeared as a raw untranslated string key and overflowed past the bottom border of recipe drop cards.
+  - Added localized `NO_CRAFTERS_NEED` string (*"All crafters know this"* / *"Bereits von allen Handwerkern erlernt"*).
+  - Recalibrated card layout: anchored item slots to `TOPLEFT`, enabled `SetWordWrap(false)` on item names and details, and anchored detail text to stop before the dismiss button, preventing multi-line recipe titles from pushing details past the card frame.
 
 
 ### Planned (Phase 4 - v1.4.0)

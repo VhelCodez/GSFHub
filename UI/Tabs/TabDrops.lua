@@ -273,48 +273,51 @@ function Tab:Refresh()
 		local card = self.dropRows[i]
 		if not card then
 			card = CreateFrame("Frame", nil, self.dropContent)
-			card:SetSize(340, 64)
+			card:SetSize(330, 64)
 			if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
 			GSF.UI:CreateBackdrop(card, false)
 			card:SetBackdropColor(0.10, 0.10, 0.14, 0.85)
 
 			-- Left 36x36px Item Slot
 			local itemSlot = GSF.UI:CreateItemSlot(card, 36)
-			itemSlot:SetPoint("LEFT", card, "LEFT", 10, 0)
+			itemSlot:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
 			card.itemSlot = itemSlot
+
+			-- Relative Time text top right
+			local timeText = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+			timeText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -8)
+			timeText:SetJustifyH("RIGHT")
+			card.timeText = timeText
+
+			-- Dismiss [X] button bottom right
+			local dismissBtn = GSF.UI:CreateButton(card, "X", 22, 20)
+			dismissBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 7)
+			GSF.UI:AttachTooltip(dismissBtn, GSF.L["DISMISS_DROP"] or "Dismiss drop")
+			card.dismissBtn = dismissBtn
 
 			-- Header: Item Name / Link
 			local itemText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			itemText:SetPoint("TOPLEFT", itemSlot, "TOPRIGHT", 10, 0)
-			itemText:SetPoint("RIGHT", card, "RIGHT", -75, 0)
+			itemText:SetPoint("TOPLEFT", itemSlot, "TOPRIGHT", 8, 1)
+			itemText:SetPoint("RIGHT", timeText, "LEFT", -6, 0)
 			itemText:SetJustifyH("LEFT")
+			itemText:SetWordWrap(false)
 			card.itemText = itemText
 
 			-- Profession Badge / Subtitle
 			local profBadge = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			profBadge:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -3)
-			profBadge:SetPoint("RIGHT", card, "RIGHT", -75, 0)
+			profBadge:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -2)
+			profBadge:SetPoint("RIGHT", card, "RIGHT", -34, 0)
 			profBadge:SetJustifyH("LEFT")
+			profBadge:SetWordWrap(false)
 			card.profBadge = profBadge
 
 			-- Needed By / Wishlist details
 			local details = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-			details:SetPoint("TOPLEFT", profBadge, "BOTTOMLEFT", 0, -3)
-			details:SetPoint("RIGHT", card, "RIGHT", -40, 0)
+			details:SetPoint("TOPLEFT", profBadge, "BOTTOMLEFT", 0, -2)
+			details:SetPoint("RIGHT", dismissBtn, "LEFT", -6, 0)
 			details:SetJustifyH("LEFT")
+			details:SetWordWrap(false)
 			card.details = details
-
-			-- Relative Time text top right
-			local timeText = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-			timeText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -8)
-			timeText:SetJustifyH("RIGHT")
-			card.timeText = timeText
-
-			-- Dismiss [X] button
-			local dismissBtn = GSF.UI:CreateButton(card, "X", 22, 20)
-			dismissBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 8)
-			GSF.UI:AttachTooltip(dismissBtn, GSF.L["DISMISS_DROP"] or "Dismiss drop")
-			card.dismissBtn = dismissBtn
 
 			table.insert(self.dropRows, card)
 		end
