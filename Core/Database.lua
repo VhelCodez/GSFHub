@@ -181,6 +181,17 @@ function GSF.DB:SyncActiveCharacterProfessions()
 		end
 	end
 
+	-- Two-way restore: If active cache member record exists or is initialized, restore saved professions to runtime cache
+	if GSF.cache and GSF.cache.members then
+		local member = self:EnsureMemberRecord(myName)
+		member.professions = member.professions or {}
+		for pName, pData in pairs(GSFHubDB.characterProfessionsByChar[charKey]) do
+			if not member.professions[pName] then
+				member.professions[pName] = pData
+			end
+		end
+	end
+
 	if GSF.db then
 		GSF.db.characterProfessions = GSFHubDB.characterProfessionsByChar[charKey]
 	end
@@ -381,10 +392,22 @@ function GSF.DB:ResetActiveCharacterData()
 	if GSFHubDB and GSFHubDB.goalsByChar then
 		GSFHubDB.goalsByChar[charKey] = {}
 	end
+	if GSFHubDB and GSFHubDB.characterProfessionsByChar then
+		GSFHubDB.characterProfessionsByChar[charKey] = {}
+	end
+
+	if GSF.cache and GSF.cache.members and GSF.cache.members[myName] then
+		GSF.cache.members[myName].professions = {}
+	end
+
+	if GSF.Scanner and GSF.Scanner.ScanSkillLines then
+		GSF.Scanner:ScanSkillLines()
+	end
 
 	if GSF.db then
 		GSF.db.myWishlist = (GSFHubDB and GSFHubDB.wishlistByChar and GSFHubDB.wishlistByChar[charKey]) or {}
 		GSF.db.myGoals = (GSFHubDB and GSFHubDB.goalsByChar and GSFHubDB.goalsByChar[charKey]) or {}
+		GSF.db.characterProfessions = (GSFHubDB and GSFHubDB.characterProfessionsByChar and GSFHubDB.characterProfessionsByChar[charKey]) or {}
 	end
 
 	if GSF.GoalsHUD and GSF.GoalsHUD.Refresh then
@@ -399,7 +422,7 @@ function GSF.DB:ResetActiveCharacterData()
 	end
 
 	if GSF.Addon then
-		GSF.Addon:Printf(string.format(GSF.L["CHAR_RESET_MSG"] or "|cff33ff99Wishlist and Goals reset for %s.|r", myName))
+		GSF.Addon:Printf(string.format(GSF.L["CHAR_RESET_MSG"] or "|cff33ff99Character data reset for %s.|r", myName))
 	end
 end
 

@@ -86,6 +86,7 @@ function GSF.Scanner:ScanTradeSkill(isManual)
 	local profName, curRank, maxRank = GetTradeSkillLine()
 	if not profName or profName == "UNKNOWN" or profName == "" then return end
 
+	local canonName = (GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(profName)) or profName
 	local myName = GSF.DB:GetPlayerName()
 	local member = GSF.DB:EnsureMemberRecord(myName)
 	member.professions = member.professions or {}
@@ -93,7 +94,7 @@ function GSF.Scanner:ScanTradeSkill(isManual)
 	local numSkills = GetNumTradeSkills()
 	if numSkills == 0 then return end
 
-	local existing = member.professions[profName]
+	local existing = member.professions[canonName] or member.professions[profName]
 	local existingCount = 0
 	if existing and existing.recipes then
 		for _ in pairs(existing.recipes) do existingCount = existingCount + 1 end
@@ -141,21 +142,37 @@ function GSF.Scanner:ScanTradeSkill(isManual)
 	end
 
 	local hasChanges = false
+	local newRecipesFound = false
 	if not existing or not existing.recipes then
 		hasChanges = true
+		if scannedCount > 0 then
+			newRecipesFound = true
+		end
 	elseif (existing.curRank ~= curRank) or (existing.maxRank ~= maxRank) or (existingCount ~= scannedCount) then
 		hasChanges = true
+		for k in pairs(recipes) do
+			if not existing.recipes[k] then
+				newRecipesFound = true
+				break
+			end
+		end
 	else
 		for k in pairs(recipes) do
 			if not existing.recipes[k] then
 				hasChanges = true
+				newRecipesFound = true
 				break
 			end
 		end
 	end
 
-	member.professions[profName] = {
-		name = profName,
+	-- Clean up legacy localized key if present
+	if profName ~= canonName and member.professions[profName] then
+		member.professions[profName] = nil
+	end
+
+	member.professions[canonName] = {
+		name = canonName,
 		curRank = curRank,
 		maxRank = maxRank,
 		lastScanned = time(),
@@ -165,12 +182,17 @@ function GSF.Scanner:ScanTradeSkill(isManual)
 	if GSF.DB and GSF.DB.SyncActiveCharacterProfessions then
 		GSF.DB:SyncActiveCharacterProfessions()
 	elseif GSF.db and GSF.db.characterProfessions then
-		GSF.db.characterProfessions[profName] = member.professions[profName]
+		GSF.db.characterProfessions[canonName] = member.professions[canonName]
 	end
 
 	if hasChanges or isManual then
 		GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
-		GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, profName, curRank, maxRank)
+
+		-- Only print to chat on manual scan or when newly learned recipes are discovered
+		if isManual or newRecipesFound then
+			local displayName = (GSF.GetLocalizedProfession and GSF:GetLocalizedProfession(canonName)) or profName
+			GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, displayName, curRank, maxRank)
+		end
 
 		if GSF.Sync then
 			GSF.Sync:SendMyData()
@@ -184,6 +206,7 @@ function GSF.Scanner:ScanCraft(isManual)
 		craftName = "Enchanting"
 	end
 
+	local canonName = (GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(craftName)) or craftName
 	local myName = GSF.DB:GetPlayerName()
 	local member = GSF.DB:EnsureMemberRecord(myName)
 	member.professions = member.professions or {}
@@ -191,7 +214,7 @@ function GSF.Scanner:ScanCraft(isManual)
 	local numCrafts = GetNumCrafts()
 	if numCrafts == 0 then return end
 
-	local existing = member.professions[craftName]
+	local existing = member.professions[canonName] or member.professions[craftName]
 	local existingCount = 0
 	if existing and existing.recipes then
 		for _ in pairs(existing.recipes) do existingCount = existingCount + 1 end
@@ -234,21 +257,37 @@ function GSF.Scanner:ScanCraft(isManual)
 	end
 
 	local hasChanges = false
+	local newRecipesFound = false
 	if not existing or not existing.recipes then
 		hasChanges = true
+		if scannedCount > 0 then
+			newRecipesFound = true
+		end
 	elseif ((existing.curRank or 0) ~= (curRank or 0)) or ((existing.maxRank or 0) ~= (maxRank or 375)) or (existingCount ~= scannedCount) then
 		hasChanges = true
+		for k in pairs(recipes) do
+			if not existing.recipes[k] then
+				newRecipesFound = true
+				break
+			end
+		end
 	else
 		for k in pairs(recipes) do
 			if not existing.recipes[k] then
 				hasChanges = true
+				newRecipesFound = true
 				break
 			end
 		end
 	end
 
-	member.professions[craftName] = {
-		name = craftName,
+	-- Clean up legacy localized key if present
+	if craftName ~= canonName and member.professions[craftName] then
+		member.professions[craftName] = nil
+	end
+
+	member.professions[canonName] = {
+		name = canonName,
 		curRank = curRank or 0,
 		maxRank = maxRank or 375,
 		lastScanned = time(),
@@ -258,12 +297,16 @@ function GSF.Scanner:ScanCraft(isManual)
 	if GSF.DB and GSF.DB.SyncActiveCharacterProfessions then
 		GSF.DB:SyncActiveCharacterProfessions()
 	elseif GSF.db and GSF.db.characterProfessions then
-		GSF.db.characterProfessions[craftName] = member.professions[craftName]
+		GSF.db.characterProfessions[canonName] = member.professions[canonName]
 	end
 
 	if hasChanges or isManual then
 		GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
-		GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, craftName, curRank or 0, maxRank or 375)
+
+		-- Only print to chat on manual scan or when newly learned recipes are discovered
+		if isManual or newRecipesFound then
+			GSF.Addon:Printf(GSF.L["SCAN_SUCCESS"], scannedCount, craftName, curRank or 0, maxRank or 375)
+		end
 
 		if GSF.Sync then
 			GSF.Sync:SendMyData()
@@ -273,24 +316,102 @@ end
 
 function GSF.Scanner:ScanSkillLines()
 	local myName = GSF.DB:GetPlayerName()
+	if not myName or myName == "" or myName == "Unknown" then return end
+
 	local member = GSF.DB:EnsureMemberRecord(myName)
 	member.professions = member.professions or {}
 
+	local realm = GetRealmName() or "UnknownRealm"
+	local charKey = string.format("%s - %s", myName, realm)
+	local charSaved = GSFHubDB and GSFHubDB.characterProfessionsByChar and GSFHubDB.characterProfessionsByChar[charKey]
+
+	local activeSkillNames = {}
+	local hasChanges = false
+
 	local numSkills = GetNumSkillLines()
-	for i = 1, numSkills do
-		local skillName, isHeader, isExpanded, skillRank, numTempPoints, skillModifier, skillMaxRank = GetSkillLineInfo(i)
-		if not isHeader and skillName and GSF.PROFESSIONS[skillName] then
-			if not member.professions[skillName] then
-				member.professions[skillName] = {
-					name = skillName,
-					curRank = skillRank,
-					maxRank = skillMaxRank,
-					recipes = {},
-				}
-			else
-				member.professions[skillName].curRank = skillRank
-				member.professions[skillName].maxRank = skillMaxRank
+	if numSkills and numSkills > 0 then
+		for i = 1, numSkills do
+			local skillName, isHeader, isExpanded, skillRank, numTempPoints, skillModifier, skillMaxRank = GetSkillLineInfo(i)
+			if not isHeader and skillName then
+				local canonName = (GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(skillName)) or skillName
+				if canonName and GSF.PROFESSIONS[canonName] then
+					activeSkillNames[canonName] = true
+					activeSkillNames[skillName] = true
+
+					local existing = member.professions[canonName] or member.professions[skillName]
+					if not existing then
+						local recipes = {}
+						if charSaved then
+							if charSaved[canonName] and charSaved[canonName].recipes then
+								recipes = charSaved[canonName].recipes
+							elseif charSaved[skillName] and charSaved[skillName].recipes then
+								recipes = charSaved[skillName].recipes
+							end
+						end
+						member.professions[canonName] = {
+							name = canonName,
+							curRank = skillRank,
+							maxRank = skillMaxRank,
+							recipes = recipes,
+						}
+						-- Clean up duplicate non-canonical key if present
+						if skillName ~= canonName and member.professions[skillName] then
+							member.professions[skillName] = nil
+						end
+						hasChanges = true
+					else
+						-- Ensure canonical key is used
+						if member.professions[skillName] and skillName ~= canonName then
+							member.professions[canonName] = member.professions[skillName]
+							member.professions[skillName] = nil
+						end
+						member.professions[canonName].name = canonName
+						if (member.professions[canonName].curRank ~= skillRank) or (member.professions[canonName].maxRank ~= skillMaxRank) then
+							member.professions[canonName].curRank = skillRank
+							member.professions[canonName].maxRank = skillMaxRank
+							hasChanges = true
+						end
+					end
+				end
 			end
+		end
+
+		-- Prune unlearned professions that are no longer active on this character
+		for profName in pairs(member.professions) do
+			local canonKey = (GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(profName)) or profName
+			if not activeSkillNames[profName] and not activeSkillNames[canonKey] then
+				member.professions[profName] = nil
+				if charSaved then
+					if charSaved[profName] then charSaved[profName] = nil end
+					if charSaved[canonKey] then charSaved[canonKey] = nil end
+				end
+				hasChanges = true
+			end
+		end
+
+		-- Also clean up any abandoned professions in persistent character partition
+		if charSaved then
+			for profName in pairs(charSaved) do
+				local canonKey = (GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(profName)) or profName
+				if not activeSkillNames[profName] and not activeSkillNames[canonKey] then
+					charSaved[profName] = nil
+					hasChanges = true
+				end
+			end
+		end
+	end
+
+	if GSF.DB and GSF.DB.SyncActiveCharacterProfessions then
+		GSF.DB:SyncActiveCharacterProfessions()
+	end
+
+	if hasChanges then
+		GSF.cache.revisions.recipes = (GSF.cache.revisions.recipes or 0) + 1
+		if GSF.Sync and GSF.isGuildScope then
+			GSF.Sync:SendMyData()
+		end
+		if GSF.MainFrame and GSF.MainFrame:IsShown() then
+			GSF.MainFrame:RefreshCurrentTab()
 		end
 	end
 end
