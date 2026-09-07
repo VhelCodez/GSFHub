@@ -39,6 +39,8 @@ graph LR
 - [x] **Reactive Uncached Item Preview Resolution:** Entering uncached item IDs (e.g. `4411`) shows a loading indicator and dynamically updates preview slots, editboxes, and databases upon server data receipt via `GET_ITEM_INFO_RECEIVED` and `ContinueOnItemLoad`.
 - [x] **Wishlist Tooltip Hyperlink Crash Protection:** Wrapped all tooltip hyperlink calls in validation and `pcall`, preventing `GameTooltip:SetHyperlink: Unknown link type` crashes on plain-text wishlist entries.
 - [x] **Generic `AttachTooltip` UI Helper & Nil Call Protection:** Implemented `GSF.UI:AttachTooltip` in `Backdrop.lua` with automatic `OnHide` dismissal, resolving `TabDrops.lua:316` nil function calls on tab selection and search filtering.
+- [x] **`NO_CRAFTERS_NEED` Localization & Text Overflow Protection:** Localized status text (*"All crafters know this"* / *"Bereits von allen Handwerkern erlernt"*) and enforced `SetWordWrap(false)` with bounded anchor points to prevent multi-line recipe titles from overflowing card boundaries.
+- [x] **Encapsulated Scrollbar Insets & Symmetrical Panel Margins:** Re-anchored slider scrollbars strictly inside `CreateScrollList` (`scrollFrame` rightmost 24px gutter) to eliminate panel overlap collisions across Professions and Drops, symmetrically anchoring the Professions left list to the bottom.
 
 ### ✅ v1.3.2 - Guild Supply Chain, Two-Sided Bounties & Goal Management Suite *(Released)*
 - [x] **Two-Sided Delivery Verification Handshake:** In-person handoffs marked with `[Geliefert melden]` / `[Verschicken]` require explicit confirmation `[Erhalt bestätigen]` by the requester, with `[Nicht erhalten]` rejection to protect against dishonest completions.
