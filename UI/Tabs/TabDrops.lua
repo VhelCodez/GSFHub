@@ -273,7 +273,7 @@ function Tab:Refresh()
 		local card = self.dropRows[i]
 		if not card then
 			card = CreateFrame("Frame", nil, self.dropContent)
-			card:SetSize(330, 64)
+			card:SetSize(324, 64)
 			if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
 			GSF.UI:CreateBackdrop(card, false)
 			card:SetBackdropColor(0.10, 0.10, 0.14, 0.85)
@@ -382,7 +382,8 @@ function Tab:Refresh()
 	-- Auto-hide drop scrollbar if list does not overflow
 	local dropBar = self.dropScroll and (self.dropScroll.ScrollBar or (self.dropScroll:GetName() and _G[self.dropScroll:GetName() .. "ScrollBar"]))
 	if dropBar then
-		if #recentDrops == 0 or yOffset <= 360 then
+		local frameH = self.dropScroll:GetHeight() or 360
+		if #recentDrops == 0 or yOffset <= frameH then
 			dropBar:Hide()
 		else
 			dropBar:Show()
@@ -570,7 +571,8 @@ function Tab:Refresh()
 	-- Auto-hide wishlist scrollbar if list does not overflow
 	local wishBar = self.wishScroll and (self.wishScroll.ScrollBar or (self.wishScroll:GetName() and _G[self.wishScroll:GetName() .. "ScrollBar"]))
 	if wishBar then
-		if idx <= 10 or wOffset <= 360 then
+		local frameH = self.wishScroll:GetHeight() or 360
+		if idx <= 1 or wOffset <= frameH then
 			wishBar:Hide()
 		else
 			wishBar:Show()

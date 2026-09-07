@@ -61,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed an issue where `NO_CRAFTERS_NEED` appeared as a raw untranslated string key and overflowed past the bottom border of recipe drop cards.
   - Added localized `NO_CRAFTERS_NEED` string (*"All crafters know this"* / *"Bereits von allen Handwerkern erlernt"*).
   - Recalibrated card layout: anchored item slots to `TOPLEFT`, enabled `SetWordWrap(false)` on item names and details, and anchored detail text to stop before the dismiss button, preventing multi-line recipe titles from pushing details past the card frame.
+- **Scrollbar Inset & Gutter Calibration Across Left Lists (`Backdrop.lua`, `TabProfessions.lua`, `TabDrops.lua`):**
+  - Resolved an issue where scrollbars in `CreateScrollList` retained Blizzard's default template offset (`TOPLEFT` anchored to `TOPRIGHT` with `x = 6`), placing scrollbars outside the frame boundary and causing them to overlap adjacent panels (e.g. overlapping `rightPane` in Professions and floating between columns in Recipe Drops).
+  - Explicitly re-anchored `scrollBar` inside the rightmost 24px gutter of `scrollFrame` (`-2, -18` to `-2, 18`) with elevated frame level.
+  - Symmetrically anchored `leftScroll` in the Professions tab to `BOTTOMLEFT, frame, BOTTOMLEFT, 15, 15`, aligning bottom margins with the details pane.
+  - Dynamically calculated scrollbar visibility thresholds using `scrollFrame:GetHeight()`.
 
 
 ### Planned (Phase 4 - v1.4.0)

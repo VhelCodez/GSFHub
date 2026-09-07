@@ -142,6 +142,13 @@ function GSF.UI:CreateScrollList(parent, width, height, name)
 	end
 	scrollFrame.ScrollBar = scrollBar
 
+	if scrollBar then
+		scrollBar:ClearAllPoints()
+		scrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", -2, -18)
+		scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", -2, 18)
+		scrollBar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
+	end
+
 	local function UpdateScrollBar()
 		if not scrollBar then return end
 		local _, maxVal = scrollBar:GetMinMaxValues()

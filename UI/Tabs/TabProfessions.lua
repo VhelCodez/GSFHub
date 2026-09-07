@@ -84,6 +84,7 @@ function Tab:Create(parent)
 	-- Left List (Recipe items)
 	local leftScroll, leftContent = GSF.UI:CreateScrollList(frame, 320, 380)
 	leftScroll:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -45)
+	leftScroll:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, 15)
 	self.leftScroll = leftScroll
 	self.leftContent = leftContent
 	self.recipeButtons = {}
@@ -240,7 +241,7 @@ function Tab:Refresh()
 		local btn = self.recipeButtons[i]
 		if not btn then
 			btn = CreateFrame("Button", nil, self.leftContent)
-			btn:SetSize(290, 28)
+			btn:SetSize(294, 28)
 			if BackdropTemplateMixin then Mixin(btn, BackdropTemplateMixin) end
 			GSF.UI:CreateBackdrop(btn, false)
 			btn:SetBackdropColor(0.12, 0.12, 0.16, 0.6)
@@ -348,7 +349,8 @@ function Tab:Refresh()
 	-- Auto-hide left scrollbar if content does not overflow or when empty
 	local leftScrollBar = self.leftScroll and (self.leftScroll.ScrollBar or (self.leftScroll:GetName() and _G[self.leftScroll:GetName() .. "ScrollBar"]))
 	if leftScrollBar then
-		if #results == 0 or yOffset <= 360 then
+		local frameH = self.leftScroll:GetHeight() or 380
+		if #results == 0 or yOffset <= frameH then
 			leftScrollBar:Hide()
 		else
 			leftScrollBar:Show()
