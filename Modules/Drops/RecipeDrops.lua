@@ -4,10 +4,32 @@ local AceEvent = LibStub("AceEvent-3.0")
 GSF.RecipeDrops = {}
 AceEvent:Embed(GSF.RecipeDrops)
 
+GSF.RECIPE_DROP_TIMEOUT = 86400 -- 24 hours
+
 function GSF.RecipeDrops:Initialize()
 	self:RegisterEvent("CHAT_MSG_LOOT", "OnLootMessage")
 	self:RegisterEvent("LOOT_OPENED", "OnLootOpened")
 	self:CleanupWishlistDuplicates()
+	self:PruneExpiredDrops()
+end
+
+function GSF.RecipeDrops:PruneExpiredDrops()
+	if not GSF.cache or not GSF.cache.recentDrops then return end
+	local now = time()
+	local valid = {}
+	for _, drop in ipairs(GSF.cache.recentDrops) do
+		if drop.timestamp and (now - drop.timestamp) < GSF.RECIPE_DROP_TIMEOUT then
+			table.insert(valid, drop)
+		end
+	end
+	GSF.cache.recentDrops = valid
+end
+
+function GSF.RecipeDrops:DismissDrop(index)
+	if not GSF.cache or not GSF.cache.recentDrops then return end
+	if index and GSF.cache.recentDrops[index] then
+		table.remove(GSF.cache.recentDrops, index)
+	end
 end
 
 function GSF.RecipeDrops:CleanupWishlistDuplicates()
@@ -44,7 +66,7 @@ end
 function GSF.RecipeDrops:IsRecipeItem(input)
 	if not input or input == "" then return false end
 
-	local itemId = tonumber(tostring(input):match("item:(%d+)")) or (type(input) == "number" and input) or (tostring(input):match("^%d+$") and tonumber(input))
+	local itemId = tonumber(tostring(input):match("item:(%d+)")) or (type(input) == "number" and input) or (tostring(input):match("^%d+$") and tonumber(input)) or tonumber(tostring(input):match("#(%d+)"))
 	if itemId and itemId > 0 then
 		if C_Item and C_Item.GetItemInfoInstant then
 			local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemId)
@@ -70,6 +92,11 @@ function GSF.RecipeDrops:IsRecipeItem(input)
 	   str:find("%f[%a]Recipe%f[%A]") or str:find("%f[%a]Formula%f[%A]") or str:find("%f[%a]Manual%f[%A]") or
 	   str:find("%f[%a]Muster%f[%A]") or str:find("%f[%a]Pläne%f[%A]") or str:find("%f[%a]Bauplan%f[%A]") or
 	   str:find("%f[%a]Rezept%f[%A]") or str:find("%f[%a]Formel%f[%A]") or str:find("%f[%a]Handbuch%f[%A]") then
+		return true
+	end
+
+	-- If it is a numeric ID currently loading from server, accept it tentatively
+	if itemId and itemId > 0 and (tostring(input):find("Wird geladen") or tostring(input):find("Loading") or tostring(input):match("^%d+$")) then
 		return true
 	end
 
@@ -99,22 +126,28 @@ function GSF.RecipeDrops:AddToWishlist(input)
 		return false
 	end
 
-	local itemId = tonumber(trimmed:match("item:(%d+)") or (trimmed:match("^%d+$") and trimmed) or 0)
-	local query = (itemId and itemId > 0) and itemId or trimmed
+	local itemId = tonumber(trimmed:match("item:(%d+)") or (trimmed:match("^%d+$") and trimmed) or trimmed:match("#(%d+)") or 0)
+	local cleanQuery = trimmed:gsub("^%[", ""):gsub("%]$", ""):trim()
+	local query = (itemId and itemId > 0) and itemId or cleanQuery
 	local itemName, itemLink = GetItemInfo(query)
 
-	if not itemName and itemId == 0 then
-		if #trimmed < 3 or trimmed:lower() == "lorem ipsum" or trimmed:lower() == "d" then
+	local validLink = itemLink and (tostring(itemLink):find("|H.-|h") or tostring(itemLink):find("^item:") or tostring(itemLink):find("^spell:")) and itemLink or nil
+
+	if not itemName then
+		if itemId and itemId > 0 then
+			itemName = string.format(GSF.L["ITEM_LOADING"] or "Item #%d (Loading...)", itemId)
+			validLink = nil
+		elseif #cleanQuery < 3 or cleanQuery:lower() == "lorem ipsum" or cleanQuery:lower() == "d" then
 			if GSF.Addon then
 				GSF.Addon:Print(GSF.L["WISHLIST_INVALID_INPUT"] or "Please provide a valid item link (Shift-Click) or recipe name.")
 			end
 			return false
+		else
+			itemName = cleanQuery
+			validLink = nil
 		end
-		itemName = trimmed
-		itemLink = trimmed
 	else
-		itemName = itemName or trimmed
-		itemLink = itemLink or trimmed
+		itemName = itemName or cleanQuery
 	end
 
 	-- Robust Deduplication: Check BOTH numeric ID and normalized item name
@@ -133,11 +166,11 @@ function GSF.RecipeDrops:AddToWishlist(input)
 			if itemId and itemId > 0 and not existingItem.id then
 				existingItem.id = itemId
 			end
-			if itemLink and itemLink:find("item:") and not (existingItem.link and existingItem.link:find("item:")) then
-				existingItem.link = itemLink
+			if validLink and not (existingItem.link and existingItem.link:find("item:")) then
+				existingItem.link = validLink
 			end
 			if GSF.Addon then
-				GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", itemLink or itemName)
+				GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", validLink or itemName)
 			end
 			return false
 		end
@@ -147,17 +180,18 @@ function GSF.RecipeDrops:AddToWishlist(input)
 
 	GSF.db.myWishlist = GSF.db.myWishlist or {}
 	if GSF.db.myWishlist[key] then
-		GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", itemLink)
+		GSF.Addon:Printf(GSF.L["ALREADY_ON_WISHLIST"] or "%s is already on your wishlist.", validLink or itemName)
 		return
 	end
 
 	GSF.db.myWishlist[key] = {
 		name = itemName,
-		link = itemLink,
+		link = validLink,
+		id = (itemId and itemId > 0) and itemId or nil,
 		addedAt = time(),
 	}
 
-	GSF.Addon:Printf(GSF.L["ADDED_TO_WISHLIST"] or "Added %s to your recipe wishlist.", itemLink)
+	GSF.Addon:Printf(GSF.L["ADDED_TO_WISHLIST"] or "Added %s to your recipe wishlist.", validLink or itemName)
 
 	if GSF.Sync then
 		GSF.Sync:SendMyData()
@@ -194,6 +228,20 @@ function GSF.RecipeDrops:OnLootOpened()
 	end
 end
 
+function GSF.RecipeDrops:CleanRecipeName(rawName)
+	if not rawName then return "" end
+	local clean = rawName:gsub("|c%x+|h", ""):gsub("|h|r", ""):gsub("%[", ""):gsub("%]", ""):trim()
+	-- Strip common prefixes (Pattern:, Recipe:, Rezept:, Vorlage:, etc.)
+	local prefixes = {
+		"^Pattern:%s*", "^Plans:%s*", "^Schematic:%s*", "^Recipe:%s*", "^Formula:%s*", "^Manual:%s*", "^Design:%s*",
+		"^Muster:%s*", "^Pläne:%s*", "^Bauplan:%s*", "^Rezept:%s*", "^Formel:%s*", "^Handbuch:%s*", "^Vorlage:%s*",
+	}
+	for _, pat in ipairs(prefixes) do
+		clean = clean:gsub(pat, "")
+	end
+	return clean:trim()
+end
+
 function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 	local itemName, _, itemQuality, _, _, itemType, itemSubType, _, _, _, _, classID = GetItemInfo(itemLink)
 
@@ -213,8 +261,9 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 
 	if not isRecipe then return end
 
-	local profession = itemSubType or "Unknown"
-	if profession == "Book" or profession == "Unknown" or profession == "Buch" or profession == "Rezept" then
+	local rawProf = itemSubType or "Unknown"
+	local profession = GSF:GetCanonicalProfession(rawProf)
+	if profession == "Book" or profession == "Unknown" or profession == "Buch" or profession == "Rezept" or not profession then
 		if itemName:find("Pattern:") or itemName:find("Muster:") then profession = "Tailoring"
 		elseif itemName:find("Plans:") or itemName:find("Pläne:") then profession = "Blacksmithing"
 		elseif itemName:find("Schematic:") or itemName:find("Bauplan:") then profession = "Engineering"
@@ -224,23 +273,42 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 		elseif itemName:find("Manual:") or itemName:find("Handbuch:") then profession = "First Aid"
 		end
 	end
+	profession = GSF:GetCanonicalProfession(profession) or profession
 
-	-- Find who needs it
+	local cleanDropName = self:CleanRecipeName(itemName):lower()
+
+	-- Find who needs it (guild crafters with this profession who do NOT know the recipe yet)
 	local neededBy = {}
 	local wishlistedBy = {}
 
 	if GSF.cache and GSF.cache.members then
 		for memberName, memberData in pairs(GSF.cache.members) do
-			if memberData.professions and memberData.professions[profession] then
-				local knows = false
-				for _, r in pairs(memberData.professions[profession].recipes or {}) do
-					if r.name and itemName:find(r.name, 1, true) then
-						knows = true
-						break
+			if memberData.professions then
+				-- Look up active profession on member
+				local profData = memberData.professions[profession]
+				if not profData then
+					for pK, pV in pairs(memberData.professions) do
+						if GSF:GetCanonicalProfession(pK) == profession then
+							profData = pV
+							break
+						end
 					end
 				end
-				if not knows then
-					table.insert(neededBy, memberName)
+
+				if profData then
+					local knows = false
+					for _, r in pairs(profData.recipes or {}) do
+						local rName = r.name and self:CleanRecipeName(r.name):lower() or ""
+						if rName ~= "" and cleanDropName ~= "" then
+							if rName == cleanDropName or rName:find(cleanDropName, 1, true) or cleanDropName:find(rName, 1, true) then
+								knows = true
+								break
+							end
+						end
+					end
+					if not knows then
+						table.insert(neededBy, memberName)
+					end
 				end
 			end
 		end
@@ -266,6 +334,7 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 	local dropRecord = {
 		link = itemLink,
 		name = itemName,
+		cleanName = cleanDropName,
 		profession = profession,
 		neededBy = neededBy,
 		wishlistedBy = wishlistedBy,
@@ -275,6 +344,7 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 
 	GSF.cache.recentDrops = GSF.cache.recentDrops or {}
 	table.insert(GSF.cache.recentDrops, 1, dropRecord)
+	self:PruneExpiredDrops()
 	if #GSF.cache.recentDrops > 30 then
 		table.remove(GSF.cache.recentDrops)
 	end

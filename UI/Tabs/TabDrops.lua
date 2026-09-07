@@ -7,6 +7,20 @@ function Tab:Create(parent)
 	local frame = CreateFrame("Frame", nil, parent)
 	frame:SetAllPoints()
 	self.frame = frame
+	self.pendingItems = {}
+
+	frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+	frame:SetScript("OnEvent", function(f, event, itemID)
+		if event == "GET_ITEM_INFO_RECEIVED" and itemID then
+			local num = tonumber(itemID)
+			if Tab.pendingItems and Tab.pendingItems[num] then
+				Tab.pendingItems[num] = nil
+				if f:IsShown() then
+					Tab:Refresh()
+				end
+			end
+		end
+	end)
 
 	-- Top Bar: Standardized Search Input (Top-Left)
 	local dropSearchBox = GSF.UI:CreateEditBox(frame, 150, 22)
@@ -140,7 +154,7 @@ function Tab:BuildWishModal(parent)
 	local function SubmitWish()
 		local text = addBox:GetText()
 		if text and text:trim() ~= "" then
-			local itemToWish = itemSlot.itemLink or addBox.lastItemLink or text:trim()
+			local itemToWish = itemSlot.itemLink or addBox.lastItemLink or (addBox.lastItemID and tostring(addBox.lastItemID)) or text:trim()
 			local isRecipe = GSF.RecipeDrops and GSF.RecipeDrops:IsRecipeItem(itemToWish)
 			if not isRecipe then
 				if GSF.Addon then
@@ -170,6 +184,20 @@ function Tab:BuildWishModal(parent)
 		modal:Hide()
 	end)
 	modal.cancelBtn = cancelBtn
+
+	modal:HookScript("OnHide", function()
+		itemSlot:Clear()
+		addBox:SetText("")
+		addBox.lastItemName = nil
+		addBox.lastItemLink = nil
+		addBox.lastItemID = nil
+		if addBox.pendingItemID then
+			addBox.pendingItemID = nil
+			if addBox.itemWatcherFrame then
+				addBox.itemWatcherFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+			end
+		end
+	end)
 end
 
 function Tab:OpenWishModal()
@@ -179,6 +207,12 @@ function Tab:OpenWishModal()
 	self.wishModal.addBox.lastItemName = nil
 	self.wishModal.addBox.lastItemLink = nil
 	self.wishModal.addBox.lastItemID = nil
+	if self.wishModal.addBox.pendingItemID then
+		self.wishModal.addBox.pendingItemID = nil
+		if self.wishModal.addBox.itemWatcherFrame then
+			self.wishModal.addBox.itemWatcherFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+		end
+	end
 	self.wishModal:Show()
 	self.wishModal.addBox:SetFocus()
 end
@@ -205,61 +239,133 @@ end
 function Tab:Refresh()
 	if not self.frame or not self.frame:IsShown() then return end
 
-	-- Refresh Drops
-	local recentDrops = GSF.cache.recentDrops or {}
-	local query = self.dropSearchBox and self.dropSearchBox:GetText():lower():trim() or ""
-	if query ~= "" then
-		local filtered = {}
-		for _, drop in ipairs(recentDrops) do
-			local itemMatch = drop.item and drop.item:lower():find(query, 1, true)
-			local recMatch = drop.recipient and drop.recipient:lower():find(query, 1, true)
-			local needsMatch = drop.needs and drop.needs:lower():find(query, 1, true)
-			if itemMatch or recMatch or needsMatch then
-				table.insert(filtered, drop)
-			end
-		end
-		recentDrops = filtered
+	-- Prune expired drops before rendering
+	if GSF.RecipeDrops and GSF.RecipeDrops.PruneExpiredDrops then
+		GSF.RecipeDrops:PruneExpiredDrops()
 	end
 
-	for _, row in ipairs(self.dropRows) do row:Hide() end
+	-- Refresh Drops
+	local allDrops = GSF.cache.recentDrops or {}
+	local recentDrops = {}
+	local query = self.dropSearchBox and self.dropSearchBox:GetText():lower():trim() or ""
+
+	for originalIdx, drop in ipairs(allDrops) do
+		local dropName = drop.cleanName or drop.name or ""
+		local prof = drop.profession or ""
+		local matches = true
+		if query ~= "" then
+			matches = dropName:lower():find(query, 1, true) or
+			          prof:lower():find(query, 1, true) or
+			          (drop.neededBy and table.concat(drop.neededBy, " "):lower():find(query, 1, true)) or
+			          (drop.wishlistedBy and table.concat(drop.wishlistedBy, " "):lower():find(query, 1, true))
+		end
+		if matches then
+			table.insert(recentDrops, { drop = drop, originalIdx = originalIdx })
+		end
+	end
+
+	for _, card in ipairs(self.dropRows) do card:Hide() end
 
 	local yOffset = 0
-	for i, drop in ipairs(recentDrops) do
-		local row = self.dropRows[i]
-		if not row then
-			row = CreateFrame("Frame", nil, self.dropContent)
-			row:SetSize(320, 56)
-			if BackdropTemplateMixin then Mixin(row, BackdropTemplateMixin) end
-			GSF.UI:CreateBackdrop(row, false)
-			row:SetBackdropColor(0.10, 0.10, 0.14, 0.75)
+	for i, entry in ipairs(recentDrops) do
+		local drop = entry.drop
+		local originalIdx = entry.originalIdx
+		local card = self.dropRows[i]
+		if not card then
+			card = CreateFrame("Frame", nil, self.dropContent)
+			card:SetSize(340, 64)
+			if BackdropTemplateMixin then Mixin(card, BackdropTemplateMixin) end
+			GSF.UI:CreateBackdrop(card, false)
+			card:SetBackdropColor(0.10, 0.10, 0.14, 0.85)
 
-			local itemText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			itemText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -6)
-			row.itemText = itemText
+			-- Left 36x36px Item Slot
+			local itemSlot = GSF.UI:CreateItemSlot(card, 36)
+			itemSlot:SetPoint("LEFT", card, "LEFT", 10, 0)
+			card.itemSlot = itemSlot
 
-			local needs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			needs:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -3)
-			row.needs = needs
+			-- Header: Item Name / Link
+			local itemText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			itemText:SetPoint("TOPLEFT", itemSlot, "TOPRIGHT", 10, 0)
+			itemText:SetPoint("RIGHT", card, "RIGHT", -75, 0)
+			itemText:SetJustifyH("LEFT")
+			card.itemText = itemText
 
-			local timeText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-			timeText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -6)
-			row.timeText = timeText
+			-- Profession Badge / Subtitle
+			local profBadge = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+			profBadge:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -3)
+			profBadge:SetPoint("RIGHT", card, "RIGHT", -75, 0)
+			profBadge:SetJustifyH("LEFT")
+			card.profBadge = profBadge
 
-			table.insert(self.dropRows, row)
+			-- Needed By / Wishlist details
+			local details = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+			details:SetPoint("TOPLEFT", profBadge, "BOTTOMLEFT", 0, -3)
+			details:SetPoint("RIGHT", card, "RIGHT", -40, 0)
+			details:SetJustifyH("LEFT")
+			card.details = details
+
+			-- Relative Time text top right
+			local timeText = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+			timeText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -8)
+			timeText:SetJustifyH("RIGHT")
+			card.timeText = timeText
+
+			-- Dismiss [X] button
+			local dismissBtn = GSF.UI:CreateButton(card, "X", 22, 20)
+			dismissBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 8)
+			GSF.UI:AttachTooltip(dismissBtn, GSF.L["DISMISS_DROP"] or "Dismiss drop")
+			card.dismissBtn = dismissBtn
+
+			table.insert(self.dropRows, card)
 		end
 
-		row:SetPoint("TOPLEFT", self.dropContent, "TOPLEFT", 0, -yOffset)
-		row.itemText:SetText(drop.link or drop.name or "Recipe")
-		
-		local needList = (drop.neededBy and #drop.neededBy > 0) and table.concat(drop.neededBy, ", ") or "None"
-		if #needList > 35 then needList = needList:sub(1, 35) .. "..." end
-		row.needs:SetText("Needed by: " .. needList)
+		card:SetPoint("TOPLEFT", self.dropContent, "TOPLEFT", 0, -yOffset)
 
-		local minsAgo = math.floor((time() - (drop.timestamp or time())) / 60)
-		row.timeText:SetText(minsAgo > 0 and (minsAgo .. "m ago") or "Just now")
+		-- Resolve Item and Rarity for slot
+		local itemId = tonumber(drop.link and drop.link:match("item:(%d+)")) or tonumber(drop.name and drop.name:match("item:(%d+)")) or tonumber(drop.name and drop.name:match("#(%d+)"))
+		local name, itemLink, quality, _, _, _, _, _, _, texture = GetItemInfo(drop.link or drop.name or itemId)
+		if not texture and itemId and AtlasJournal and AtlasJournal.GetItemDetails then
+			local yd = AtlasJournal:GetItemDetails(itemId)
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
+				texture = yd.icon
+				name = name or yd.name
+				itemLink = itemLink or yd.link
+			end
+		end
 
-		row:Show()
-		yOffset = yOffset + 62
+		card.itemSlot:SetItem(name or drop.name or "Recipe", texture or "Interface\\Icons\\INV_Scroll_03", itemLink or drop.link, itemId)
+
+		-- Format Header and Profession Badge
+		local profDisplay = (drop.profession and drop.profession ~= "Unknown") and GSF:GetLocalizedProfession(drop.profession) or (GSF.L["ANY"] or "Any")
+		card.itemText:SetText(itemLink or drop.link or drop.name or "Recipe")
+		card.profBadge:SetText(string.format("|cffffd100[%s]|r", profDisplay))
+
+		-- Format Needed / Wishlisted crafters
+		local needList = (drop.neededBy and #drop.neededBy > 0) and table.concat(drop.neededBy, ", ") or nil
+		local wishList = (drop.wishlistedBy and #drop.wishlistedBy > 0) and table.concat(drop.wishlistedBy, ", ") or nil
+		local detailStr = ""
+		if needList then
+			if #needList > 35 then needList = needList:sub(1, 35) .. "..." end
+			detailStr = string.format(GSF.L["NEEDED_BY"] or "Needed by: %s", "|cff00ff00" .. needList .. "|r")
+		elseif wishList then
+			if #wishList > 35 then wishList = wishList:sub(1, 35) .. "..." end
+			detailStr = string.format(GSF.L["WISHLISTED_BY"] or "Wishlist: %s", "|cff33ccff" .. wishList .. "|r")
+		else
+			detailStr = "|cff888888" .. (GSF.L["NO_CRAFTERS_NEED"] or "All crafters know this") .. "|r"
+		end
+		card.details:SetText(detailStr)
+
+		-- Format time using standardized GSF:FormatTimeAgo
+		card.timeText:SetText(GSF:FormatTimeAgo(drop.timestamp))
+
+		-- Dismiss Action
+		card.dismissBtn:SetScript("OnClick", function()
+			GSF.RecipeDrops:DismissDrop(originalIdx)
+			Tab:Refresh()
+		end)
+
+		card:Show()
+		yOffset = yOffset + 68
 	end
 
 	if #recentDrops == 0 then
@@ -272,7 +378,7 @@ function Tab:Refresh()
 	-- Auto-hide drop scrollbar if list does not overflow
 	local dropBar = self.dropScroll and (self.dropScroll.ScrollBar or (self.dropScroll:GetName() and _G[self.dropScroll:GetName() .. "ScrollBar"]))
 	if dropBar then
-		if #recentDrops == 0 or yOffset <= 370 then
+		if #recentDrops == 0 or yOffset <= 360 then
 			dropBar:Hide()
 		else
 			dropBar:Show()
@@ -313,22 +419,29 @@ function Tab:Refresh()
 			row:EnableMouse(true)
 			row:RegisterForClicks("LeftButtonUp")
 			row:SetScript("OnEnter", function(self)
-				if self.itemLink or self.itemID then
-					GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-					if self.itemLink then
-						GameTooltip:SetHyperlink(self.itemLink)
-					elseif self.itemID then
-						GameTooltip:SetItemByID(self.itemID)
-					end
-					GameTooltip:Show()
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				local link = self.itemLink
+				local validLink = link and (tostring(link):find("|H.-|h") or tostring(link):find("^item:") or tostring(link):find("^spell:")) and link
+				local shown = false
+				if validLink then
+					shown = pcall(function() GameTooltip:SetHyperlink(validLink) end)
 				end
+				if not shown and self.itemID then
+					shown = pcall(function() GameTooltip:SetItemByID(self.itemID) end)
+				end
+				if not shown then
+					GameTooltip:SetText(self.itemName or (link and tostring(link):gsub("|c%x+", ""):gsub("|r", "")) or "Recipe", 1, 0.82, 0)
+				end
+				GameTooltip:Show()
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:Hide()
 			end)
 			row:SetScript("OnClick", function(self)
-				if IsModifiedClick and IsModifiedClick("CHATLINK") and self.itemLink then
-					ChatEdit_InsertLink(self.itemLink)
+				local link = self.itemLink
+				local validLink = link and (tostring(link):find("|H.-|h") or tostring(link):find("^item:") or tostring(link):find("^spell:")) and link
+				if IsModifiedClick and IsModifiedClick("CHATLINK") and validLink then
+					ChatEdit_InsertLink(validLink)
 				end
 			end)
 
@@ -336,33 +449,98 @@ function Tab:Refresh()
 		end
 
 		row:SetPoint("TOPLEFT", self.wishContent, "TOPLEFT", 0, -wOffset)
-		row.itemLink = item.link
-		row.itemID = tonumber(key) or (item.link and tonumber(item.link:match("item:(%d+)")))
-		row.itemName = item.name or key
+		local cleanName = (item.name or key or ""):gsub("^%[", ""):gsub("%]$", ""):trim()
+		local rawLink = item.link
+		local validLink = rawLink and (tostring(rawLink):find("|H.-|h") or tostring(rawLink):find("^item:") or tostring(rawLink):find("^spell:")) and rawLink or nil
 
-		row.name:SetText(item.link or item.name or key)
+		-- Clean up invalid link in database if stored previously as plain text
+		if item.link and not validLink then
+			item.link = nil
+		end
 
-		-- Resolve icon texture
-		local _, _, _, _, _, _, _, _, _, texture = GetItemInfo(item.link or row.itemID or item.name)
-		if texture then
+		row.itemID = item.id or tonumber(key) or (rawLink and tonumber(rawLink:match("item:(%d+)"))) or (cleanName:match("#(%d+)") and tonumber(cleanName:match("#(%d+)")))
+		row.itemName = (item.name and item.name ~= "") and item.name or cleanName
+		row.itemLink = validLink
+
+		-- Try resolving from local cache
+		local rName, rLink, _, _, _, _, _, _, _, texture = GetItemInfo(validLink or row.itemID or cleanName)
+		if not rName and cleanName ~= "" then
+			local bareName = cleanName:gsub("^(Muster|Pläne|Bauplan|Rezept|Formel|Handbuch|Vorlage|Buch):%s*", ""):trim()
+			if GSF.RecipeBook and GSF.RecipeBook.Search then
+				local res = GSF.RecipeBook:Search(bareName, "ALL", false)
+				if res and res[1] then
+					local foundLink = res[1].itemLink or res[1].recipeLink
+					if foundLink and tonumber(foundLink:match("item:(%d+)")) then
+						row.itemID = tonumber(foundLink:match("item:(%d+)"))
+						rName, rLink, _, _, _, _, _, _, _, texture = GetItemInfo(row.itemID)
+					end
+				end
+			end
+		end
+
+		if rName and texture then
+			row.itemLink = rLink or validLink
+			row.itemName = rName
+			row.name:SetText(rLink or rName)
 			row.icon:SetTexture(texture)
 			row.icon:Show()
-		elseif row.itemID and C_Item and C_Item.RequestLoadItemDataByID then
-			row.icon:SetTexture("Interface\\Icons\\INV_Scroll_03")
-			row.icon:Show()
-			C_Item.RequestLoadItemDataByID(row.itemID)
-			local itm = Item:CreateFromItemID(row.itemID)
-			if itm then
-				itm:ContinueOnItemLoad(function()
-					local t = itm:GetItemIcon()
-					if t and row.itemID == itm:GetItemID() then
-						row.icon:SetTexture(t)
-					end
-				end)
+
+			-- Upgrade database entry if it had placeholder or missing link
+			if (not item.name or item.name ~= rName or item.name:find("Wird geladen") or item.name:find("Loading")) and rName then
+				item.name = rName
+			end
+			if rLink and (not item.link or not item.link:find("|H")) then
+				item.link = rLink
+			end
+			if row.itemID and not item.id then
+				item.id = row.itemID
 			end
 		else
+			-- Uncached: show loading placeholder or current item name
+			local isPlaceholder = not item.name or item.name:find("Wird geladen") or item.name:find("Loading") or item.name:match("^%d+$")
+			local dispName = isPlaceholder and string.format(GSF.L["ITEM_LOADING"] or "Item #%d (Loading...)", row.itemID or 0) or (validLink or item.name or cleanName or key)
+			row.name:SetText(dispName)
 			row.icon:SetTexture("Interface\\Icons\\INV_Scroll_03")
 			row.icon:Show()
+
+			if row.itemID then
+				self.pendingItems = self.pendingItems or {}
+				self.pendingItems[row.itemID] = true
+
+				if C_Item and C_Item.RequestLoadItemDataByID then
+					C_Item.RequestLoadItemDataByID(row.itemID)
+				end
+
+				if Item and Item.CreateFromItemID then
+					local itm = Item:CreateFromItemID(row.itemID)
+					if itm and not itm:IsItemEmpty() and itm:GetItemID() then
+						pcall(function()
+							itm:ContinueOnItemLoad(function()
+								local t = itm:GetItemIcon()
+								local n = itm:GetItemName()
+								local l = itm:GetItemLink()
+								if row.itemID == itm:GetItemID() then
+									if t then row.icon:SetTexture(t) end
+									if n then
+										row.name:SetText(l or n)
+										row.itemLink = l or row.itemLink
+										row.itemName = n
+										if GSF.db.myWishlist and GSF.db.myWishlist[key] then
+											GSF.db.myWishlist[key].name = n
+											if l and l:find("|H") then
+												GSF.db.myWishlist[key].link = l
+											end
+											GSF.db.myWishlist[key].id = row.itemID
+										end
+									end
+								end
+							end)
+						end)
+					end
+				else
+					GetItemInfo(row.itemID)
+				end
+			end
 		end
 
 		row.delBtn:SetScript("OnClick", function()
