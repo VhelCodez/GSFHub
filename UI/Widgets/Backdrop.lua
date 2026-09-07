@@ -266,33 +266,43 @@ function GSF.UI:CreateItemSlot(parent, size)
 	slot:SetScript("OnClick", HandleCursorDrop)
 
 	slot:SetScript("OnEnter", function(self)
-		if self.itemLink then
+		local link = self.itemLink
+		local validLink = link and (tostring(link):find("|H.-|h") or tostring(link):find("^item:") or tostring(link):find("^spell:"))
+		if validLink then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetHyperlink(self.itemLink)
-			GameTooltip:Show()
-		elseif self.itemID then
+			local ok = pcall(function() GameTooltip:SetHyperlink(link) end)
+			if ok then
+				GameTooltip:Show()
+				return
+			end
+		end
+		if self.itemID then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			if GetSpellInfo and GetSpellInfo(self.itemID) and not (GetItemInfo and GetItemInfo(self.itemID)) then
 				local sLink = GetSpellLink and GetSpellLink(self.itemID)
 				if sLink then
-					GameTooltip:SetHyperlink(sLink)
+					pcall(function() GameTooltip:SetHyperlink(sLink) end)
 				elseif GameTooltip.SetSpellByID then
-					GameTooltip:SetSpellByID(self.itemID)
+					pcall(function() GameTooltip:SetSpellByID(self.itemID) end)
 				else
-					GameTooltip:SetHyperlink("spell:" .. self.itemID)
+					pcall(function() GameTooltip:SetHyperlink("spell:" .. self.itemID) end)
 				end
 			else
-				GameTooltip:SetItemByID(self.itemID)
+				pcall(function() GameTooltip:SetItemByID(self.itemID) end)
 			end
 			GameTooltip:Show()
-		elseif self.itemName then
+			return
+		end
+		if self.itemName then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			GameTooltip:SetText(self.itemName, 1, 0.82, 0)
 			if self.professionText then
 				GameTooltip:AddLine(self.professionText, 0.7, 0.7, 0.7)
 			end
 			GameTooltip:Show()
-		elseif not self.noDropHint then
+			return
+		end
+		if not self.noDropHint then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			GameTooltip:SetText(GSF.L["ITEM_SLOT_DROP_HINT"] or "Drag item here")
 			GameTooltip:Show()
@@ -305,8 +315,9 @@ function GSF.UI:CreateItemSlot(parent, size)
 
 	function slot:SetItem(name, texture, link, itemID)
 		self.itemName = name
-		self.itemLink = link
-		self.itemID = itemID
+		local validLink = link and (tostring(link):find("|H.-|h") or tostring(link):find("^item:") or tostring(link):find("^spell:")) and link or nil
+		self.itemLink = validLink
+		self.itemID = itemID or (validLink and tonumber(validLink:match("item:(%d+)")))
 		if texture then
 			self.icon:SetTexture(texture)
 			self.icon:Show()
@@ -350,11 +361,18 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 			return
 		end
 
-		-- 1. Check if link or text has a spell/enchant reference
-		local spellId = tonumber(itemID) or tonumber(text:match("enchant:(%d+)") or text:match("spell:(%d+)")) or (link and tonumber(link:match("enchant:(%d+)") or link:match("spell:(%d+)")))
+		-- 1. Check if link or text has an explicit spell/enchant reference
+		local isExplicitSpell = (link and (link:match("enchant:") or link:match("spell:"))) or (text:match("enchant:") or text:match("spell:"))
+		local spellId = (isExplicitSpell and (tonumber(itemID) or tonumber(text:match("enchant:(%d+)") or text:match("spell:(%d+)")) or (link and tonumber(link:match("enchant:(%d+)") or link:match("spell:(%d+)"))))) or nil
 		if spellId and GetSpellInfo then
 			local sName, _, sTexture = GetSpellInfo(spellId)
+			local matchValid = false
 			if sName and sTexture then
+				if not text or text == "" or sName:lower() == text:lower() or text:lower():find(sName:lower(), 1, true) or sName:lower():find(text:lower(), 1, true) then
+					matchValid = true
+				end
+			end
+			if matchValid then
 				local sLink = (GetSpellLink and GetSpellLink(spellId)) or link or string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellId, sName)
 				itemSlot:SetItem(sName, sTexture, sLink, spellId)
 				editBox.lastItemName = sName
@@ -392,14 +410,20 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 
 		if not texture and numId and AtlasJournal and AtlasJournal.GetItemDetails then
 			local yd = AtlasJournal:GetItemDetails(numId)
-			if yd and yd.icon then
+			if yd and yd.link and yd.icon and yd.icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
 				texture = yd.icon
 				name = name or yd.name or text
 				itemLink = itemLink or yd.link
 			end
 		end
 
-		if name and texture then
+		if name and texture and texture ~= "Interface\\Icons\\INV_Misc_QuestionMark" and not (name:find("Wird geladen") or name:find("Loading")) then
+			if editBox.pendingItemID then
+				editBox.pendingItemID = nil
+				if editBox.itemWatcherFrame then
+					editBox.itemWatcherFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+				end
+			end
 			itemSlot:SetItem(name, texture, itemLink or link, numId or itemID)
 			editBox.lastItemName = name
 			editBox.lastItemLink = itemLink or link
@@ -410,28 +434,73 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 				editBox:SetText(cleanName)
 			end
 			if callback then callback(name, itemLink or link, texture, numId or itemID) end
-		elseif numId and numId >= 100 and C_Item and C_Item.RequestLoadItemDataByID and Item and Item.CreateFromItemID then
-			C_Item.RequestLoadItemDataByID(numId)
-			local item = Item:CreateFromItemID(numId)
-			if item and not item:IsItemEmpty() and item:GetItemID() then
-				pcall(function()
-					item:ContinueOnItemLoad(function()
-						local n = item:GetItemName()
-						local icon = item:GetItemIcon()
-						local l = item:GetItemLink()
-						if n and icon then
-							itemSlot:SetItem(n, icon, l, numId)
-							editBox.lastItemName = n
-							editBox.lastItemLink = l
-							editBox.lastItemID = numId
-							if rawId or (scriptId and text:find("/script")) then
-								local cleanName = (scriptId and text:match("%[(.-)%]")) or n
-								editBox:SetText(cleanName)
+		elseif numId and numId >= 100 then
+			-- Uncached item: display loading state and initiate reactive asynchronous resolution
+			local loadingName = string.format(GSF.L["ITEM_LOADING"] or "Item #%d (Loading...)", numId)
+			itemSlot:SetItem(loadingName, "Interface\\Icons\\INV_Misc_QuestionMark", nil, numId)
+			editBox.lastItemName = loadingName
+			editBox.lastItemLink = nil
+			editBox.lastItemID = numId
+			editBox.pendingItemID = numId
+
+			if rawId or (scriptId and text:find("/script")) then
+				local cleanName = (scriptId and text:match("%[(.-)%]")) or loadingName
+				editBox:SetText(cleanName)
+			end
+
+			local function OnItemResolved(n, l, icon)
+				if editBox.pendingItemID ~= numId then return end
+				editBox.pendingItemID = nil
+				if editBox.itemWatcherFrame then
+					editBox.itemWatcherFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+				end
+				if n and icon and icon ~= "Interface\\Icons\\INV_Misc_QuestionMark" then
+					itemSlot:SetItem(n, icon, l, numId)
+					editBox.lastItemName = n
+					editBox.lastItemLink = l
+					editBox.lastItemID = numId
+					local cur = editBox:GetText() and editBox:GetText():trim() or ""
+					if cur == tostring(numId) or cur == loadingName or cur:find("Wird geladen") or cur:find("Loading") or cur:find("^Gegenstand #%d+") or cur:find("^Item #%d+") or cur:find("/script") then
+						editBox:SetText(n)
+					end
+					if callback then callback(n, l, icon, numId) end
+				end
+			end
+
+			-- Setup event watcher frame for GET_ITEM_INFO_RECEIVED
+			if not editBox.itemWatcherFrame then
+				editBox.itemWatcherFrame = CreateFrame("Frame")
+			end
+			editBox.itemWatcherFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+			editBox.itemWatcherFrame:SetScript("OnEvent", function(f, evt, loadedID)
+				if tonumber(loadedID) == numId then
+					local n, l, _, _, _, _, _, _, _, icon = GetItemInfo(numId)
+					if n and icon then
+						OnItemResolved(n, l, icon)
+					end
+				end
+			end)
+
+			-- Request data load from server via C_Item and standard query
+			if C_Item and C_Item.RequestLoadItemDataByID then
+				C_Item.RequestLoadItemDataByID(numId)
+			end
+			if Item and Item.CreateFromItemID then
+				local itemObj = Item:CreateFromItemID(numId)
+				if itemObj and not itemObj:IsItemEmpty() and itemObj:GetItemID() then
+					pcall(function()
+						itemObj:ContinueOnItemLoad(function()
+							local n = itemObj:GetItemName()
+							local icon = itemObj:GetItemIcon()
+							local l = itemObj:GetItemLink()
+							if n and icon then
+								OnItemResolved(n, l, icon)
 							end
-							if callback then callback(n, l, icon, numId) end
-						end
+						end)
 					end)
-				end)
+				end
+			else
+				GetItemInfo(numId)
 			end
 		else
 			-- Check if text matches a spell name
@@ -455,6 +524,12 @@ function GSF.UI:AttachItemPreview(editBox, itemSlot, callback)
 			self.lastItemName = nil
 			self.lastItemLink = nil
 			self.lastItemID = nil
+			if self.pendingItemID then
+				self.pendingItemID = nil
+				if self.itemWatcherFrame then
+					self.itemWatcherFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+				end
+			end
 			if callback then callback(nil) end
 			return
 		end
@@ -493,9 +568,11 @@ function GSF.UI:AttachItemTooltip(frame, getItemLinkFunc)
 		if link then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			if type(link) == "number" then
-				GameTooltip:SetItemByID(link)
+				pcall(function() GameTooltip:SetItemByID(link) end)
+			elseif tostring(link):find("|H.-|h") or tostring(link):find("^item:") or tostring(link):find("^spell:") then
+				pcall(function() GameTooltip:SetHyperlink(link) end)
 			else
-				GameTooltip:SetHyperlink(link)
+				GameTooltip:SetText(tostring(link), 1, 0.82, 0)
 			end
 			GameTooltip:Show()
 		end
