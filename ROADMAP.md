@@ -18,7 +18,8 @@ graph LR
     v13 --> v131["v1.3.1<br/><b>Master Expansion & CRAFT</b><br/>(Released)"]
     v131 --> v132["v1.3.2<br/><b>Supply Chain & Goals</b><br/>(Released)"]
     v132 --> v133["v1.3.3<br/><b>Drops Revamp & Persistence</b><br/>(Released)"]
-    v133 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
+    v133 --> v134["v1.3.4<br/><b>Library Standardization</b><br/>(Released)"]
+    v134 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -27,6 +28,13 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.3.4 - Inter-Addon Library Standardization & Ecosystem Compatibility *(Released)*
+- [x] **Canonical Ace3 Library Integration:** Replaced custom skeleton mock implementations of `AceAddon-3.0`, `AceEvent-3.0`, `AceTimer-3.0`, `AceComm-3.0`, `AceSerializer-3.0`, and `AceConsole-3.0` with official, complete community releases.
+- [x] **Eliminated Questie Silent Startup Freeze:** Fixed the alphabetical load-order collision where GSFHub's mock `AceAddon-3.0` ignored `ADDON_LOADED` and delayed initialization until `PLAYER_LOGIN`, causing Questie to register for `PLAYER_LOGIN` after it had already fired.
+- [x] **Official LibDeflate (RFC1951) & Safe Base64 Encoding:** Embedded official `LibDeflate` (v1.0.2-release / Minor 3 by SafeteeWoW) with genuine DEFLATE compression and standard 64-char safe ASCII channel encoding.
+- [x] **ChatThrottleLib Anti-Disconnect Protection:** Embedded `ChatThrottleLib` (v24) into `Libs/AceComm-3.0/` ensuring reliable multi-part chunking and flood protection over the hidden `GUILD` channel.
+- [x] **LibDataBroker & LibDBIcon Parity:** Updated `LibDataBroker-1.1` and `LibDBIcon-1.0` to canonical community releases.
 
 ### ✅ v1.3.3 - Recipe Drops Revamp, Robust Profession Persistence & Reactive Item Resolution Suite *(Released)*
 - [x] **Modern 64px Recipe Drops Architecture:** Converted raw drop text list into modern 64px cards matching Work Orders and Bounties, featuring 36x36px item slots with Blizzard rarity borders, interactive tooltips, Shift-click chat linking, localized profession badges, and individual `[X]` dismiss buttons.

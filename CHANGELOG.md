@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.4] - 2026-09-08
+
+### Fixed
+- **Resolved Inter-Addon Library Collision & Silent Startup Freeze (Questie v11.37.1 & Ace3 Addons):**
+  - Replaced legacy custom skeleton library implementations in `Libs/` (`AceAddon-3.0`, `AceEvent-3.0`, `AceTimer-3.0`, `AceComm-3.0`, `AceSerializer-3.0`, `AceConsole-3.0`, `LibDeflate`, `LibDataBroker-1.1`, and `LibDBIcon-1.0`) with canonical, full-featured community releases.
+  - **Root Cause:** Due to alphabetical addon load order (`G` before `Q`), GSFHub's embedded mock `AceAddon-3.0` registered with `MINOR = 13` and ignored the `ADDON_LOADED` event, delaying initialization until `PLAYER_LOGIN`. Addons like Questie register their `PLAYER_LOGIN` listener inside `OnInitialize()` (which standard AceAddon triggers on `ADDON_LOADED`). Delaying `OnInitialize` caused Questie to register for `PLAYER_LOGIN` after WoW had already fired it, leaving Questie completely dormant with zero Lua errors.
+  - Standardized `Libs/Libs.xml` with official XML includes, added `ChatThrottleLib` (v24) to eliminate disconnect risks during large P2P sync broadcasts, and restored genuine RFC1951 DEFLATE compression and safe channel encoding via official `LibDeflate`.
+
 ## [1.3.3] - 2026-09-07
 
 ### Added
@@ -342,7 +350,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decentralized P2P Networking Mesh:** Peer-to-peer sync with `LibDeflate` compression over the hidden `GUILD` channel.
 - **Presentation Layer:** 5-tab parchment/slate main frame with draggable Minimap icon and toast popup alerts.
 
-[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.3.4...HEAD
+[1.3.4]: https://github.com/VhelCodez/GSFHub/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/VhelCodez/GSFHub/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/VhelCodez/GSFHub/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/VhelCodez/GSFHub/compare/v1.3.0...v1.3.1
