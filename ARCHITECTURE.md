@@ -215,6 +215,37 @@ All communications occur over the hidden WoW addon channel (`C_ChatInfo.SendAddo
 
 ---
 
+## 📚 External Libraries Architecture & Upstream Tracking Standard
+
+GSFHub follows the **Tracked Vendoring** architectural pattern used by premier World of Warcraft addons (Questie, WeakAuras, Details!). All external community libraries are committed directly into `Libs/` to enable zero-setup local execution while strictly using canonical upstream releases to maintain ecosystem compatibility.
+
+### 1. Embedded Community Libraries Directory
+| Library | Version / Minor | Architectural Purpose in GSFHub |
+| :--- | :--- | :--- |
+| **`LibStub`** | v1.0.3 / Minor 2 | Universal library manager and version negotiator. |
+| **`CallbackHandler-1.0`** | Minor 8 | Underlying pub-sub event engine for AceEvent, AceComm, LibDBIcon, and LibDataBroker. |
+| **`AceAddon-3.0`** | Minor 13 | Main addon lifecycle controller (`GSFHub = AceAddon:NewAddon(...)`). Coordinates SavedVariables loading (`ADDON_LOADED`) with character entry (`PLAYER_LOGIN`). |
+| **`AceEvent-3.0`** | Minor 4 | Dispatches WoW game events (`GUILD_ROSTER_UPDATE`, `PLAYER_ENTERING_WORLD`) and inter-addon messages (`SendMessage`). |
+| **`AceTimer-3.0`** | Minor 17 | High-accuracy scheduler for periodic P2P heartbeat sync (`BroadcastHello` every 600s), debounced scans, and delayed UI refreshes. |
+| **`AceComm-3.0` & `ChatThrottleLib`** | Minor 14 / v24 | P2P network messaging over `CHAT_MSG_ADDON` (`GUILD` channel). Automatically chunks multi-part payloads (>255 bytes) and throttles transmission to prevent server disconnects. |
+| **`AceSerializer-3.0`** | Minor 5 | Serializes Lua tables (professions, orders, surplus listings, recipe drops) into compact ASCII strings for P2P sync. |
+| **`AceConsole-3.0`** | Minor 7 | Registers slash commands (`/gsf`, `/gsfhub`, `/gsfcraft`) and provides `GetArgs` parsing. |
+| **`LibDeflate`** | v1.0.2 / Minor 3 | Pure Lua RFC1951 DEFLATE compression and safe 64-character ASCII encoding for WoW addon channels. |
+| **`LibDataBroker-1.1`** | Minor 4 | Standard data provider feed (`GSFHub_LDB`) for display bars (Titan Panel, ChocolateBar, etc.). |
+| **`LibDBIcon-1.0`** | Minor 55 | Places and manages the draggable GSFHub minimap launcher button with position persistence in `GSFHubDB.minimap`. |
+| **`AtlasJournal`** | `LibAtlasJournal-1.1` | Headless 1–375 Classic & TBC resource and gathering compendium library developed natively for GSFHub. |
+
+### 2. Ecosystem Compatibility & The LibStub Lifecycle Guarantee
+- **Zero-Mock Policy:** Community libraries must **never** be mocked or custom-coded under official `LibStub` names.
+- **Addon Load Order Resilience:** In WoW, addons load alphabetically (`GSFHub` before `Questie`). If an early addon registers a mock library with an equal minor version, it prevents subsequent addons from loading their real libraries. GSFHub embeds canonical libraries with full event lifecycle support (`ADDON_LOADED` dispatched prior to `PLAYER_LOGIN`), ensuring zero interference with other addons.
+- **Runtime Upgrades:** If another addon loads with a newer minor version, `LibStub` automatically upgrades the in-memory instance without causing errors.
+
+### 3. Upstream Maintenance Tooling
+- **Local Synchronization (`scripts/update-libs.ps1`):** A one-command PowerShell tool that shallowly clones upstream official repositories (`WoWUIDev/Ace3`, `safeteeWow/LibDeflate`, `tekkub/libdatabroker-1-1`, `Questie/LibDBIcon-1.0`), copies canonical files into `Libs/`, and executes syntax verification.
+- **Continuous Integration (`.github/workflows/check-libraries.yml`):** Runs monthly in GitHub Actions, automatically checking upstream repositories for updates and opening an issue if updates or patches are published.
+
+---
+
 ## 🚀 Release & Versioning Workflow
-- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`, `v1.2.6`, `v1.2.7`, `v1.3.0`, `v1.3.1`, `v1.3.2`, `v1.3.3`).
+- Semantic versioning: `vMajor.Minor.Patch` (e.g. `v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, `v1.2.4`, `v1.2.5`, `v1.2.6`, `v1.2.7`, `v1.3.0`, `v1.3.1`, `v1.3.2`, `v1.3.3`, `v1.3.4`).
 - GitHub Action (`.github/workflows/release.yml`) triggers on tag push (`git push origin v1.X.X`), automatically builds `GSFHub-vX.X.X.zip` containing code, `README.md`, `CHANGELOG.md`, and `LICENSE`.

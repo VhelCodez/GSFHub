@@ -96,8 +96,24 @@
   - `perf`: Performance or memory optimizations.
   - `test`: Automated verification scripts or unit tests.
   - `chore`: Tooling or non-functional maintenance.
+- **Atomic & Logical Multi-Step Commits:**
+  - Whenever multiple distinct components or layers are modified in a task (e.g. bug fixes, tooling/CI scripts, architecture documentation, and release version bumps), **DO NOT combine them into one single monolithic commit**.
+  - Commit each logical domain as an independent, focused atomic step (e.g. 1. Core Fix, 2. Tooling/CI, 3. Architecture/Rules, 4. Release Bump).
+  - This ensures a clean, bisectable Git history and allows individual changes to be audited, reverted, or cherry-picked independently.
 - **Auto-Closing Integration:** Always append closing keywords (e.g. `(closes #<id>)` or `(fixes #<id>)`) when resolving an open GitHub Issue.
 
 ### 12. 💡 Ideas Incubator & Backlog Policy
 - **Mandatory Storage for Unplanned Ideas:** Any temporary, unassigned, future, or exploratory ideas discussed during brainstorming MUST be stored persistently in **`.gemini/ideas/`** (e.g. `idea_incubator.md` or topic-specific markdown files).
 - **Scope Protection:** Keeps active phase implementation plans strictly focused and scoped while guaranteeing that zero creative thoughts or future feature concepts are forgotten.
+
+### 13. 🛡️ Canonical Library Integrity & Tracked Vendoring Policy (CRITICAL)
+- **Strict Zero-Mocking Rule:** Embedded community libraries (`Ace3`, `LibDeflate`, `LibDataBroker`, `LibDBIcon`, `LibStub`, `CallbackHandler`) MUST ALWAYS be official, full-featured canonical releases. **NEVER create custom, partial, or mock implementations** under official `LibStub` names.
+- **The Questie Load-Order Collision Lesson:**
+  - World of Warcraft loads addons alphabetically by directory name (`GSFHub` loads before `Questie`, `WeakAuras`, etc.).
+  - `LibStub` rejects library loading if `oldminor >= minor`.
+  - When GSFHub previously embedded a 130-line mock `AceAddon-3.0` (MINOR 13) that ignored `ADDON_LOADED` and deferred initialization to `PLAYER_LOGIN`, it hijacked the library instance. Addons loading after GSFHub (like Questie) had their `OnInitialize()` delayed until `PLAYER_LOGIN`. Because Questie registers its `PLAYER_LOGIN` event listener during `OnInitialize()`, the event had already fired and was never caught—causing Questie to remain permanently dead in memory with **zero Lua errors**.
+- **Tracked Vendoring Standard:**
+  1. **Deterministic Local Execution:** Canonical libraries are committed directly into `Libs/` so that any developer cloning the repo or symlinking into `_classic_/Interface/AddOns/` has an immediately functional addon with zero build tools or package managers required.
+  2. **Automated Upstream Synchronization:** Local library updates must be executed using `powershell ./scripts/update-libs.ps1`, which shallowly clones upstream repositories (`WoWUIDev/Ace3`, `safeteeWow/LibDeflate`, `tekkub/libdatabroker-1-1`, `Questie/LibDBIcon-1.0`), copies canonical files, and runs syntax verification.
+  3. **Continuous Integration Monitoring:** `.github/workflows/check-libraries.yml` runs monthly on CI, automatically checking for upstream releases and creating GitHub notifications if changes exist.
+  4. **ChatThrottleLib Anti-Disconnect Mandate:** `AceComm-3.0` MUST always be packaged alongside `ChatThrottleLib.lua` to throttle P2P network traffic and prevent server disconnects during large payload broadcasts.
