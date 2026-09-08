@@ -1,0 +1,8 @@
+﻿package-as: GSFHub
+
+ignore:
+  - .github
+  - .gitignore
+  - ARCHITECTURE.md
+  - ROADMAP.md
+  - docs
