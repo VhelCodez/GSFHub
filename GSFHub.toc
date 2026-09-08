@@ -6,6 +6,7 @@
 ## SavedVariables: GSFHubDB, GSFHubCache
 ## OptionalDeps: Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate
 ## DefaultState: enabled
+## X-Curse-Project-ID: 1685824
 
 # Embedded Libraries
 Libs\Libs.xml

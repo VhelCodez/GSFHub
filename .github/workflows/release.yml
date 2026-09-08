@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Package Addon Archive
         run: |
@@ -45,3 +47,11 @@ jobs:
           gh release create "${{ github.ref_name }}" "${ARCHIVE_NAME}" \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
+
+      - name: Publish to CurseForge
+        if: ${{ secrets.CF_API_KEY != '' }}
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -p 1685824
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}

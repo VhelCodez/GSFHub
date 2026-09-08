@@ -4,9 +4,10 @@ GSF.COMM_PREFIX = "GSFHUB"
 GSF.VERSION = "1.3.3"
 GSF.PROTOCOL_VERSION = 2
 
--- Download & Issue Tracker URLs (CurseForge ready)
-GSF.DOWNLOAD_URL = "https://github.com/VhelCodez/GSFHub/releases"
+-- Download & Issue Tracker URLs
+GSF.DOWNLOAD_URL = "https://www.curseforge.com/wow/addons/gsfhub"
 GSF.ISSUES_URL = "https://github.com/VhelCodez/GSFHub/issues/new/choose"
+GSF.CURSEFORGE_PROJECT_ID = 1685824
 
 -- Network Protocol Opcodes
 GSF.OPCODE = {

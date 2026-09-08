@@ -1,5 +1,6 @@
 # GSFHub (Guild Self-Found Hub) for WoW Classic TBC
 
+[![CurseForge](https://img.shields.io/badge/CurseForge-1685824-f16436.svg?logo=curseforge&logoColor=white)](https://www.curseforge.com/wow/addons/gsfhub)
 [![Latest Release](https://img.shields.io/github/v/release/VhelCodez/GSFHub?color=blue&label=Release)](https://github.com/VhelCodez/GSFHub/releases)
 [![WoW Classic](https://img.shields.io/badge/WoW%20Classic-TBC%202.5.6%20(20506)-orange.svg)](https://wago.tools)
 [![Locales](https://img.shields.io/badge/Locales-English%20%7C%20Deutsch-brightgreen.svg)](Locales/)
@@ -50,8 +51,14 @@
 
 ## 🚀 Installation
 
-1. Download or clone this repository.
-2. Copy the entire `GSFHub` folder into your World of Warcraft directory:
+### Option 1: CurseForge App (Recommended)
+1. Open the **[CurseForge App](https://download.curseforge.com/)**.
+2. Select **World of Warcraft** and search for **GSFHub**.
+3. Click **Install** for 1-click automatic installation and future version updates.
+
+### Option 2: Manual Installation
+1. Download the latest release from **[CurseForge](https://www.curseforge.com/wow/addons/gsfhub)** or **[GitHub Releases](https://github.com/VhelCodez/GSFHub/releases)**.
+2. Extract the `GSFHub` folder into your World of Warcraft directory:
    ```
    World of Warcraft/_classic_/Interface/AddOns/GSFHub
    ```
