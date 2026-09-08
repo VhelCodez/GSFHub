@@ -1,0 +1,26 @@
+name: Check Upstream Libraries
+
+on:
+  schedule:
+    # Runs on the 1st of every month at 12:00 UTC
+    - cron: '0 12 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-libraries:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Upstream Community Libraries
+        run: |
+          chmod +x .github/scripts/check_libraries.sh
+          .github/scripts/check_libraries.sh
