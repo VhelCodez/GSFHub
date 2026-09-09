@@ -9,8 +9,65 @@ GSF.RECIPE_DROP_TIMEOUT = 86400 -- 24 hours
 function GSF.RecipeDrops:Initialize()
 	self:RegisterEvent("CHAT_MSG_LOOT", "OnLootMessage")
 	self:RegisterEvent("LOOT_OPENED", "OnLootOpened")
+	self:RegisterEvent("MERCHANT_SHOW", "OnMerchantShow")
+	self:RegisterEvent("MERCHANT_CLOSED", "OnMerchantClosed")
+	self:RegisterEvent("CHAT_MSG_PARTY", "OnChatMessage")
+	self:RegisterEvent("CHAT_MSG_PARTY_LEADER", "OnChatMessage")
+	self:RegisterEvent("CHAT_MSG_RAID", "OnChatMessage")
+	self:RegisterEvent("CHAT_MSG_RAID_LEADER", "OnChatMessage")
+
+	-- Hook merchant buy functions to suppress vendor bought recipes/handbooks from drops
+	if not self.hookedMerchant then
+		hooksecurefunc("BuyMerchantItem", function(index, count)
+			GSF.RecipeDrops.lastMerchantBuyTime = GetTime()
+		end)
+		hooksecurefunc("BuybackItem", function(index)
+			GSF.RecipeDrops.lastMerchantBuyTime = GetTime()
+		end)
+		self.hookedMerchant = true
+	end
+
+	self.recentPartyAnnounced = {}
+	self.recentSeenDrops = {}
+
 	self:CleanupWishlistDuplicates()
 	self:PruneExpiredDrops()
+end
+
+function GSF.RecipeDrops:OnChatMessage(event, message, sender)
+	if not message or not message:find("^%[GSF%]") then return end
+	self.recentPartyAnnounced = self.recentPartyAnnounced or {}
+	local now = GetTime()
+
+	local itemLink = message:match("(|c%x+|Hitem:%d+:.+|h%[.-%]|h|r)")
+	if itemLink then
+		local itemId = tonumber(itemLink:match("item:(%d+)"))
+		if itemId and itemId > 0 then
+			self.recentPartyAnnounced[itemId] = now
+		end
+		local clean = self:CleanRecipeName(itemLink):lower()
+		if clean ~= "" then
+			self.recentPartyAnnounced[clean] = now
+		end
+	end
+end
+
+function GSF.RecipeDrops:OnMerchantShow()
+	self.isAtMerchant = true
+	self.lastMerchantBuyTime = GetTime()
+end
+
+function GSF.RecipeDrops:OnMerchantClosed()
+	self.isAtMerchant = false
+	self.lastMerchantCloseTime = GetTime()
+end
+
+function GSF.RecipeDrops:IsClassOrPetTome(name)
+	if not name then return false end
+	local lower = name:lower()
+	if lower:find("grimoire") then return true end
+	if lower:find("tome of") or lower:find("buch des") or lower:find("buch der") then return true end
+	return false
 end
 
 function GSF.RecipeDrops:PruneExpiredDrops()
@@ -18,7 +75,11 @@ function GSF.RecipeDrops:PruneExpiredDrops()
 	local now = time()
 	local valid = {}
 	for _, drop in ipairs(GSF.cache.recentDrops) do
-		if drop.timestamp and (now - drop.timestamp) < GSF.RECIPE_DROP_TIMEOUT then
+		local isExpired = not drop.timestamp or ((now - drop.timestamp) >= GSF.RECIPE_DROP_TIMEOUT)
+		local isTome = drop.name and self:IsClassOrPetTome(drop.name)
+		local canonProf = drop.profession and GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(drop.profession)
+		local isValidProf = canonProf and GSF.PROFESSIONS and GSF.PROFESSIONS[canonProf]
+		if not isExpired and not isTome and isValidProf then
 			table.insert(valid, drop)
 		end
 	end
@@ -65,6 +126,7 @@ end
 
 function GSF.RecipeDrops:IsRecipeItem(input)
 	if not input or input == "" then return false end
+	if self:IsClassOrPetTome(tostring(input)) then return false end
 
 	local itemId = tonumber(tostring(input):match("item:(%d+)")) or (type(input) == "number" and input) or (tostring(input):match("^%d+$") and tonumber(input)) or tonumber(tostring(input):match("#(%d+)"))
 	if itemId and itemId > 0 then
@@ -77,6 +139,10 @@ function GSF.RecipeDrops:IsRecipeItem(input)
 	end
 
 	local itemName, itemLink, _, _, _, itemType, _, _, _, _, _, classID = GetItemInfo(input)
+	if itemName and self:IsClassOrPetTome(itemName) then
+		return false
+	end
+
 	if classID then
 		return classID == 9 or classID == (LE_ITEM_CLASS_RECIPE or 9)
 	end
@@ -86,8 +152,8 @@ function GSF.RecipeDrops:IsRecipeItem(input)
 	end
 
 	local str = tostring(itemName or input)
-	if str:find("^(Pattern|Plans|Schematic|Recipe|Formula|Manual|Design|Book):") or
-	   str:find("^(Muster|Pläne|Bauplan|Rezept|Formel|Handbuch|Vorlage|Buch):") or
+	if str:find("^(Pattern|Plans|Schematic|Recipe|Formula|Manual|Design):") or
+	   str:find("^(Muster|Pläne|Bauplan|Rezept|Formel|Handbuch|Vorlage):") or
 	   str:find("%f[%a]Pattern%f[%A]") or str:find("%f[%a]Plans%f[%A]") or str:find("%f[%a]Schematic%f[%A]") or
 	   str:find("%f[%a]Recipe%f[%A]") or str:find("%f[%a]Formula%f[%A]") or str:find("%f[%a]Manual%f[%A]") or
 	   str:find("%f[%a]Muster%f[%A]") or str:find("%f[%a]Pläne%f[%A]") or str:find("%f[%a]Bauplan%f[%A]") or
@@ -212,6 +278,19 @@ end
 
 function GSF.RecipeDrops:OnLootMessage(event, message, sender)
 	if not message then return end
+
+	-- Suppress vendor purchases from being recorded as drops
+	local now = GetTime()
+	if (MerchantFrame and MerchantFrame:IsShown()) or self.isAtMerchant then
+		return
+	end
+	if self.lastMerchantBuyTime and (now - self.lastMerchantBuyTime) < 3.0 then
+		return
+	end
+	if self.lastMerchantCloseTime and (now - self.lastMerchantCloseTime) < 2.0 then
+		return
+	end
+
 	local itemLink = message:match("(|c%x+|Hitem:%d+:.+|h%[.-%]|h|r)")
 	if itemLink then
 		self:ProcessItemDrop(itemLink, sender or "Group")
@@ -244,6 +323,12 @@ end
 
 function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 	local itemName, _, itemQuality, _, _, itemType, itemSubType, _, _, _, _, classID = GetItemInfo(itemLink)
+	if not itemName then return end
+
+	-- Exclude class ability books & Warlock pet grimoires
+	if self:IsClassOrPetTome(itemName) then
+		return
+	end
 
 	local isRecipe = false
 	if classID == 9 or (Enum and Enum.ItemClass and classID == Enum.ItemClass.Recipe) then
@@ -275,7 +360,34 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 	end
 	profession = GSF:GetCanonicalProfession(profession) or profession
 
+	-- Must belong to a recognized trade skill profession in GSF.PROFESSIONS
+	if not GSF.PROFESSIONS or not GSF.PROFESSIONS[profession] then
+		return
+	end
+
 	local cleanDropName = self:CleanRecipeName(itemName):lower()
+	local itemId = tonumber(itemLink:match("item:(%d+)") or 0)
+	local dropKey = (itemId and itemId > 0) and itemId or cleanDropName
+	local now = GetTime()
+
+	-- 1. Deduplication / Cooldown: Skip duplicate processing within 60 seconds
+	self.recentSeenDrops = self.recentSeenDrops or {}
+	if self.recentSeenDrops[dropKey] and (now - self.recentSeenDrops[dropKey]) < 60 then
+		return
+	end
+	self.recentSeenDrops[dropKey] = now
+
+	-- 2. Deduplicate in recentDrops cache: prevent inserting multiple times
+	if GSF.cache and GSF.cache.recentDrops then
+		for k = 1, math.min(10, #GSF.cache.recentDrops) do
+			local prev = GSF.cache.recentDrops[k]
+			if prev and (prev.cleanName == cleanDropName or (itemId and itemId > 0 and prev.link and prev.link:find("item:" .. itemId))) then
+				if (time() - (prev.timestamp or 0)) < 60 then
+					return
+				end
+			end
+		end
+	end
 
 	-- Find who needs it (guild crafters with this profession who do NOT know the recipe yet)
 	local neededBy = {}
@@ -315,7 +427,6 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 	end
 
 	-- Check wishlists (local player and guild members)
-	local itemId = tonumber(itemLink:match("item:(%d+)") or 0)
 	local myName = GSF.DB:GetPlayerName()
 	if GSF.db and GSF.db.myWishlist and (GSF.db.myWishlist[tostring(itemId)] or GSF.db.myWishlist[itemName]) then
 		table.insert(wishlistedBy, myName)
@@ -361,11 +472,17 @@ function GSF.RecipeDrops:ProcessItemDrop(itemLink, source)
 			GSF.Toast:ShowToast(string.format("Recipe Drop: %s (|cff33ff99%d crafters need|r)", itemName, #neededBy))
 		end
 
-		-- Announce to Party/Raid if enabled
-		if GSF.db.announceDropsToParty and (IsInRaid() or IsInGroup()) then
-			local channel = IsInRaid() and "RAID" or "PARTY"
-			local announce = string.format("[GSF] %s dropped! %d guild crafters need this: %s", itemName, #neededBy, needStr)
-			SendChatMessage(announce, channel)
+		-- Announce to Party/Raid if enabled (throttled across party to prevent duplicate spam)
+		if GSF.db and GSF.db.announceDropsToParty and (IsInRaid() or IsInGroup()) then
+			self.recentPartyAnnounced = self.recentPartyAnnounced or {}
+			local lastAnnounced = self.recentPartyAnnounced[dropKey] or self.recentPartyAnnounced[cleanDropName] or 0
+			if (now - lastAnnounced) >= 60 then
+				self.recentPartyAnnounced[dropKey] = now
+				self.recentPartyAnnounced[cleanDropName] = now
+				local channel = IsInRaid() and "RAID" or "PARTY"
+				local announce = string.format("[GSF] %s dropped! %d guild crafters need this: %s", itemName, #neededBy, needStr)
+				SendChatMessage(announce, channel)
+			end
 		end
 	end
 end
