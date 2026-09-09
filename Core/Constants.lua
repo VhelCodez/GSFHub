@@ -309,3 +309,36 @@ function GSF:FormatTimeAgo(timestamp)
 	return self:FormatTime(diff)
 end
 
+-- Diacritic stripping & normalization for alphabetical sorting
+local DIACRITIC_MAP = {
+	-- Upper case
+	["À"] = "A", ["Á"] = "A", ["Â"] = "A", ["Ã"] = "A", ["Ä"] = "A", ["Å"] = "A", ["Æ"] = "Ae",
+	["È"] = "E", ["É"] = "E", ["Ê"] = "E", ["Ë"] = "E",
+	["Ì"] = "I", ["Í"] = "I", ["Î"] = "I", ["Ï"] = "I",
+	["Ò"] = "O", ["Ó"] = "O", ["Ô"] = "O", ["Õ"] = "O", ["Ö"] = "O", ["Ø"] = "O",
+	["Ù"] = "U", ["Ú"] = "U", ["Û"] = "U", ["Ü"] = "U",
+	["Ý"] = "Y", ["Ÿ"] = "Y",
+	["Ñ"] = "N", ["Ç"] = "C", ["Ð"] = "D", ["Þ"] = "Th",
+	["Š"] = "S", ["Ž"] = "Z",
+	-- Lower case
+	["à"] = "a", ["á"] = "a", ["â"] = "a", ["ã"] = "a", ["ä"] = "a", ["å"] = "a", ["æ"] = "ae",
+	["è"] = "e", ["é"] = "e", ["ê"] = "e", ["ë"] = "e",
+	["ì"] = "i", ["í"] = "i", ["î"] = "i", ["ï"] = "i",
+	["ò"] = "o", ["ó"] = "o", ["ô"] = "o", ["õ"] = "o", ["ö"] = "o", ["ø"] = "o",
+	["ù"] = "u", ["ú"] = "u", ["û"] = "u", ["ü"] = "u",
+	["ý"] = "y", ["ÿ"] = "y",
+	["ñ"] = "n", ["ç"] = "c", ["ð"] = "d", ["þ"] = "th", ["ß"] = "ss",
+	["š"] = "s", ["ž"] = "z",
+}
+
+function GSF:NormalizeSortString(str)
+	if not str or str == "" then return "" end
+	local s = tostring(str)
+	-- Replace accented multibyte UTF-8 characters with plain equivalents
+	for diac, repl in pairs(DIACRITIC_MAP) do
+		s = s:gsub(diac, repl)
+	end
+	return s:lower()
+end
+
+
