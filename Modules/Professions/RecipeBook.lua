@@ -88,11 +88,14 @@ function GSF.RecipeBook:GetCraftersForSpell(spellId, recipeName, profession)
 	local crafters = {}
 	if not GSF.cache or not GSF.cache.members then return crafters end
 
+	local canonTarget = profession and GSF:GetCanonicalProfession(profession)
+
 	for memberName, memberData in pairs(GSF.cache.members) do
 		local isOnline = (time() - (memberData.lastSeen or 0)) < 900
 		if memberData.professions then
 			for profName, profData in pairs(memberData.professions) do
-				if not profession or profName == profession then
+				local canonCur = GSF:GetCanonicalProfession(profName)
+				if not canonTarget or canonCur == canonTarget then
 					if profData.recipes then
 						local hasRecipe = false
 						if spellId and profData.recipes[spellId] then
@@ -129,20 +132,36 @@ function GSF.RecipeBook:WhoNeedsRecipe(recipeItemLink, profession)
 	if not GSF.cache or not GSF.cache.members then return needs, canLearn end
 
 	local recipeName = GetItemInfo(recipeItemLink) or recipeItemLink
+	local canonTarget = profession and GSF:GetCanonicalProfession(profession)
 
 	for memberName, memberData in pairs(GSF.cache.members) do
-		if memberData.professions and memberData.professions[profession] then
-			local prof = memberData.professions[profession]
-			local alreadyKnows = false
-			for _, r in pairs(prof.recipes or {}) do
-				if (r.name and recipeName:find(r.name, 1, true)) or (r.itemLink and r.itemLink == recipeItemLink) then
-					alreadyKnows = true
-					break
+		if memberData.professions then
+			local prof = nil
+			if canonTarget and memberData.professions[canonTarget] then
+				prof = memberData.professions[canonTarget]
+			elseif profession and memberData.professions[profession] then
+				prof = memberData.professions[profession]
+			else
+				for pK, pV in pairs(memberData.professions) do
+					if GSF:GetCanonicalProfession(pK) == canonTarget then
+						prof = pV
+						break
+					end
 				end
 			end
 
-			if not alreadyKnows then
-				table.insert(canLearn, memberName)
+			if prof then
+				local alreadyKnows = false
+				for _, r in pairs(prof.recipes or {}) do
+					if (r.name and recipeName:find(r.name, 1, true)) or (r.itemLink and r.itemLink == recipeItemLink) then
+						alreadyKnows = true
+						break
+					end
+				end
+
+				if not alreadyKnows then
+					table.insert(canLearn, memberName)
+				end
 			end
 		end
 	end

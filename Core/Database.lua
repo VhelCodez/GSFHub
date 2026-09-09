@@ -77,11 +77,43 @@ function GSF.DB:UpdateScope()
 	self:SyncActiveCharacterWishlist()
 	self:SyncActiveCharacterGoals()
 
+	-- Normalize legacy localized profession keys (e.g. Alchimie -> Alchemy)
+	if GSF.cache and GSF.cache.members then
+		for _, member in pairs(GSF.cache.members) do
+			if member.professions then
+				self:NormalizeProfessionKeys(member.professions)
+			end
+		end
+	end
+	if GSFHubDB and GSFHubDB.characterProfessionsByChar then
+		for _, profs in pairs(GSFHubDB.characterProfessionsByChar) do
+			self:NormalizeProfessionKeys(profs)
+		end
+	end
+
 	-- Clean expired work orders (> 7 days) in current scope
 	self:CleanupExpiredOrders()
 
 	local scopeChanged = (previousScopeKey ~= nil and previousScopeKey ~= scopeKey)
 	return scopeKey, isGuild, scopeChanged
+end
+
+function GSF.DB:NormalizeProfessionKeys(profTable)
+	if not profTable then return end
+	local toMove = {}
+	for pName, pData in pairs(profTable) do
+		local canon = GSF.GetCanonicalProfession and GSF:GetCanonicalProfession(pName)
+		if canon and canon ~= pName then
+			table.insert(toMove, { oldKey = pName, newKey = canon, data = pData })
+		end
+	end
+	for _, m in ipairs(toMove) do
+		if not profTable[m.newKey] then
+			m.data.name = m.newKey
+			profTable[m.newKey] = m.data
+		end
+		profTable[m.oldKey] = nil
+	end
 end
 
 function GSF.DB:PruneNonGuildMembers(currentGuildMembers)

@@ -43,7 +43,7 @@ L["SELECT_RECIPE_PROMPT"] = "Wähle ein Rezept aus, um Handwerker & Reagenzien a
 L["NO_EXTRA_REAGENTS"] = "Keine zusätzlichen Materialien erforderlich."
 
 -- Profession Names (deDE)
-L["PROF_ALCHEMY"] = "Alchemie"
+L["PROF_ALCHEMY"] = "Alchimie"
 L["PROF_BLACKSMITHING"] = "Schmiedekunst"
 L["PROF_ENCHANTING"] = "Verzauberkunst"
 L["PROF_ENGINEERING"] = "Ingenieurskunst"

@@ -159,6 +159,7 @@ GSF.CACHE_RETENTION_DAYS = 30
 local CANONICAL_PROFS = {
 	["alchemy"] = "Alchemy",
 	["alchemie"] = "Alchemy",
+	["alchimie"] = "Alchemy",
 	["blacksmithing"] = "Blacksmithing",
 	["schmiedekunst"] = "Blacksmithing",
 	["enchanting"] = "Enchanting",
