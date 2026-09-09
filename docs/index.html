@@ -54,7 +54,7 @@
       <div class="flex items-center space-x-3">
         <span class="text-2xl">🌿</span>
         <span class="font-cinzel text-xl font-bold gold-gradient-text tracking-wider">GSFHub</span>
-        <span class="text-xs bg-wow-cardDark border border-wow-cardBorder text-wow-gold font-mono px-2 py-0.5 rounded-full">v1.3.4 (TBC 2.5.6)</span>
+        <span class="text-xs bg-wow-cardDark border border-wow-cardBorder text-wow-gold font-mono px-2 py-0.5 rounded-full">v1.3.5 (TBC 2.5.6)</span>
       </div>
       <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
         <a href="#features" class="hover:text-wow-gold transition-colors">Features</a>
@@ -80,7 +80,7 @@
   <section class="relative py-20 overflow-hidden border-b border-wow-cardBorder bg-gradient-to-b from-wow-bgDark via-[#121820] to-wow-bgDark">
     <div class="max-w-5xl mx-auto px-4 text-center">
       <div class="inline-flex items-center space-x-2 bg-wow-cardDark border border-wow-cardBorder px-3 py-1 rounded-full text-xs font-mono text-wow-gold mb-6">
-        <span>⚡ Version 1.3.4 Live</span>
+        <span>⚡ Version 1.3.5 Live</span>
         <span>•</span>
         <span>WoW Classic TBC 2.5.6 Ready</span>
       </div>
@@ -311,16 +311,41 @@
     </div>
 
     <div class="space-y-6">
-      <!-- v1.3.4 (Current) -->
+      <!-- v1.3.5 (Current) -->
       <div class="bg-wow-cardDark border border-green-500/30 rounded-xl p-6 relative overflow-hidden">
         <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-24 h-24 bg-green-500/5 rounded-full blur-2xl"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div class="flex items-center space-x-3">
+            <span class="text-xl">✨</span>
+            <h3 class="font-cinzel text-lg font-bold text-white">v1.3.5 — Guild Roster Interactive Sorting, Class Color Mapping &amp; Recipe Drop Anti-Spam Suite</h3>
+          </div>
+          <span class="inline-flex items-center text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 w-fit">
+            ● Current Release
+          </span>
+        </div>
+        <p class="text-sm text-gray-300 mb-3">Feature and stability release introducing interactive Guild Roster column sorting with Blizzard sort arrows, unified online presence ordering, diacritic normalization (<code class="text-xs text-wow-gold">GSF:NormalizeSortString</code>) grouping accented names accurately, German female class recognition and class coloring, roster layout polish with logged-in golden highlight and scrollbar collision elimination, TradeSkillFrame button repositioning, 60s distributed group drop announcement throttle, vendor buy suppression, and German "Alchimie" localization with automated database migration.</p>
+        <div class="flex flex-wrap gap-2 text-xs font-mono text-gray-400">
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Interactive Roster Sorting</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Blizzard Sort Arrows</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Diacritic Normalization</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">German Female Classes</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Class Color Helpers</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Scrollbar Clearance Fix</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Golden Player Highlight</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Drop Anti-Spam Throttle</span>
+          <span class="bg-[#121820] px-2 py-1 rounded border border-wow-cardBorder">Alchimie DB Migration</span>
+        </div>
+      </div>
+
+      <!-- v1.3.4 -->
+      <div class="bg-wow-cardDark border border-wow-cardBorder rounded-xl p-6 relative overflow-hidden opacity-80">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div class="flex items-center space-x-3">
             <span class="text-xl">🛡️</span>
             <h3 class="font-cinzel text-lg font-bold text-white">v1.3.4 — Inter-Addon Library Standardization &amp; Ecosystem Compatibility</h3>
           </div>
-          <span class="inline-flex items-center text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 w-fit">
-            ● Current Release
+          <span class="inline-flex items-center text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-gray-500/10 text-gray-400 border border-gray-500/30 w-fit">
+            Released
           </span>
         </div>
         <p class="text-sm text-gray-300 mb-3">Critical compatibility release resolving an inter-addon library collision where Questie (v11.37.1) and other Ace3 addons silently froze upon login. Replaced all custom skeleton library mocks with canonical, full-featured community releases (Ace3, official LibDeflate 1.0.2 with RFC1951 DEFLATE compression, and ChatThrottleLib v24 for disconnect-safe P2P syncing over the hidden guild channel).</p>

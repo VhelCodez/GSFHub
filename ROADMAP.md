@@ -19,7 +19,8 @@ graph LR
     v131 --> v132["v1.3.2<br/><b>Supply Chain & Goals</b><br/>(Released)"]
     v132 --> v133["v1.3.3<br/><b>Drops Revamp & Persistence</b><br/>(Released)"]
     v133 --> v134["v1.3.4<br/><b>Library Standardization</b><br/>(Released)"]
-    v134 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
+    v134 --> v135["v1.3.5<br/><b>Roster & Drop De-Spam</b><br/>(Released)"]
+    v135 --> v14["v1.4.0<br/><b>Phase 4: Navigation & QoL</b><br/>(Next Up)"]
     v14 --> v15["v1.5.0<br/><b>Phase 5: Specializations & CDs</b><br/>(Planned)"]
     v15 --> v16["v1.6.0<br/><b>Phase 6: TBC Guild Vault</b><br/>(Planned)"]
     v16 --> v17["v1.7.0<br/><b>Phase 7: Guild Intelligence</b><br/>(Planned)"]
@@ -28,6 +29,16 @@ graph LR
 ---
 
 ## 🚀 Released Milestones
+
+### ✅ v1.3.5 - Guild Roster Interactive Sorting, Class Color Mapping & Recipe Drop Anti-Spam Suite *(Released)*
+- [x] **Interactive Guild Roster Sorting:** Clickable column headers (`Character`, `Level`, `Class`, `Main`, `Status`) with native Blizzard sort arrow textures and coordinate flipping for ascending / descending sorting.
+- [x] **Unified Status Sorting & Strict Weak Ordering:** Online guildies sorted to top with current player pinned first, followed by active members ordered by last seen; secondary tie-breakers strictly alphabetical A-Z.
+- [x] **Diacritic Normalization (`GSF:NormalizeSortString`):** Accented names (e.g. `Ârthas`, `Ärthas`) stripped of diacritics during sort comparisons and search queries, grouping them naturally adjacent to base ASCII names.
+- [x] **German Female Class Recognition & Color Mapping:** Enhanced `GSF:GetClassColor` with complete support for German female class forms (`Jägerin`, `Schamanin`, `Priesterin`, `Kriegerin`, `Schurkin`, etc.) and synchronized character levels and class tokens across roster events and P2P sync.
+- [x] **Roster Layout Polish & Golden Border:** Logged-in character highlighted with golden border (`1.0, 0.82, 0.0`); row height expanded to 46px giving a 2px larger gap between primary and secondary professions; clean dash (`—`) placeholders for unindexed professions.
+- [x] **Scrollbar Clearance & Title Bar Hook Fixes:** Reduced roster row width to 674px with an 8px clear gutter to prevent clipping into the scrollbar track/thumb; aligned Status header; repositioned TradeSkillFrame GSF button inside title bar clear of Blizzard's close button.
+- [x] **Recipe Drop Anti-Spam & Deduplication:** 60-second distributed party announcement throttle (`CHAT_MSG_PARTY`/`RAID`) preventing announcement cascades when multiple party members run GSFHub; 60-second per-item drop cooldown eliminating duplicate `LOOT_OPENED`/`CHAT_MSG_LOOT` triggers; vendor purchase suppression via `BuyMerchantItem`/`BuybackItem` hooks; class tome and pet grimoire exclusion.
+- [x] **German "Alchimie" Localization & Data Migration:** Corrected spelling to `Alchimie` (`L["PROF_ALCHEMY"]`), canonical mapping in `CANONICAL_PROFS`, and automated non-destructive migration (`NormalizeProfessionKeys`) across SavedVariables and cache.
 
 ### ✅ v1.3.4 - Inter-Addon Library Standardization & Ecosystem Compatibility *(Released)*
 - [x] **Canonical Ace3 Library Integration:** Replaced custom skeleton mock implementations of `AceAddon-3.0`, `AceEvent-3.0`, `AceTimer-3.0`, `AceComm-3.0`, `AceSerializer-3.0`, and `AceConsole-3.0` with official, complete community releases.

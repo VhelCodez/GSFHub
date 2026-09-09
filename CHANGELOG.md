@@ -17,6 +17,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.5] - 2026-09-10
+
+### Added
+- **Interactive Guild Roster Sorting & Sort Indicators (`TabRoster.lua`):**
+  - Added clickable column header buttons for **Character** (`name`), **Level** (`level`), **Class** (`class`), **Main** (`main`), and **Status** (`status`).
+  - Integrated native Blizzard sort arrow textures (`Interface\Buttons\UI-SortArrow`) with automatic ascending/descending texture coordinate flipping (`SetTexCoord`).
+  - Unified online status sorting logic: online members pinned to the top (with logged-in character first) followed by active guildies ordered by last seen; reverse sorting for offline members.
+  - Secondary tie-breakers across all columns strictly maintain alphabetical A-Z order.
+- **Diacritic Normalization for Alphabetical Sorting (`Core/Constants.lua`, `TabRoster.lua`):**
+  - Implemented `GSF:NormalizeSortString(str)` mapping accented UTF-8 characters (`Â`, `Ä`, `Ö`, `É`, `ß`, etc.) to ASCII equivalents.
+  - Characters with accented names (e.g. `Ârthas`, `Ärthas`) now sort accurately next to `Arthas` rather than being sorted to the bottom.
+- **Class Color Helpers & Female German Class Mapping (`Core/Constants.lua`, `TabRoster.lua`):**
+  - Implemented `GSF:GetClassColor(classNameOrToken)` supporting standard class tokens and German localized class titles, including female forms (`Jägerin`, `Schamanin`, `Priesterin`, `Kriegerin`, `Schurkin`, `Magierin`, `Hexenmeisterin`, `Druidin`, `Paladinin`, `Todesritterin`).
+  - Synchronized member levels and English `classFileName` tokens across guild roster update events and peer-to-peer comms.
+- **Roster Visual Polish & Logged-In Highlight (`TabRoster.lua`):**
+  - Prominently highlighted the logged-in player's row with a golden border (`1.0, 0.82, 0.0`) and warm dark background.
+  - Increased row height from 44px to 46px (48px vertical stride), increasing the vertical gap between primary and secondary professions by 2px.
+  - Replaced empty or missing profession clutter with clean subtle dash (`—`) placeholders.
+
+### Fixed
+- **Recipe Drop Duplicate Spam & Cascading Group Announcements (`Modules/Drops/RecipeDrops.lua`):**
+  - Implemented a 60-second distributed party announcement throttle listening to incoming `[GSF]` announcements on `CHAT_MSG_PARTY` and `CHAT_MSG_RAID`. If any party member with GSFHub announces a recipe drop, duplicate announcements from other group members are suppressed.
+  - Added local deduplication with a 60-second cooldown per `dropKey` to eliminate redundant triggers between `LOOT_OPENED` and `CHAT_MSG_LOOT`.
+  - Hooked `BuyMerchantItem` and `BuybackItem` to prevent vendor-purchased recipes or books from being broadcast as dungeon drops.
+  - Excluded class ability books and Warlock pet grimoires from recipe detection and drop pruning.
+- **German "Alchimie" Localization & Database Normalization (`Locales/deDE.lua`, `Core/Constants.lua`, `Core/Database.lua`, `Modules/Professions/RecipeBook.lua`):**
+  - Corrected localized German profession spelling to `"Alchimie"` (`L["PROF_ALCHEMY"]`) matching the German WoW client.
+  - Mapped `"alchimie"` to canonical `"Alchemy"` in `CANONICAL_PROFS`.
+  - Added non-destructive database migration `GSF.DB:NormalizeProfessionKeys()` to automatically migrate existing character SavedVariables and runtime cache tables.
+  - Ensured canonical resolution in `GetCraftersForSpell` and `WhoNeedsRecipe`.
+- **Roster Scrollbar Overlap Collision (`TabRoster.lua`):**
+  - Resized roster rows from 690px to 674px, creating an 8px clear gutter between the row right border and the scrollbar track and thumb.
+  - Symmetrically aligned the `Status` column header (`headerBar, "RIGHT", -36, 0`) with the row status text right anchor (`row, "TOPRIGHT", -10, -7`).
+- **TradeSkill Frame GSF Button Overlap (`UI/TradeSkillHook.lua`):**
+  - Fixed the GSF Hub sync button on `TradeSkillFrame` and `CraftFrame` overlapping the Blizzard close button ('X').
+  - Repositioned the button inside the title bar section at `TOPRIGHT, xOffset, -15` (size `68, 16`) with dynamic close button detection (`xOffset = -68`).
+
+---
+
 ## [1.3.4] - 2026-09-08
 
 ### Fixed
@@ -350,7 +389,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decentralized P2P Networking Mesh:** Peer-to-peer sync with `LibDeflate` compression over the hidden `GUILD` channel.
 - **Presentation Layer:** 5-tab parchment/slate main frame with draggable Minimap icon and toast popup alerts.
 
-[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/VhelCodez/GSFHub/compare/v1.3.5...HEAD
+[1.3.5]: https://github.com/VhelCodez/GSFHub/compare/v1.3.4...v1.3.5
 [1.3.4]: https://github.com/VhelCodez/GSFHub/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/VhelCodez/GSFHub/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/VhelCodez/GSFHub/compare/v1.3.1...v1.3.2
