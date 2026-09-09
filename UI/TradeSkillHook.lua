@@ -22,8 +22,16 @@ function GSF.TradeSkillHook:HookTradeSkill()
 	if not TradeSkillFrame or TradeSkillFrame.gsfBtn then return end
 
 	local btn = CreateFrame("Button", "TradeSkillFrameGSFButton", TradeSkillFrame, "UIPanelButtonTemplate")
-	btn:SetSize(76, 18)
-	btn:SetPoint("TOPRIGHT", TradeSkillFrame, "TOPRIGHT", -36, -14)
+	btn:SetSize(68, 16)
+	local xOffset = -52
+	local closeBtn = _G["TradeSkillFrameCloseButton"] or (TradeSkillFrame and TradeSkillFrame.CloseButton)
+	if closeBtn and closeBtn.GetPoint then
+		local _, _, _, closeX = closeBtn:GetPoint(1)
+		if closeX and closeX <= -25 then
+			xOffset = -68
+		end
+	end
+	btn:SetPoint("TOPRIGHT", TradeSkillFrame, "TOPRIGHT", xOffset, -15)
 	btn:SetText("GSF Hub")
 	btn:SetScript("OnClick", function()
 		if GSF.Scanner then
@@ -42,8 +50,16 @@ function GSF.TradeSkillHook:HookCraft()
 	if not CraftFrame or CraftFrame.gsfBtn then return end
 
 	local btn = CreateFrame("Button", "CraftFrameGSFButton", CraftFrame, "UIPanelButtonTemplate")
-	btn:SetSize(76, 18)
-	btn:SetPoint("TOPRIGHT", CraftFrame, "TOPRIGHT", -36, -14)
+	btn:SetSize(68, 16)
+	local xOffset = -52
+	local closeBtn = _G["CraftFrameCloseButton"] or (CraftFrame and CraftFrame.CloseButton)
+	if closeBtn and closeBtn.GetPoint then
+		local _, _, _, closeX = closeBtn:GetPoint(1)
+		if closeX and closeX <= -25 then
+			xOffset = -68
+		end
+	end
+	btn:SetPoint("TOPRIGHT", CraftFrame, "TOPRIGHT", xOffset, -15)
 	btn:SetText("GSF Hub")
 	btn:SetScript("OnClick", function()
 		if GSF.Scanner then
