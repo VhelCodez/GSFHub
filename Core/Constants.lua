@@ -206,6 +206,77 @@ function GSF:GetLocalizedProfession(name)
 	return canon
 end
 
+-- Class Color Helpers
+local CLASS_COLORS = {
+	["WARRIOR"]     = "C79C6E",
+	["PALADIN"]     = "F58CBA",
+	["HUNTER"]      = "ABD473",
+	["ROGUE"]       = "FFF569",
+	["PRIEST"]      = "FFFFFF",
+	["DEATHKNIGHT"] = "C41F3B",
+	["SHAMAN"]      = "0070DE",
+	["MAGE"]        = "40C7EB",
+	["WARLOCK"]     = "8787ED",
+	["DRUID"]       = "FF7D0A",
+}
+
+local CLASS_NAME_MAP = {
+	["krieger"] = "WARRIOR",
+	["kriegerin"] = "WARRIOR",
+	["warrior"] = "WARRIOR",
+	["paladin"] = "PALADIN",
+	["paladinin"] = "PALADIN",
+	["jäger"] = "HUNTER",
+	["jager"] = "HUNTER",
+	["jägerin"] = "HUNTER",
+	["jagerin"] = "HUNTER",
+	["hunter"] = "HUNTER",
+	["schurke"] = "ROGUE",
+	["schurkin"] = "ROGUE",
+	["rogue"] = "ROGUE",
+	["priester"] = "PRIEST",
+	["priesterin"] = "PRIEST",
+	["priest"] = "PRIEST",
+	["todesritter"] = "DEATHKNIGHT",
+	["todesritterin"] = "DEATHKNIGHT",
+	["deathknight"] = "DEATHKNIGHT",
+	["death knight"] = "DEATHKNIGHT",
+	["schamane"] = "SHAMAN",
+	["schamanin"] = "SHAMAN",
+	["shaman"] = "SHAMAN",
+	["magier"] = "MAGE",
+	["magierin"] = "MAGE",
+	["mage"] = "MAGE",
+	["hexenmeister"] = "WARLOCK",
+	["hexenmeisterin"] = "WARLOCK",
+	["warlock"] = "WARLOCK",
+	["druide"] = "DRUID",
+	["druidin"] = "DRUID",
+	["druid"] = "DRUID",
+}
+
+function GSF:GetClassColor(classNameOrToken)
+	if not classNameOrToken then return "ffffff" end
+	local token = tostring(classNameOrToken):upper():gsub("%s+", "")
+	if CLASS_COLORS[token] then
+		return CLASS_COLORS[token]
+	end
+	local lower = tostring(classNameOrToken):lower():gsub("^%s*(.-)%s*$", "%1")
+	local mapped = CLASS_NAME_MAP[lower]
+	if mapped and CLASS_COLORS[mapped] then
+		return CLASS_COLORS[mapped]
+	end
+	if RAID_CLASS_COLORS and RAID_CLASS_COLORS[token] then
+		local c = RAID_CLASS_COLORS[token]
+		if c.colorStr then
+			return c.colorStr:sub(3)
+		elseif c.r and c.g and c.b then
+			return string.format("%02x%02x%02x", math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255))
+		end
+	end
+	return "ffffff"
+end
+
 function GSF:FormatTime(seconds)
 	if not seconds or seconds < 60 then
 		return (GSF.L and GSF.L["JUST_NOW"]) or "Just now"

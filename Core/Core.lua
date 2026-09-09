@@ -147,19 +147,40 @@ function GSFHub:GUILD_ROSTER_UPDATE()
 		if numMembers == 0 then return end
 
 		local currentGuildMembers = {}
+		local myName = GSF.DB:GetPlayerName()
 		for i = 1, numMembers do
-			local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline = GetGuildRosterInfo(i)
+			local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline, status, classFileName = GetGuildRosterInfo(i)
 			if name then
 				local shortName = strsplit("-", name, 2)
 				currentGuildMembers[shortName] = true
 				local member = GSF.DB:EnsureMemberRecord(shortName)
-				if isOnline then
+				local onlineBool = (isOnline == 1 or isOnline == true)
+				member.isOnline = onlineBool
+				if onlineBool then
 					member.lastSeen = time()
+				end
+				if level and level > 0 then
+					member.level = level
 				end
 				if classDisplayName and classDisplayName ~= "" then
 					member.class = classDisplayName
 				end
+				if classFileName and classFileName ~= "" then
+					member.classFileName = classFileName
+				end
 			end
+		end
+
+		-- Ensure current player record has freshest local info
+		if myName and myName ~= "" and myName ~= "Unknown" then
+			local myMember = GSF.DB:EnsureMemberRecord(myName)
+			myMember.isOnline = true
+			myMember.lastSeen = time()
+			local myLvl = UnitLevel("player")
+			if myLvl and myLvl > 0 then myMember.level = myLvl end
+			local myLocClass, myEngClass = UnitClass("player")
+			if myLocClass and myLocClass ~= "" then myMember.class = myLocClass end
+			if myEngClass and myEngClass ~= "" then myMember.classFileName = myEngClass end
 		end
 
 		-- Prune characters and work orders that do not belong to this guild

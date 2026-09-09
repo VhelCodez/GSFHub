@@ -344,13 +344,25 @@ function GSF.DB:EnsureMemberRecord(name)
 			name = name,
 			main = name,
 			class = "UNKNOWN",
+			classFileName = nil,
+			level = 0,
+			isOnline = false,
 			lastSeen = time(),
 			professions = {},
 			surplus = {},
 			wishlist = {},
 		}
 	end
-	return GSF.cache.members[name]
+	local rec = GSF.cache.members[name]
+	if name == self:GetPlayerName() then
+		local locClass, engClass = UnitClass("player")
+		if locClass and locClass ~= "" then rec.class = locClass end
+		if engClass and engClass ~= "" then rec.classFileName = engClass end
+		local lvl = UnitLevel("player")
+		if lvl and lvl > 0 then rec.level = lvl end
+		rec.isOnline = true
+	end
+	return rec
 end
 
 function GSF.DB:RebuildGuildCache()

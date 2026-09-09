@@ -65,10 +65,13 @@ function GSF.Sync:SendMyData(targetName)
 	-- Gather surplus strictly for this character in this guild scope
 	local mySurplus = memberData.surplus or {}
 
+	local locClass, engClass = UnitClass("player")
 	local payload = {
 		name = myName,
 		main = GSF.Alts:GetMain(myName),
-		class = GSF.DB:GetPlayerClass(),
+		class = locClass or GSF.DB:GetPlayerClass(),
+		classFileName = engClass,
+		level = UnitLevel("player"),
 		professions = memberData.professions or {},
 		surplus = mySurplus,
 		wishlist = (GSF.db and GSF.db.myWishlist) or {},
@@ -137,6 +140,7 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 		-- Register that sender is online
 		local member = GSF.DB:EnsureMemberRecord(sender)
 		member.lastSeen = time()
+		member.isOnline = true
 		if data.main then
 			GSF.Alts:SetMain(sender, data.main)
 		end
@@ -154,6 +158,13 @@ function GSF.Sync:OnCommReceived(prefix, message, distribution, sender)
 		local targetMember = GSF.DB:EnsureMemberRecord(data.name or sender)
 		targetMember.main = data.main or sender
 		targetMember.class = data.class or targetMember.class
+		if data.classFileName and data.classFileName ~= "" then
+			targetMember.classFileName = data.classFileName
+		end
+		if data.level and tonumber(data.level) and tonumber(data.level) > 0 then
+			targetMember.level = tonumber(data.level)
+		end
+		targetMember.isOnline = true
 		targetMember.lastSeen = time()
 		targetMember.professions = data.professions or {}
 		targetMember.surplus = data.surplus or {}
